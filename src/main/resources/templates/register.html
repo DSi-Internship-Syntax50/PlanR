@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Create Account - PlanR</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .register-container {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            width: 100%;
+            max-width: 450px;
+            backdrop-filter: blur(10px);
+        }
+        .register-container h2 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 25px;
+            font-weight: 600;
+        }
+        .form-group { margin-bottom: 20px; }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #4a5568;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            box-sizing: border-box;
+            background-color: #f8fafc;
+            color: #2d3748;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #3182ce;
+            box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.2);
+            background-color: #fff;
+        }
+        .btn {
+            width: 100%;
+            padding: 14px;
+            background: #3182ce;
+            border: none;
+            color: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            margin-top: 10px;
+            transition: background 0.3s;
+        }
+        .btn:hover { background: #2b6cb0; }
+        .error-message {
+            color: #e53e3e;
+            font-size: 12px;
+            margin-top: 5px;
+            display: block;
+        }
+        .footer-link {
+            text-align: center;
+            margin-top: 25px;
+            font-size: 14px;
+        }
+        .footer-link a {
+            color: #3182ce;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .footer-link a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+
+<div class="register-container">
+    <h2>Create Your Account</h2>
+
+    <!-- The form automatically binds to the 'user' object added to the Model in GET mapping -->
+    <form th:action="@{/register}" th:object="${user}" method="post">
+        
+        <div class="form-group">
+            <label for="name">Full Name</label>
+            <input type="text" id="name" th:field="*{name}" placeholder="John Doe" autofocus />
+            <span th:if="${#fields.hasErrors('name')}" th:errors="*{name}" class="error-message"></span>
+        </div>
+
+        <div class="form-group">
+            <label for="email">Email Address</label>
+            <input type="email" id="email" th:field="*{email}" placeholder="john@example.com" />
+            <span th:if="${#fields.hasErrors('email')}" th:errors="*{email}" class="error-message"></span>
+        </div>
+
+        <!-- Role Dropdown -->
+        <div class="form-group">
+            <label for="role">Select Your Role</label>
+            <select id="role" th:field="*{role}">
+                <option value="">-- Select Role --</option>
+                <option th:each="r : ${roles}" 
+                        th:value="${r}" 
+                        th:text="${r}"></option>
+            </select>
+            <span th:if="${#fields.hasErrors('role')}" th:errors="*{role}" class="error-message"></span>
+        </div>
+
+        <!-- Department Dropdown -->
+        <div class="form-group">
+            <label for="departmentId">Select Your Department</label>
+            <select id="departmentId" th:field="*{departmentId}">
+                <option value="">-- Select Department --</option>
+                <option th:each="dept : ${departments}" 
+                        th:value="${dept.id}" 
+                        th:text="${dept.shortCode + ' - ' + dept.name}"></option>
+            </select>
+            <span th:if="${#fields.hasErrors('departmentId')}" th:errors="*{departmentId}" class="error-message"></span>
+        </div>
+
+        <div class="form-group">
+            <label for="password">Password</label>
+            <input type="password" id="password" th:field="*{password}" placeholder="Create a strong password (min 6 chars)" />
+            <span th:if="${#fields.hasErrors('password')}" th:errors="*{password}" class="error-message"></span>
+        </div>
+
+        <button type="submit" class="btn">Register</button>
+
+        <div class="footer-link">
+            Already have an account? <a href="/login">Sign In here</a>
+        </div>
+    </form>
+</div>
+
+</body>
+</html>

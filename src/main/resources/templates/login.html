@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Login - PlanR</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f7f6; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .login-container { background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 100%; max-width: 400px; }
+        .login-container h2 { text-align: center; color: #333; margin-bottom: 20px; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; color: #666; }
+        .form-group input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        .btn { width: 100%; padding: 10px; background: #007bff; border: none; color: white; border-radius: 4px; cursor: pointer; font-size: 16px; margin-top: 10px; }
+        .btn:hover { background: #0056b3; }
+        .alert { padding: 10px; border-radius: 4px; margin-bottom: 15px; text-align: center; }
+        .alert-error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .alert-success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+    </style>
+</head>
+<body>
+
+<div class="login-container">
+    <h2>Welcome Back</h2>
+    
+    <!-- Spring Security appends ?error=true on failed logins -->
+    <div th:if="${param.error}" class="alert alert-error">
+        Invalid Username or Password!
+    </div>
+    
+    <!-- Spring Security appends ?logout=true on successful logouts -->
+    <div th:if="${param.logout}" class="alert alert-success">
+        You have been successfully logged out.
+    </div>
+
+    <!-- The form action MUST match the processing URL configured (default is POST /login) -->
+    <!-- Thymeleaf automatically injects a hidden CSRF token field into forms with th:action -->
+    <form th:action="@{/login}" method="post">
+        <div class="form-group">
+            <label for="username">Email address</label>
+            <input type="email" id="username" name="username" required autofocus placeholder="Enter email" />
+        </div>
+        <div class="form-group">
+            <label for="password">Password</label>
+            <input type="password" id="password" name="password" required placeholder="Enter password" />
+        </div>
+        <button type="submit" class="btn">Sign In</button>
+    </form>
+</div>
+
+</body>
+</html>
