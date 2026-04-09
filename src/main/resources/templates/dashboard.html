@@ -1,17 +1,71 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PlanR Dashboard</title>
+    
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <style>
+        .custom-card {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 15px rgba(15, 23, 42, 0.05);
+            border: 1px solid var(--sec-border);
+            margin-bottom: 25px;
+            animation: slideInUp 0.5s ease-out forwards;
+        }
+
+        @keyframes slideInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .dashboard-header {
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .dashboard-header h1 {
+            font-size: 1.8rem;
+            color: var(--primary);
+        }
+    </style>
 </head>
-<body style="font-family: Arial, sans-serif; padding: 40px; text-align: center;">
+<body>
 
-    <h1 style="color: #2F80ED;">Welcome to PlanR Dashboard!</h1>
-    <h3 style="color: #333;">You have successfully logged in.</h3>
+    <div th:replace="~{fragments/sidebar :: sidebar}"></div>
 
-    <form th:action="@{/logout}" method="post">
-        <button type="submit" style="padding: 10px 20px; background: #dc3545; color: white; border: none; border-radius: 5px; cursor: pointer;">Logout</button>
-    </form>
+    <div class="main-content">
+        
+        <div th:replace="~{fragments/header :: header}"></div>
+
+        <div class="page-container">
+            <div class="dashboard-header">
+                <h1>Dashboard</h1>
+                <form th:action="@{/logout}" method="post">
+                    <button type="submit" class="btn-edit" style="width: auto; padding: 10px 20px; animation: none; opacity: 1;">
+                        <i class="fa-solid fa-right-from-bracket"></i> Logout
+                    </button>
+                </form>
+            </div>
+
+            <div class="custom-card">
+                <h2>Welcome to PlanR Dashboard!</h2>
+                <p style="color: var(--text-light); margin-top: 10px;">You have successfully logged in.</p>
+                <div style="margin-top: 20px;">
+                    <a th:href="@{/my-profile}" style="color: var(--primary); font-weight: 600; text-decoration: none;">
+                        <i class="fa-solid fa-arrow-right"></i> Go to Profile
+                    </a>
+                </div>
+            </div>
+            
+        </div>
+        
+    </div>
 
 </body>
 </html>
