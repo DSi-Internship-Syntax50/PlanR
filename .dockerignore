@@ -6,3 +6,5 @@ target/
 HELP.md
 Dockerfile
 **/*.properties
+
+.env
