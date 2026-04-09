@@ -15,12 +15,12 @@ public class AuthController {
         if (auth != null && auth.isAuthenticated() && !(auth instanceof AnonymousAuthenticationToken)) {
             return "redirect:/";
         }
-        
+
         return "login";
     }
-    
-    
+
     @GetMapping("/")
     public String dashboard() {
-        return "dashboard"; 
+        return "dashboard";
+    }
 }
