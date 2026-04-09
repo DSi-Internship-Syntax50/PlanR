@@ -1,22 +1,127 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <body>
-    <header th:fragment="header" class="top-header">
-        <div class="header-search">
-            <i class="fa-solid fa-magnifying-glass search-icon"></i>
-            <input type="text" placeholder="Search academic resources...">
+    <!-- Floating Glassmorphism Pill Navbar -->
+    <!-- Removed 'w-full' and 'ml-64' because it inherits the parent's container constraints cleanly! -->
+    <header th:fragment="header" id="mainHeader" class="h-[64px] mx-8 mt-6 bg-white/40 backdrop-blur-2xl border border-white/60 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] flex items-center justify-between px-6 sticky top-6 z-40 transition-transform duration-300 transform translate-y-0">
+        
+        <div class="relative w-96 group">
+            <i class="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm group-hover:text-blue-500 transition-colors"></i>
+            <input type="text" placeholder="Search resources..." class="w-full bg-gray-100/50 hover:bg-gray-100 focus:bg-white text-sm border border-transparent focus:border-blue-200 rounded-xl py-2 pl-11 pr-4 focus:ring-4 focus:ring-blue-50 outline-none transition-all duration-300">
+        </div>
+
+        <div class="hidden md:flex gap-8 text-xs font-bold tracking-wider text-gray-400">
+            <a href="/canvas" class="text-blue-600 bg-blue-50 px-4 py-2 rounded-lg transition-all shadow-sm">CANVAS</a>
+            <a href="/schedules" class="hover:text-gray-800 hover:bg-gray-50 px-4 py-2 rounded-lg transition-all">SCHEDULES</a>
+            <a href="/faculty" class="hover:text-gray-800 hover:bg-gray-50 px-4 py-2 rounded-lg transition-all">FACULTY</a>
         </div>
         
-        <div class="header-actions">
-            <button class="icon-btn" title="Notifications"><i class="fa-regular fa-bell"></i></button>
-            <a th:href="@{/my-profile}" style="text-decoration: none;">
-                <div class="user-profile-menu" title="Go to Profile">
-                    <span th:text="${user != null ? user.name : 'User Name'}">User Name</span>
-                    <div class="user-avatar" th:text="${user != null ? #strings.substring(user.name, 0, 1) : 'U'}">U</div>
-                    <i class="fa-solid fa-chevron-right" style="font-size: 0.8rem; color: var(--text-light);"></i>
+        <div class="flex items-center gap-5">
+            <span class="bg-blue-50 text-blue-700 px-3 py-1.5 rounded-lg text-xs font-bold border border-blue-100">Coordinator</span>
+            
+            <!-- Notification Dropdown Core -->
+            <div class="relative">
+                <button id="btnNotifToggle" class="relative w-10 h-10 rounded-full flex items-center justify-center text-gray-500 hover:text-blue-600 hover:bg-blue-50 focus:outline-none transition-all">
+                    <i class="fas fa-bell text-lg"></i>
+                    <span class="absolute top-2 right-2 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white animate-pulse"></span>
+                </button>
+                
+                <!-- Notification Menu (Hidden by default) -->
+                <div id="notifDropdown" class="hidden absolute right-0 mt-3 w-80 bg-white/90 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/50 overflow-hidden transform opacity-0 scale-95 transition-all origin-top-right z-50">
+                    <div class="px-4 py-3 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+                        <span class="font-bold text-gray-900 text-sm">Notifications</span>
+                        <span class="text-[10px] bg-blue-100 text-blue-700 font-bold px-2 py-0.5 rounded-full">2 New</span>
+                    </div>
+                    <div class="max-h-64 overflow-y-auto">
+                        <a href="#" class="block px-4 py-3 hover:bg-blue-50/50 border-b border-gray-50 transition">
+                            <div class="flex items-start gap-3">
+                                <div class="w-8 h-8 rounded-full bg-red-100 text-red-500 flex items-center justify-center shrink-0 mt-0.5"><i class="fas fa-calendar-times text-xs"></i></div>
+                                <div>
+                                    <p class="text-xs font-semibold text-gray-900">Class Removed</p>
+                                    <p class="text-[11px] text-gray-500 mt-0.5">PHY 110 has been dropped from Room 305 to clear a double booking.</p>
+                                    <p class="text-[9px] text-gray-400 font-bold mt-1">2 MINS AGO</p>
+                                </div>
+                            </div>
+                        </a>
+                        <a href="#" class="block px-4 py-3 hover:bg-blue-50/50 border-b border-gray-50 transition">
+                            <div class="flex items-start gap-3">
+                                <div class="w-8 h-8 rounded-full bg-yellow-100 text-yellow-500 flex items-center justify-center shrink-0 mt-0.5"><i class="fas fa-exclamation-triangle text-xs"></i></div>
+                                <div>
+                                    <p class="text-xs font-semibold text-gray-900">Room Changed</p>
+                                    <p class="text-[11px] text-gray-500 mt-0.5">EEE 3105 shifted to Lecture Hall 401.</p>
+                                    <p class="text-[9px] text-gray-400 font-bold mt-1">1 HR AGO</p>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="px-4 py-2 bg-gray-50/30 text-center border-t border-gray-100">
+                        <a href="#" class="text-[11px] font-bold text-blue-600 hover:text-blue-800">View All Updates</a>
+                    </div>
                 </div>
+            </div>
+
+            <a href="/settings" class="w-10 h-10 rounded-full flex items-center justify-center text-gray-500 hover:text-blue-600 hover:bg-blue-50 transition-all"><i class="fas fa-cog text-lg"></i></a>
+            
+            <a href="/my-profile" class="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center font-bold text-sm shadow-md cursor-pointer hover:shadow-lg transition-transform transform hover:-translate-y-0.5 border-2 border-white">
+                <span th:text="${#strings.substring(user != null && user.name != null && !user.name.isEmpty() ? user.name : 'A', 0, 1)}">A</span>
             </a>
         </div>
+
+        <!-- Inline Script handling Header Dropdowns globally! -->
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                // Notification dropdown toggle logic
+                const btnNotifToggle = document.getElementById('btnNotifToggle');
+                const notifDropdown = document.getElementById('notifDropdown');
+                
+                if (btnNotifToggle && notifDropdown) {
+                    btnNotifToggle.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        if(notifDropdown.classList.contains('hidden')) {
+                            notifDropdown.classList.remove('hidden');
+                            setTimeout(() => {
+                                notifDropdown.classList.remove('opacity-0', 'scale-95');
+                                notifDropdown.classList.add('opacity-100', 'scale-100');
+                            }, 10);
+                        } else {
+                            notifDropdown.classList.remove('opacity-100', 'scale-100');
+                            notifDropdown.classList.add('opacity-0', 'scale-95');
+                            setTimeout(() => {
+                                notifDropdown.classList.add('hidden');
+                            }, 150); 
+                        }
+                    });
+
+                    document.addEventListener('click', (e) => {
+                        if(!notifDropdown.contains(e.target) && !notifDropdown.classList.contains('hidden')) {
+                            notifDropdown.classList.remove('opacity-100', 'scale-100');
+                            notifDropdown.classList.add('opacity-0', 'scale-95');
+                            setTimeout(() => notifDropdown.classList.add('hidden'), 150);
+                        }
+                    });
+                    
+                    notifDropdown.addEventListener('click', (e) => e.stopPropagation());
+                }
+
+                // Navbar Scroll Hide/Show Logic
+                let scrollTimeout;
+                const header = document.getElementById('mainHeader');
+                
+                window.addEventListener('scroll', () => {
+                    if(window.scrollY > 80) {
+                        // Move it up, using -translate-y-[150%] because it sits at top-6
+                        header.classList.add('-translate-y-[150%]');
+                        window.clearTimeout(scrollTimeout);
+                        scrollTimeout = setTimeout(() => {
+                            header.classList.remove('-translate-y-[150%]');
+                        }, 300); 
+                    } else {
+                        header.classList.remove('-translate-y-[150%]');
+                    }
+                });
+            });
+        </script>
+
     </header>
 </body>
 </html>

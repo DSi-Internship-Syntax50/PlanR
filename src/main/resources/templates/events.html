@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Event Bookings spreadsheet - PlanR</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <style>
+        /* Custom scrollbar for spreadsheet */
+        .spreadsheet-container::-webkit-scrollbar { height: 12px; width: 12px; }
+        .spreadsheet-container::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 8px;}
+        .spreadsheet-container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 8px;}
+        .spreadsheet-container::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        .cell-content { min-width: 100px; display: inline-block;}
+    </style>
+</head>
+<body class="bg-[#f3f6f8] font-['Inter',sans-serif]">
+
+    <!-- Sidebar fragment -->
+    <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+
+    <div class="ml-64 flex flex-col min-h-screen">
+        
+        <!-- Header fragment -->
+        <div th:replace="~{fragments/header :: header}"></div>
+
+        <main class="flex-1 p-8 flex flex-col">
+            <!-- Page Header -->
+            <div class="flex justify-between items-start mb-6">
+                <div>
+                    <h1 class="text-4xl font-extrabold text-[#0a192f] tracking-tight">Event Bookings Spreadsheet</h1>
+                    <p class="text-gray-500 font-medium mt-3 text-sm">Monthly chronological spreadsheet for tracking academic and extracurricular events overriding master routines.</p>
+                </div>
+                <div class="flex gap-3">
+                    <div class="bg-white border border-gray-200 rounded-lg p-1 mr-4 flex text-sm shadow-sm font-semibold text-gray-600">
+                        <button class="px-3 py-1.5 hover:bg-gray-50 rounded"><i class="fas fa-chevron-left text-xs"></i></button>
+                        <span class="px-4 py-1.5 border-x border-gray-100 flex items-center justify-center min-w-[120px]">October 2024</span>
+                        <button class="px-3 py-1.5 hover:bg-gray-50 rounded"><i class="fas fa-chevron-right text-xs"></i></button>
+                    </div>
+
+                    <button class="px-5 py-2.5 bg-white border border-gray-200 text-gray-700 font-bold rounded-lg text-sm shadow-sm hover:bg-gray-50 transition-colors flex items-center gap-2">
+                        <i class="fas fa-filter"></i> Filter
+                    </button>
+                    <button class="px-5 py-2.5 bg-[#0a192f] text-white font-bold rounded-lg text-sm shadow-md hover:bg-gray-800 transition-colors flex items-center gap-2">
+                        <i class="fas fa-plus"></i> Log New Event
+                    </button>
+                </div>
+            </div>
+
+            <!-- Spreadsheet Wrap -->
+            <div class="flex-1 bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden flex flex-col relative">
+                
+                <div class="p-4 border-b border-gray-100 bg-gray-50 flex gap-4 items-center text-xs font-bold text-gray-500">
+                    <span class="flex items-center gap-2"><div class="w-3 h-3 rounded-sm bg-blue-500"></div> Academic (High Priority)</span>
+                    <span class="flex items-center gap-2"><div class="w-3 h-3 rounded-sm bg-purple-500"></div> Extracurricular</span>
+                    <span class="flex items-center gap-2 pr-4 border-r border-gray-200"><div class="w-3 h-3 rounded-sm bg-orange-400"></div> Maintenance</span>
+                    <span class="text-gray-400"><i class="fas fa-info-circle"></i> AI automatic override: Academic events will automatically displace extracurricular events if double-booked.</span>
+                </div>
+
+                <!-- Spreadsheet Grid -->
+                <div class="flex-1 overflow-auto spreadsheet-container relative">
+                    <table class="w-full text-left border-collapse text-sm table-fixed whitespace-nowrap">
+                        <thead class="bg-white sticky top-0 z-20 shadow-sm">
+                            <tr>
+                                <th class="w-48 min-w-[192px] sticky left-0 z-30 bg-white p-3 text-xs font-black text-gray-800 uppercase tracking-wider border-b-2 border-r border-gray-200 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">
+                                    Venues & Spaces
+                                </th>
+                                <!-- Days 1 to 31 -->
+                                <th:block th:each="i: ${#numbers.sequence(1, 31)}">
+                                    <th class="w-24 min-w-[96px] p-2 text-center text-[10px] font-bold text-gray-500 border-b-2 border-r border-gray-100">
+                                        <div class="flex flex-col">
+                                            <span class="text-gray-400 uppercase leading-none" th:text="${i % 7 == 0 ? 'SUN' : i % 7 == 1 ? 'MON' : i % 7 == 2 ? 'TUE' : i % 7 == 3 ? 'WED' : i % 7 == 4 ? 'THU' : i % 7 == 5 ? 'FRI' : 'SAT'}"></span>
+                                            <span class="text-base text-gray-900 mt-1" th:text="${i}"></span>
+                                        </div>
+                                    </th>
+                                </th:block>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100 relative z-10 text-gray-700">
+                            
+                            <!-- Row: Main Auditorium -->
+                            <tr class="hover:bg-blue-50/20 transition-colors group">
+                                <td class="sticky left-0 bg-white group-hover:bg-blue-50/20 p-3 font-semibold text-gray-900 border-r border-gray-200 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] flex items-center gap-2">
+                                    <i class="fas fa-university text-blue-300 w-4"></i> Main Auditorium
+                                </td>
+                                <!-- 31 Cells -->
+                                <td class="border-r border-gray-100 p-1 relative"></td>
+                                <td class="border-r border-gray-100 p-1 relative"></td>
+                                <!-- Academic Event spanning 2 days -->
+                                <td colspan="2" class="border-r border-gray-100 p-1 relative z-10">
+                                    <div class="bg-blue-500 text-white rounded p-1.5 text-[10px] font-bold shadow-sm flex flex-col justify-center h-full cursor-pointer hover:bg-blue-600 transition" title="Freshers Orientation (Academic)">
+                                        <span class="truncate">Freshers Orientation</span>
+                                        <span class="text-[8px] opacity-80 truncate">10:00 AM - 4:00 PM</span>
+                                    </div>
+                                </td>
+                                <!-- empty rest -->
+                                <th:block th:each="i: ${#numbers.sequence(5, 14)}">
+                                    <td class="border-r border-gray-100 p-1 bg-[repeating-linear-gradient(-45deg,transparent,transparent_5px,#f9fafb_5px,#f9fafb_10px)] cursor-crosshair hover:bg-gray-100"></td>
+                                </th:block>
+                                <td class="border-r border-gray-100 p-1 relative z-10">
+                                     <div class="bg-purple-500 text-white rounded p-1.5 text-[10px] font-bold shadow-sm flex flex-col justify-center h-full cursor-pointer hover:bg-purple-600 transition">
+                                        <span class="truncate">Cultural Night</span>
+                                    </div>
+                                </td>
+                                 <th:block th:each="i: ${#numbers.sequence(16, 31)}">
+                                    <td class="border-r border-gray-100 p-1 cursor-crosshair hover:bg-gray-100"></td>
+                                </th:block>
+                            </tr>
+
+                            <!-- Row: Seminar Hall C -->
+                            <tr class="hover:bg-blue-50/20 transition-colors group">
+                                <td class="sticky left-0 bg-white group-hover:bg-blue-50/20 p-3 font-semibold text-gray-900 border-r border-gray-200 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] flex items-center gap-2">
+                                    <i class="fas fa-chalkboard-teacher text-indigo-300 w-4"></i> Seminar Hall C
+                                </td>
+                                <td class="border-r border-gray-100 p-1 cursor-crosshair hover:bg-gray-100"></td>
+                                <td class="border-r border-gray-100 p-1 cursor-crosshair hover:bg-gray-100"></td>
+                                <td class="border-r border-gray-100 p-1 cursor-crosshair hover:bg-gray-100"></td>
+                                <td class="border-r border-gray-100 p-1 relative z-10">
+                                    <div class="bg-blue-500 text-white rounded p-1.5 text-[10px] font-bold shadow-sm flex flex-col justify-center h-full">
+                                        <span class="truncate">CSE Thesis Def.</span>
+                                    </div>
+                                </td>
+                                <td class="border-r border-gray-100 p-1 cursor-crosshair hover:bg-gray-100"></td>
+                                <td class="border-r border-gray-100 p-1 cursor-crosshair hover:bg-gray-100"></td>
+                                <td colspan="3" class="border-r border-gray-100 p-1 relative z-10">
+                                     <div class="bg-orange-400 text-white rounded p-1.5 text-[10px] font-bold shadow-sm flex flex-col justify-center h-full">
+                                        <span class="truncate"><i class="fas fa-tools"></i> AC Maintenance & Repair</span>
+                                    </div>
+                                </td>
+                                <th:block th:each="i: ${#numbers.sequence(10, 24)}">
+                                    <td class="border-r border-gray-100 p-1 cursor-crosshair hover:bg-gray-100"></td>
+                                </th:block>
+                                <td class="border-r border-gray-100 p-1 relative z-10">
+                                    <div class="bg-purple-500 text-white rounded p-1.5 text-[10px] font-bold shadow-sm flex flex-col justify-center h-full relative overflow-hidden">
+                                        <div class="absolute right-0 top-0 bottom-0 bg-red-600/90 text-white text-[8px] flex items-center px-1 font-black">DISPLACED</div>
+                                        <span class="truncate line-through opacity-70">Debate Club</span>
+                                    </div>
+                                </td>
+                                <td colspan="2" class="border-r border-gray-100 p-1 relative z-10">
+                                     <div class="bg-blue-500 text-white border-2 border-red-500 shadow-[0_0_10px_rgba(239,68,68,0.5)] rounded p-1.5 text-[10px] font-bold shadow-sm flex flex-col justify-center h-full z-20">
+                                        <span class="truncate">Faculty Workshop</span>
+                                        <span class="text-[8px] truncate text-red-100">Priority Overrode Club Event</span>
+                                    </div>
+                                </td>
+                                <th:block th:each="i: ${#numbers.sequence(28, 31)}">
+                                    <td class="border-r border-gray-100 p-1 cursor-crosshair hover:bg-gray-100"></td>
+                                </th:block>
+                            </tr>
+
+                            <!-- Row: Indoor Stadium -->
+                            <tr class="hover:bg-blue-50/20 transition-colors group">
+                                <td class="sticky left-0 bg-white group-hover:bg-blue-50/20 p-3 font-semibold text-gray-900 border-r border-gray-200 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] flex items-center gap-2">
+                                    <i class="fas fa-volleyball-ball text-green-300 w-4"></i> Indoor Stadium
+                                </td>
+                                <th:block th:each="i: ${#numbers.sequence(1, 10)}">
+                                    <td class="border-r border-gray-100 p-1 cursor-crosshair hover:bg-gray-100 bg-[repeating-linear-gradient(-45deg,transparent,transparent_5px,#f9fafb_5px,#f9fafb_10px)]"></td>
+                                </th:block>
+                                <td colspan="5" class="border-r border-gray-100 p-1 relative z-10">
+                                    <div class="bg-purple-500 text-white rounded p-1.5 text-[10px] font-bold shadow-sm flex flex-col justify-center h-full">
+                                        <span class="truncate">Inter-University Sports Week</span>
+                                    </div>
+                                </td>
+                                <th:block th:each="i: ${#numbers.sequence(16, 31)}">
+                                    <td class="border-r border-gray-100 p-1 cursor-crosshair hover:bg-gray-100"></td>
+                                </th:block>
+                            </tr>
+                            
+                             <!-- Empty Row filler -->
+                             <th:block th:each="j: ${#numbers.sequence(1, 15)}">
+                                <tr class="hover:bg-blue-50/20 transition-colors group h-12">
+                                <td class="sticky left-0 bg-white group-hover:bg-blue-50/20 p-3 font-medium text-gray-500 border-r border-gray-200 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] text-xs">
+                                    Room 20<span th:text="${j}"></span>
+                                </td>
+                                <th:block th:each="i: ${#numbers.sequence(1, 31)}">
+                                    <td class="border-r border-gray-100 p-1 cursor-crosshair hover:bg-blue-50/50"></td>
+                                </th:block>
+                                </tr>
+                            </th:block>
+
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+        </main>
+    </div>
+</body>
+</html>
