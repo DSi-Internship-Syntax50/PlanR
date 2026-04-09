@@ -1,0 +1,8 @@
+target/
+.git/
+.vscode/
+.mvn/
+.gitignore
+HELP.md
+Dockerfile
+**/*.properties

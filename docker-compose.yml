@@ -1,0 +1,33 @@
+services:
+  # 1. The Database Container
+  db:
+    image: postgres:15-alpine
+    container_name: planr-postgres
+    restart: always
+    environment:
+      POSTGRES_DB: planrdb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-2462003}
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  # 2. Your Spring Boot App Container
+  app:
+    build: .
+    container_name: planr-app
+    restart: always
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/planrdb
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-2462003}
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+    depends_on:
+      - db
+
+volumes:
+  # This ensures your database data isn't lost if the container shuts down
+  postgres_data:
