@@ -120,6 +120,38 @@ body {
     color: var(--primary);
 }
 
+.sidebar-logout-btn {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    padding: 16px 25px;
+    background: none;
+    border: none;
+    color: #e11d48;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: left;
+}
+
+.sidebar-logout-btn i {
+    margin-right: 15px;
+    width: 20px;
+    text-align: center;
+    font-size: 1.1rem;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sidebar-logout-btn:hover {
+    background-color: #ffe4e6;
+    color: #be123c;
+}
+
+.sidebar-logout-btn:hover i {
+    transform: translateX(5px);
+}
+
 /* --- Header Styles --- */
 .main-content {
     flex: 1;
