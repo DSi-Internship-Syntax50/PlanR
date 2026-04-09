@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Profile - PlanR</title>
+    
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+
+    <style>
+        .profile-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: calc(100vh - 150px);
+            padding: 20px;
+        }
+
+        .profile-card {
+            background: #ffffff;
+            width: 100%;
+            max-width: 480px;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(15, 23, 42, 0.08);
+            border: 1px solid var(--sec-border);
+            overflow: hidden;
+            opacity: 0;
+            transform: translateY(30px) scale(0.95);
+            animation: cardEntrance 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        @keyframes cardEntrance {
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .profile-header-bg {
+            background: linear-gradient(135deg, var(--primary), var(--primary-hover));
+            height: 140px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .profile-header-bg::before {
+            content: '';
+            position: absolute;
+            top: -50px; right: -50px;
+            width: 150px; height: 150px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            animation: pulseBg 4s infinite alternate ease-in-out;
+        }
+        
+        .profile-header-bg::after {
+            content: '';
+            position: absolute;
+            bottom: -30px; left: 10%;
+            width: 80px; height: 80px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.05);
+            animation: pulseBg 3s infinite alternate ease-in-out reverse;
+        }
+
+        @keyframes pulseBg {
+            0% { transform: scale(1); opacity: 0.5; }
+            100% { transform: scale(1.3); opacity: 1; }
+        }
+
+        .avatar-container {
+            position: absolute;
+            bottom: -50px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 110px;
+            height: 110px;
+            background: white;
+            border-radius: 50%;
+            padding: 6px;
+            box-shadow: 0 8px 20px rgba(30, 58, 138, 0.15);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 10;
+        }
+
+        .avatar-container:hover {
+            transform: translateX(-50%) scale(1.1) rotate(5deg);
+        }
+
+        .avatar {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: var(--bg-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            color: var(--primary);
+            font-weight: 700;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .profile-body { padding: 65px 40px 40px; text-align: center; }
+        
+        .profile-name { margin: 0; font-size: 1.6rem; color: var(--text-dark); font-weight: 700; }
+        
+        .profile-role { 
+            margin: 8px 0 25px; 
+            color: var(--accent); 
+            font-weight: 600; 
+            font-size: 0.9rem; 
+            text-transform: uppercase; 
+            letter-spacing: 1.5px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        
+        .info-group {
+            display: flex;
+            align-items: center;
+            text-align: left;
+            padding: 15px;
+            background: #f8fafc;
+            border: 1px solid var(--sec-border);
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            animation: slideInRight 0.5s ease-out forwards;
+            opacity: 0;
+            transform: translateX(20px);
+        }
+        
+        .info-group:nth-child(1) { animation-delay: 0.3s; }
+        .info-group:nth-child(2) { animation-delay: 0.4s; }
+
+        @keyframes slideInRight {
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .info-group:hover { 
+            background: white; 
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
+            border-color: var(--primary);
+            transform: translateY(-2px);
+        }
+        
+        .info-icon {
+            width: 40px;
+            height: 40px;
+            background: rgba(30, 58, 138, 0.05);
+            color: var(--primary);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            margin-right: 15px;
+            transition: all 0.3s ease;
+        }
+        
+        .info-group:hover .info-icon {
+            background: var(--primary);
+            color: white;
+            transform: rotate(-10deg) scale(1.1);
+        }
+
+        .info-content {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .info-label { font-size: 0.75rem; color: var(--text-light); text-transform: uppercase; font-weight: 700; margin-bottom: 4px; letter-spacing: 0.5px; }
+        .info-value { color: var(--text-dark); font-size: 1rem; font-weight: 500; }
+
+        .btn-edit {
+            width: 100%;
+            padding: 14px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            opacity: 0;
+            animation: slideInRight 0.5s ease-out forwards;
+            animation-delay: 0.5s;
+        }
+        
+        .btn-edit:hover { 
+            background: var(--primary-hover); 
+            transform: translateY(-3px); 
+            box-shadow: 0 6px 15px rgba(30, 58, 138, 0.25); 
+        }
+        
+        .btn-edit i {
+            transition: transform 0.3s ease;
+        }
+        
+        .btn-edit:hover i {
+            transform: rotate(15deg);
+        }
+    </style>
+</head>
+<body>
+
+    <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+
+    <div class="main-content">
+        
+        <div th:replace="~{fragments/header :: header}"></div>
+
+        <div class="page-container">
+            <div class="profile-container">
+                <div class="profile-card">
+                    <div class="profile-header-bg">
+                        <div class="avatar-container">
+                            <div class="avatar" th:text="${user != null ? #strings.substring(user.name, 0, 1) : 'U'}">U</div>
+                        </div>
+                    </div>
+                    
+                    <div class="profile-body">
+                        <h2 class="profile-name" th:text="${user != null ? user.name : 'User Name'}">John Doe</h2>
+                        <div class="profile-role">
+                            <i class="fa-solid fa-user-shield"></i>
+                            <span th:text="${user != null ? user.role : 'GUEST'}">ADMIN</span>
+                        </div>
+
+                        <div class="info-grid">
+                            <div class="info-group">
+                                <div class="info-icon"><i class="fa-solid fa-envelope"></i></div>
+                                <div class="info-content">
+                                    <span class="info-label">Email Address</span>
+                                    <span class="info-value" th:text="${user != null ? user.email : 'N/A'}">john.doe@example.com</span>
+                                </div>
+                            </div>
+
+                            <div class="info-group">
+                                <div class="info-icon"><i class="fa-solid fa-building-columns"></i></div>
+                                <div class="info-content">
+                                    <span class="info-label">Department ID</span>
+                                    <span class="info-value" th:text="${user != null && user.department != null ? user.department.id : 'N/A'}">101</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button class="btn-edit">
+                            <i class="fa-solid fa-pen-to-square"></i> Edit Profile
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+    </div>
+
+</body>
+</html>

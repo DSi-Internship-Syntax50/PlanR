@@ -13,28 +13,33 @@ import org.springframework.web.bind.annotation.GetMapping;
 import java.util.Optional;
 
 @Controller
-public class AuthController {
+public class ProfileController {
 
     @Autowired
     private UserRepository userRepository;
 
-    @GetMapping("/login")
-    public String login() {
+    @GetMapping("/my-profile")
+    public String myProfile(Model model) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth != null && auth.isAuthenticated() && !(auth instanceof AnonymousAuthenticationToken)) {
-            return "redirect:/dashboard";
-        }
-        return "login";
-    }
-
-    @GetMapping({"/", "/dashboard"})
-    public String dashboard(Model model) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        User user = null;
+        
         if (auth != null && auth.isAuthenticated() && !(auth instanceof AnonymousAuthenticationToken)) {
             String email = auth.getName();
             Optional<User> optionalUser = userRepository.findByEmail(email);
-            optionalUser.ifPresent(user -> model.addAttribute("user", user));
+            if (optionalUser.isPresent()) {
+                user = optionalUser.get();
+            }
         }
-        return "dashboard";
+        
+        if (user == null) {
+            // Provide a dummy user for UI testing if unauthenticated
+            user = new User();
+            user.setName("UI Tester");
+            user.setEmail("tester@planr.com");
+            user.setRole(com.example.PlanR.model.enums.Role.STUDENT);
+        }
+        
+        model.addAttribute("user", user);
+        return "profile";
     }
 }
