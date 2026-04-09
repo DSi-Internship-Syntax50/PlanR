@@ -6,25 +6,25 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ControllerAdvice;
+import org.springframework.web.bind.annotation.ModelAttribute;
 
 import java.util.Optional;
 
-@Controller
-public class AuthController {
+@ControllerAdvice
+public class GlobalControllerAdvice {
 
     @Autowired
     private UserRepository userRepository;
 
-    @GetMapping("/login")
-    public String login() {
+    @ModelAttribute("user")
+    public User globalUser() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth != null && auth.isAuthenticated() && !(auth instanceof AnonymousAuthenticationToken)) {
-            return "redirect:/dashboard";
+            String email = auth.getName();
+            Optional<User> optionalUser = userRepository.findByEmail(email);
+            return optionalUser.orElse(null);
         }
-        return "login";
+        return null;
     }
-
 }

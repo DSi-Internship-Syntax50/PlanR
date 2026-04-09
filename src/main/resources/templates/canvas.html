@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Global Canvas - PlanR</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body class="bg-[#f3f6f8] font-['Inter',sans-serif]">
+
+    <!-- Sidebar fragment -->
+    <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+
+    <div class="ml-64 flex flex-col min-h-screen">
+        
+        <!-- Header fragment -->
+        <div th:replace="~{fragments/header :: header}"></div>
+
+        <!-- Remove standard padding to allow a massive edge-to-edge canvas feel -->
+        <main class="flex-1 flex flex-col">
+            
+            <!-- Canvas Toolbar -->
+            <div class="bg-white border-b border-gray-200 px-8 py-4 flex justify-between items-center z-10 shadow-sm relative">
+                <div class="flex items-center gap-6">
+                    <h1 class="text-2xl font-extrabold text-[#0a192f] tracking-tight">Global Canvas</h1>
+                    
+                    <div class="h-6 w-px bg-gray-300"></div>
+                    
+                    <!-- Quick Filters -->
+                    <div class="flex gap-2">
+                        <select class="bg-gray-50 border border-gray-200 text-gray-700 text-xs font-bold rounded-md px-3 py-1.5 focus:ring-2 focus:ring-blue-500 outline-none">
+                            <option>All Departments</option>
+                            <option>Computer Science</option>
+                            <option>Electrical Eng.</option>
+                        </select>
+                        <select class="bg-gray-50 border border-gray-200 text-gray-700 text-xs font-bold rounded-md px-3 py-1.5 focus:ring-2 focus:ring-blue-500 outline-none">
+                            <option>Fall 2024</option>
+                            <option>Spring 2025</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-3">
+                    <button class="px-4 py-2 bg-white border border-gray-200 text-gray-700 font-bold rounded-lg text-xs shadow-sm hover:bg-gray-50 transition-colors flex items-center gap-2">
+                        <i class="fas fa-shield-alt text-blue-500"></i> Run Conflict Check
+                    </button>
+                    <button class="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold rounded-lg text-xs shadow-md hover:shadow-lg transition-all flex items-center gap-2">
+                        <i class="fas fa-magic"></i> Auto-Generate Master
+                    </button>
+                </div>
+            </div>
+
+            <!-- Massive Grid Area -->
+            <div class="flex-1 overflow-auto bg-gray-50 p-6 relative">
+                
+                <!-- Floating Info Badge -->
+                <div class="absolute top-8 right-8 bg-white/90 backdrop-blur border border-blue-100 shadow-lg rounded-xl p-4 w-64 z-20">
+                    <h4 class="text-xs font-black text-gray-800 uppercase tracking-wider mb-2 border-b border-gray-100 pb-2"><i class="fas fa-globe text-blue-500 mr-1"></i> Global Stats</h4>
+                    <div class="space-y-2">
+                        <div class="flex justify-between text-xs">
+                            <span class="text-gray-500 font-semibold">Total Courses</span>
+                            <span class="font-bold text-gray-900">420</span>
+                        </div>
+                        <div class="flex justify-between text-xs">
+                            <span class="text-gray-500 font-semibold">Unassigned</span>
+                            <span class="font-bold text-red-500">12</span>
+                        </div>
+                        <div class="flex justify-between text-xs">
+                            <span class="text-gray-500 font-semibold">Hard Conflicts</span>
+                            <span class="font-bold text-green-500">0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden min-w-[1000px]">
+                    <!-- Timeline Header -->
+                    <div class="grid grid-cols-6 border-b border-gray-200 bg-gray-50 text-xs font-bold text-gray-500 uppercase tracking-widest text-center">
+                        <div class="py-4 border-r border-gray-200">Time / Dept</div>
+                        <div class="py-4 border-r border-gray-200 text-gray-900">Monday</div>
+                        <div class="py-4 border-r border-gray-200">Tuesday</div>
+                        <div class="py-4 border-r border-gray-200">Wednesday</div>
+                        <div class="py-4 border-r border-gray-200">Thursday</div>
+                        <div class="py-4">Friday</div>
+                    </div>
+
+                    <!-- Row 1: CSE Morning Block -->
+                    <div class="grid grid-cols-6 border-b border-gray-100 min-h-[140px]">
+                        <div class="border-r border-gray-200 p-4 bg-blue-50/30 flex flex-col items-center justify-center text-center">
+                            <span class="text-sm font-black text-blue-900">08:00 AM</span>
+                            <span class="bg-blue-100 text-blue-700 text-[9px] font-bold px-2 py-0.5 rounded mt-2">CSE Theory</span>
+                        </div>
+                        <!-- Mon -->
+                        <div class="border-r border-gray-100 p-2">
+                            <div class="bg-blue-600 rounded-lg p-3 h-full text-white shadow-sm cursor-grab active:cursor-grabbing hover:bg-blue-700 transition flex flex-col justify-between">
+                                <div>
+                                    <span class="text-[10px] font-black tracking-widest opacity-80">CSE 4101</span>
+                                    <p class="text-sm font-bold leading-tight mt-0.5">Compiler Design</p>
+                                </div>
+                                <div class="text-[10px] font-medium opacity-90 mt-2 flex justify-between">
+                                    <span>Dr. Rahman</span>
+                                    <span>R: 402</span>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Tue -->
+                        <div class="border-r border-gray-100 p-2">
+                            <div class="bg-white border-2 border-dashed border-gray-300 rounded-lg h-full flex items-center justify-center text-gray-400 hover:border-blue-400 hover:bg-blue-50 transition cursor-pointer group">
+                                <i class="fas fa-plus text-xl group-hover:scale-110 transition-transform"></i>
+                            </div>
+                        </div>
+                        <!-- Wed -->
+                        <div class="border-r border-gray-100 p-2">
+                            <div class="bg-blue-600 rounded-lg p-3 h-full text-white shadow-sm cursor-grab active:cursor-grabbing hover:bg-blue-700 transition flex flex-col justify-between">
+                                <div>
+                                    <span class="text-[10px] font-black tracking-widest opacity-80">CSE 4101</span>
+                                    <p class="text-sm font-bold leading-tight mt-0.5">Compiler Design</p>
+                                </div>
+                                <div class="text-[10px] font-medium opacity-90 mt-2 flex justify-between">
+                                    <span>Dr. Rahman</span>
+                                    <span>R: 402</span>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Thu & Fri Empty -->
+                        <div class="border-r border-gray-100 p-2 opacity-50 bg-[repeating-linear-gradient(45deg,transparent,transparent_10px,#f9fafb_10px,#f9fafb_20px)]"></div>
+                        <div class="p-2 opacity-50 bg-[repeating-linear-gradient(45deg,transparent,transparent_10px,#f9fafb_10px,#f9fafb_20px)]"></div>
+                    </div>
+
+                    <!-- Row 2: EEE Mixed Block -->
+                    <div class="grid grid-cols-6 border-b border-gray-100 min-h-[140px]">
+                        <div class="border-r border-gray-200 p-4 bg-purple-50/30 flex flex-col items-center justify-center text-center">
+                            <span class="text-sm font-black text-purple-900">09:30 AM</span>
+                            <span class="bg-purple-100 text-purple-700 text-[9px] font-bold px-2 py-0.5 rounded mt-2">EEE Labs/Th</span>
+                        </div>
+                        
+                        <div class="border-r border-gray-100 p-2 opacity-50 bg-[repeating-linear-gradient(45deg,transparent,transparent_10px,#f9fafb_10px,#f9fafb_20px)]"></div>
+                        
+                        <!-- Tue -->
+                        <div class="border-r border-gray-100 p-2">
+                            <div class="bg-purple-600 rounded-lg p-3 h-full text-white shadow-sm cursor-grab active:cursor-grabbing hover:bg-purple-700 transition flex flex-col justify-between">
+                                <div>
+                                    <span class="text-[10px] font-black tracking-widest opacity-80">EEE 3105</span>
+                                    <p class="text-sm font-bold leading-tight mt-0.5">Microprocessors Lab</p>
+                                </div>
+                                <div class="text-[10px] font-medium opacity-90 mt-2 flex justify-between">
+                                    <span>Dr. Kamal</span>
+                                    <span>Lab 2A</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Wed -->
+                        <div class="border-r border-gray-100 p-2 relative overflow-hidden group">
+                           <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 h-full cursor-not-allowed">
+                               <p class="text-xs font-bold text-yellow-700"><i class="fas fa-lock"></i> Dept Meeting</p>
+                               <p class="text-[10px] text-yellow-600 mt-1">Blocked off globally for EEE Faculty.</p>
+                           </div>
+                        </div>
+
+                        <!-- Thu -->
+                        <div class="border-r border-gray-100 p-2">
+                            <div class="bg-purple-600 rounded-lg p-3 h-full text-white shadow-sm cursor-grab active:cursor-grabbing hover:bg-purple-700 transition flex flex-col justify-between">
+                                <div>
+                                    <span class="text-[10px] font-black tracking-widest opacity-80">EEE 3105</span>
+                                    <p class="text-sm font-bold leading-tight mt-0.5">Microprocessors Lab</p>
+                                </div>
+                                <div class="text-[10px] font-medium opacity-90 mt-2 flex justify-between">
+                                    <span>Dr. Kamal</span>
+                                    <span>Lab 2A</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="p-2 opacity-50 bg-[repeating-linear-gradient(45deg,transparent,transparent_10px,#f9fafb_10px,#f9fafb_20px)]"></div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+</body>
+</html>
