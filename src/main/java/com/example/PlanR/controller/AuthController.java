@@ -1,5 +1,8 @@
 package com.example.PlanR.controller;
 
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 
@@ -8,13 +11,16 @@ public class AuthController {
 
     @GetMapping("/login")
     public String login() {
-        // Return the "login" Thymeleaf template located in src/main/resources/templates/login.html
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.isAuthenticated() && !(auth instanceof AnonymousAuthenticationToken)) {
+            return "redirect:/";
+        }
+        
         return "login";
     }
     
-    // As requested earlier, make sure root endpoint works for redirect demo
+    
     @GetMapping("/")
     public String dashboard() {
-        return "dashboard"; // We will map this to a basic view later or now. We can return text via @ResponseBody for now or create a basic template.
-    }
+        return "dashboard"; 
 }
