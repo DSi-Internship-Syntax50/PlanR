@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+    <header th:fragment="header" class="top-header">
+        <div class="header-search">
+            <i class="fa-solid fa-magnifying-glass search-icon"></i>
+            <input type="text" placeholder="Search academic resources...">
+        </div>
+        
+        <div class="header-actions">
+            <button class="icon-btn" title="Notifications"><i class="fa-regular fa-bell"></i></button>
+            <a th:href="@{/my-profile}" style="text-decoration: none;">
+                <div class="user-profile-menu" title="Go to Profile">
+                    <span th:text="${user != null ? user.name : 'User Name'}">User Name</span>
+                    <div class="user-avatar" th:text="${user != null ? #strings.substring(user.name, 0, 1) : 'U'}">U</div>
+                    <i class="fa-solid fa-chevron-right" style="font-size: 0.8rem; color: var(--text-light);"></i>
+                </div>
+            </a>
+        </div>
+    </header>
+</body>
+</html>

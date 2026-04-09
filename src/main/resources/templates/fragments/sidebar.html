@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+    <aside th:fragment="sidebar" class="sidebar">
+        <!-- Load FontAwesome strictly for fragments where this is injected -->
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+        
+        <a href="/" class="sidebar-logo">
+            <i class="fa-solid fa-graduation-cap"></i> Plan<span>R</span>
+        </a>
+        
+        <ul class="nav-links" style="display: flex; flex-direction: column; height: calc(100vh - 100px); justify-content: space-between;">
+            <div>
+                <li><a href="/dashboard"><i class="fa-solid fa-chart-line"></i> Dashboard</a></li>
+                <li><a href="/my-profile"><i class="fa-solid fa-user-graduate"></i> My Profile</a></li>
+                <li><a href="/users"><i class="fa-solid fa-users"></i> Users List</a></li>
+                <li><a href="/departments"><i class="fa-solid fa-building-columns"></i> Departments</a></li>
+                <li><a href="/settings"><i class="fa-solid fa-gear"></i> Settings</a></li>
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+                <form th:action="@{/logout}" method="post">
+                    <button type="submit" class="sidebar-logout-btn">
+                        <i class="fa-solid fa-right-from-bracket"></i> Logout
+                    </button>
+                </form>
+            </div>
+        </ul>
+    </aside>
+</body>
+</html>
