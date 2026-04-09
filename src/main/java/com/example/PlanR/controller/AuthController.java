@@ -23,4 +23,5 @@ public class AuthController {
     @GetMapping("/")
     public String dashboard() {
         return "dashboard"; 
+    }
 }
