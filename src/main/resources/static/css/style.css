@@ -5,7 +5,7 @@
     /* Educational Theme Colors */
     --primary: #1E3A8A; /* Academic Deep Blue */
     --primary-hover: #1E40AF;
-    --accent: #0bf5ab; /* Restored user's choice: bright cyan */
+    --accent: #0bf5ab; /* Academic Gold */
     --accent-hover: #06d99d;
     --sidebar-bg: #FFFFFF; /* Pure white sidebar */
     --sidebar-hover: #F1F5F9; /* Subtle gray for hover state */
@@ -140,7 +140,7 @@ body {
     width: 20px;
     text-align: center;
     font-size: 1.1rem;
-    transition: transform 0.3s ease;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .sidebar-logout-btn:hover {

@@ -18,6 +18,10 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 // Publicly accessible routes
                 .requestMatchers("/login", "/register", "/css/**", "/js/**").permitAll()
+                
+                
+                .requestMatchers("/my-profile").permitAll() 
+                
                 // Example of restricting an endpoint to ADMIN only
                 .requestMatchers("/admin/**").hasRole("ADMIN")
                 // Protect all other routes

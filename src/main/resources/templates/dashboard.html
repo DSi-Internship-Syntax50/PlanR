@@ -46,6 +46,11 @@
         <div class="page-container">
             <div class="dashboard-header">
                 <h1>Dashboard</h1>
+                <form th:action="@{/logout}" method="post">
+                    <button type="submit" class="btn-edit" style="width: auto; padding: 10px 20px; animation: none; opacity: 1;">
+                        <i class="fa-solid fa-right-from-bracket"></i> Logout
+                    </button>
+                </form>
             </div>
 
             <div class="custom-card">
