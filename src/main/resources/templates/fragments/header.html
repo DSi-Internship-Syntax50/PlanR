@@ -1,8 +1,6 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <body>
-    <!-- Floating Glassmorphism Pill Navbar -->
-    <!-- Removed 'w-full' and 'ml-64' because it inherits the parent's container constraints cleanly! -->
     <header th:fragment="header" id="mainHeader" class="h-[64px] mx-8 mt-6 bg-white/40 backdrop-blur-2xl border border-white/60 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] flex items-center justify-between px-6 sticky top-6 z-40 transition-transform duration-300 transform translate-y-0">
         
         <div class="relative w-96 group">
@@ -17,16 +15,15 @@
         </div>
         
         <div class="flex items-center gap-5">
-            <span class="bg-blue-50 text-blue-700 px-3 py-1.5 rounded-lg text-xs font-bold border border-blue-100">Coordinator</span>
+            <span th:if="${user != null}" class="bg-blue-50 text-blue-700 px-3 py-1.5 rounded-lg text-[10px] uppercase tracking-widest font-extrabold border border-blue-100" th:text="${user.role}">ROLE</span>
+            <span th:unless="${user != null}" class="bg-blue-50 text-blue-700 px-3 py-1.5 rounded-lg text-[10px] uppercase tracking-widest font-extrabold border border-blue-100">GUEST</span>
             
-            <!-- Notification Dropdown Core -->
             <div class="relative">
                 <button id="btnNotifToggle" class="relative w-10 h-10 rounded-full flex items-center justify-center text-gray-500 hover:text-blue-600 hover:bg-blue-50 focus:outline-none transition-all">
                     <i class="fas fa-bell text-lg"></i>
                     <span class="absolute top-2 right-2 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white animate-pulse"></span>
                 </button>
                 
-                <!-- Notification Menu (Hidden by default) -->
                 <div id="notifDropdown" class="hidden absolute right-0 mt-3 w-80 bg-white/90 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/50 overflow-hidden transform opacity-0 scale-95 transition-all origin-top-right z-50">
                     <div class="px-4 py-3 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
                         <span class="font-bold text-gray-900 text-sm">Notifications</span>
@@ -67,7 +64,6 @@
             </a>
         </div>
 
-        <!-- Inline Script handling Header Dropdowns globally! -->
         <script>
             document.addEventListener('DOMContentLoaded', () => {
                 // Notification dropdown toggle logic
