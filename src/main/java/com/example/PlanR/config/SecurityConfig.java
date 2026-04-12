@@ -1,5 +1,6 @@
 package com.example.PlanR.config;
 
+import com.example.PlanR.security.CustomUserDetailsService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -13,15 +14,11 @@ import org.springframework.security.web.SecurityFilterChain;
 public class SecurityConfig {
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, CustomUserDetailsService userDetailsService) throws Exception {
         http
             .authorizeHttpRequests(auth -> auth
                 // Publicly accessible routes
                 .requestMatchers("/login", "/register", "/css/**", "/js/**").permitAll()
-                
-                
-                .requestMatchers("/my-profile").permitAll() 
-                
                 // Example of restricting an endpoint to ADMIN only
                 .requestMatchers("/admin/**").hasRole("ADMIN")
                 // Protect all other routes
@@ -30,6 +27,11 @@ public class SecurityConfig {
             .formLogin(form -> form
                 // Custom login page
                 .loginPage("/login")
+                // Explicitly set the processing URL
+                .loginProcessingUrl("/login")
+                // Form parameter names (must match login.html)
+                .usernameParameter("username")
+                .passwordParameter("password")
                 // Redirect here on successful login
                 .defaultSuccessUrl("/", true)
                 // Redirect here on failed login
@@ -39,12 +41,11 @@ public class SecurityConfig {
             .logout(logout -> logout
                 .logoutUrl("/logout")
                 .logoutSuccessUrl("/login?logout=true")
-                // Invalidate the session on logout
                 .invalidateHttpSession(true)
-                // Delete the JSESSIONID cookie
-                .deleteCookies("JSESSIONID")
+                .deleteCookies("JSESSIONID", "SESSION") 
                 .permitAll()
-            );
+            )
+            .userDetailsService(userDetailsService);
 
         return http.build();
     }
