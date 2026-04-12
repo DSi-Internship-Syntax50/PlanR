@@ -3,130 +3,288 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Login - PlanR</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign In - PlanR</title>
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        :root {
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
         body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f7f6;
+            background: var(--bg-gradient);
+            height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
-            margin: 0;
+            color: var(--text-main);
+            overflow: hidden;
         }
 
-        .login-container {
-            background: #fff;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        /* Animated Background Elements */
+        .bg-blob {
+            position: absolute;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(37, 99, 235, 0.15) 0%, transparent 70%);
+            border-radius: 50%;
+            z-index: -1;
+            filter: blur(40px);
+            animation: move 20s infinite alternate;
+        }
+
+        .blob-1 { top: -10%; left: -10%; }
+        .blob-2 { bottom: -10%; right: -10%; animation-delay: -5s; }
+
+        @keyframes move {
+            from { transform: translate(0, 0) scale(1); }
+            to { transform: translate(50px, 50px) scale(1.1); }
+        }
+
+        .login-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            padding: 40px;
+            border-radius: 24px;
             width: 100%;
-            max-width: 400px;
+            max-width: 420px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            animation: fadeIn 0.8s ease-out;
         }
 
-        .login-container h2 {
-            text-align: center;
-            color: #333;
-            margin-bottom: 20px;
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .brand {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 32px;
+        }
+
+        .logo-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 16px;
+            box-shadow: 0 0 20px rgba(37, 99, 235, 0.4);
+        }
+
+        .brand h1 {
+            font-size: 28px;
+            font-weight: 800;
+            letter-spacing: -1px;
+        }
+
+        .brand span { color: var(--primary); }
+
+        .brand p {
+            color: var(--text-muted);
+            font-size: 14px;
+            margin-top: 4px;
         }
 
         .form-group {
-            margin-bottom: 15px;
+            margin-bottom: 20px;
         }
 
         .form-group label {
             display: block;
-            margin-bottom: 5px;
-            color: #666;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .input-wrapper i {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-size: 14px;
         }
 
         .form-group input {
             width: 100%;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            box-sizing: border-box;
-        }
-
-        .btn {
-            width: 100%;
-            padding: 10px;
-            background: #007bff;
-            border: none;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 12px 16px 12px 48px;
             color: white;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 16px;
-            margin-top: 10px;
+            font-size: 15px;
+            transition: all 0.3s;
         }
 
-        .btn:hover {
-            background: #0056b3;
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+            background: rgba(0, 0, 0, 0.3);
         }
+
+        .btn-submit {
+            width: 100%;
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-submit:hover {
+            background: var(--primary-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px -5px rgba(37, 99, 235, 0.4);
+        }
+
+        .btn-submit:active { transform: translateY(0); }
 
         .alert {
-            padding: 10px;
-            border-radius: 4px;
-            margin-bottom: 15px;
-            text-align: center;
+            padding: 12px 16px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            animation: slideIn 0.4s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-10px); }
+            to { opacity: 1; transform: translateX(0); }
         }
 
         .alert-error {
-            background-color: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-
-        .footer-link a:hover {
-            text-decoration: underline;
+            background: rgba(239, 68, 68, 0.1);
+            color: #f87171;
+            border: 1px solid rgba(239, 68, 68, 0.2);
         }
 
         .alert-success {
-            background-color: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
+            background: rgba(34, 197, 94, 0.1);
+            color: #4ade80;
+            border: 1px solid rgba(34, 197, 94, 0.2);
+        }
+
+        .footer-link {
+            text-align: center;
+            margin-top: 32px;
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        .footer-link a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.2s;
+        }
+
+        .footer-link a:hover {
+            color: #60a5fa;
+            text-decoration: underline;
         }
     </style>
 </head>
 
 <body>
+    <div class="bg-blob blob-1"></div>
+    <div class="bg-blob blob-2"></div>
 
-    <div class="login-container">
-        <h2>Welcome Back</h2>
+    <div class="login-card">
+        <div class="brand">
+            <div class="logo-icon">
+                <i class="fas fa-layer-group text-white text-xl"></i>
+            </div>
+            <h1>Plan<span>R</span> Assets</h1>
+            <p>Institutional Operations OS</p>
+        </div>
 
-        <!-- Spring Security appends ?error=true on failed logins -->
+        <!-- Error Alert -->
         <div th:if="${param.error}" class="alert alert-error">
-            Invalid Username or Password!
+            <i class="fas fa-circle-exclamation"></i>
+            Invalid Username or Password
         </div>
 
-        <!-- Spring Security appends ?logout=true on successful logouts -->
+        <!-- Logout Alert -->
         <div th:if="${param.logout}" class="alert alert-success">
-            You have been successfully logged out.
+            <i class="fas fa-circle-check"></i>
+            Successfully logged out
         </div>
 
-        <!-- The form action MUST match the processing URL configured (default is POST /login) -->
-        <!-- Thymeleaf automatically injects a hidden CSRF token field into forms with th:action -->
+        <!-- Registration Success Alert -->
+        <div th:if="${param.success}" class="alert alert-success">
+            <i class="fas fa-circle-check"></i>
+            Account created! Please sign in.
+        </div>
+
         <form th:action="@{/login}" method="post">
             <div class="form-group">
-                <label for="username">Email address</label>
-                <input type="email" id="username" name="username" required autofocus placeholder="Enter email" />
+                <label for="username">Corporate Email</label>
+                <div class="input-wrapper">
+                    <i class="fas fa-envelope"></i>
+                    <input type="email" id="username" name="username" required autofocus placeholder="admin@planr.com" />
+                </div>
             </div>
             <div class="form-group">
                 <label for="password">Password</label>
-                <input type="password" id="password" name="password" required placeholder="Enter password" />
+                <div class="input-wrapper">
+                    <i class="fas fa-lock"></i>
+                    <input type="password" id="password" name="password" required placeholder="••••••••" />
+                </div>
             </div>
-            <button type="submit" class="btn">Sign In</button>
+            
+            <button type="submit" class="btn-submit">
+                Access Workspace <i class="fas fa-arrow-right"></i>
+            </button>
 
-
-            <div class="footer-link" style="text-align: center; margin-top: 20px; font-size: 14px;">
-                Don't have an account?
-                <a th:href="@{/register}" style="color: #007bff; text-decoration: none; font-weight: 600;">
-                    Sign Up here
-                </a>
+            <div class="footer-link">
+                New to PlanR?
+                <a th:href="@{/register}">Create Account</a>
             </div>
         </form>
     </div>
-
 </body>
 
 </html>
