@@ -24,11 +24,13 @@ public class RegistrationController {
     private final UserRepository userRepository;
     private final DepartmentRepository departmentRepository;
     private final PasswordEncoder passwordEncoder;
+    private final com.example.PlanR.service.NotificationService notificationService;
 
-    public RegistrationController(UserRepository userRepository, DepartmentRepository departmentRepository, PasswordEncoder passwordEncoder) {
+    public RegistrationController(UserRepository userRepository, DepartmentRepository departmentRepository, PasswordEncoder passwordEncoder, com.example.PlanR.service.NotificationService notificationService) {
         this.userRepository = userRepository;
         this.departmentRepository = departmentRepository;
         this.passwordEncoder = passwordEncoder;
+        this.notificationService = notificationService;
     }
 
     @GetMapping("/register")
@@ -79,6 +81,9 @@ public class RegistrationController {
             // 5. Save the user
             userRepository.save(user);
             logger.info("User {} registered successfully with role {}", email, user.getRole());
+
+            // 6. Send welcome notification
+            notificationService.createNotification(user, "Welcome to PlanR", "Your account has been initialized. You can now access your schedules and seat plans.");
 
             // Redirect to login with success parameter
             return "redirect:/login?success=true";
