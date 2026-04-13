@@ -26,6 +26,12 @@ public class Room {
     @Column(name = "has_hardware_kits")
     private Boolean hasHardwareKits;
 
+    @Column(name = "floor_number")
+    private Integer floorNumber;
+
+    @Column(name = "block_name")
+    private String block;
+
     @OneToMany(mappedBy = "room", cascade = CascadeType.ALL)
     private List<MasterRoutine> routines;
     
@@ -98,5 +104,21 @@ public class Room {
 
     public void setBookings(List<EventBooking> bookings) {
         this.bookings = bookings;
+    }
+
+    public Integer getFloorNumber() {
+        return floorNumber;
+    }
+
+    public void setFloorNumber(Integer floorNumber) {
+        this.floorNumber = floorNumber;
+    }
+
+    public String getBlock() {
+        return block;
+    }
+
+    public void setBlock(String block) {
+        this.block = block;
     }
 }
