@@ -47,7 +47,7 @@ public class RecommendationService {
 
             // Check room type (Simplified matching based on our robust schemas: isLab
             // implies Lab type)
-            boolean roomTypeOk;
+            boolean roomTypeOk = true;
             if (course.getIsLab() != null && course.getIsLab()) {
                 roomTypeOk = room.getType() == com.example.PlanR.model.enums.RoomType.LAB; // Assuming LAB exists in
                                                                                            // enum
