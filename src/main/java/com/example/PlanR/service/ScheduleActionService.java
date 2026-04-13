@@ -1,5 +1,8 @@
 package com.example.PlanR.service;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
 import com.example.PlanR.model.MasterRoutine;
 import com.example.PlanR.model.Room;
 import com.example.PlanR.model.ScheduleRequest;
@@ -11,10 +14,6 @@ import com.example.PlanR.repository.MasterRoutineRepository;
 import com.example.PlanR.repository.RoomRepository;
 import com.example.PlanR.repository.ScheduleRequestRepository;
 import com.example.PlanR.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
-import java.util.Optional;
 
 @Service
 public class ScheduleActionService {

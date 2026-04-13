@@ -1,14 +1,15 @@
 package com.example.PlanR.config;
 
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.crypto.password.PasswordEncoder;
+
 import com.example.PlanR.model.Department;
 import com.example.PlanR.model.User;
 import com.example.PlanR.model.enums.Role;
 import com.example.PlanR.repository.DepartmentRepository;
 import com.example.PlanR.repository.UserRepository;
-import org.springframework.boot.CommandLineRunner;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Configuration
 public class DataSeeder {
