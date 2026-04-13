@@ -17,6 +17,9 @@ public class EventBookingResponseDto {
     private EventType eventType;
     private BookingStatus status;
     private String title;
+    private String departmentName;
+    private String teacherName;
+    private String additionalInfo;
     private String requestedByUsername;
     private Long displacedByEventId;
 
@@ -32,6 +35,9 @@ public class EventBookingResponseDto {
         this.eventType = booking.getEventType();
         this.status = booking.getStatus();
         this.title = booking.getTitle();
+        this.departmentName = booking.getDepartmentName();
+        this.teacherName = booking.getTeacherName();
+        this.additionalInfo = booking.getAdditionalInfo();
         this.requestedByUsername = booking.getRequestedBy() != null ? booking.getRequestedBy().getName() : null;
         this.displacedByEventId = booking.getDisplacedByEventId();
     }
@@ -122,5 +128,29 @@ public class EventBookingResponseDto {
 
     public void setDisplacedByEventId(Long displacedByEventId) {
         this.displacedByEventId = displacedByEventId;
+    }
+
+    public String getDepartmentName() {
+        return departmentName;
+    }
+
+    public void setDepartmentName(String departmentName) {
+        this.departmentName = departmentName;
+    }
+
+    public String getTeacherName() {
+        return teacherName;
+    }
+
+    public void setTeacherName(String teacherName) {
+        this.teacherName = teacherName;
+    }
+
+    public String getAdditionalInfo() {
+        return additionalInfo;
+    }
+
+    public void setAdditionalInfo(String additionalInfo) {
+        this.additionalInfo = additionalInfo;
     }
 }

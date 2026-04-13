@@ -40,6 +40,15 @@ public class EventBooking {
 
     private String title;
 
+    @Column(name = "department_name")
+    private String departmentName;
+
+    @Column(name = "teacher_name")
+    private String teacherName;
+
+    @Column(columnDefinition = "TEXT")
+    private String additionalInfo;
+
     @Version
     private Long version;
 
@@ -136,5 +145,29 @@ public class EventBooking {
 
     public void setDisplacedByEventId(Long displacedByEventId) {
         this.displacedByEventId = displacedByEventId;
+    }
+
+    public String getDepartmentName() {
+        return departmentName;
+    }
+
+    public void setDepartmentName(String departmentName) {
+        this.departmentName = departmentName;
+    }
+
+    public String getTeacherName() {
+        return teacherName;
+    }
+
+    public void setTeacherName(String teacherName) {
+        this.teacherName = teacherName;
+    }
+
+    public String getAdditionalInfo() {
+        return additionalInfo;
+    }
+
+    public void setAdditionalInfo(String additionalInfo) {
+        this.additionalInfo = additionalInfo;
     }
 }

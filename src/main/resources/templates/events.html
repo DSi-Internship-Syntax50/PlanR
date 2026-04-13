@@ -46,7 +46,7 @@
                         <button @click="nextMonth()" class="px-3 py-1.5 hover:bg-gray-50 rounded"><i class="fas fa-chevron-right text-xs"></i></button>
                     </div>
 
-                    <button class="px-5 py-2.5 bg-[#0a192f] text-white font-bold rounded-lg text-sm shadow-md hover:bg-gray-800 transition-colors flex items-center gap-2" @click="openNewBookingModal()">
+                    <button x-show="isTeacherOrAdmin" class="px-5 py-2.5 bg-[#0a192f] text-white font-bold rounded-lg text-sm shadow-md hover:bg-gray-800 transition-colors flex items-center gap-2" @click="openNewBookingModal()" x-cloak>
                         <i class="fas fa-plus"></i> Quick Booking
                     </button>
                 </div>
@@ -80,10 +80,10 @@
                                 </th>
                                 <!-- Days 1 to 31 loop -->
                                 <template x-for="day in daysInMonth" :key="day">
-                                    <th class="w-24 min-w-[96px] p-2 text-center text-[10px] font-bold text-gray-500 border-b-2 border-r border-gray-100">
+                                    <th class="w-24 min-w-[96px] p-2 text-center text-[10px] font-bold text-gray-500 border-b-2 border-r border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors" @click="openDayBookingModal(day)">
                                         <div class="flex flex-col">
                                             <span class="text-gray-400 uppercase leading-none" x-text="getDayOfWeek(day)"></span>
-                                            <span class="text-base text-gray-900 mt-1" x-text="day"></span>
+                                            <span class="text-base text-gray-900 mt-1 font-black" x-text="day"></span>
                                         </div>
                                     </th>
                                 </template>
@@ -92,34 +92,30 @@
                         <tbody class="divide-y divide-gray-100 relative z-10 text-gray-700">
                             
                             <template x-for="room in rooms" :key="room.id">
-                                <tr class="hover:bg-blue-50/20 transition-colors group h-12">
-                                    <td class="sticky left-0 bg-white group-hover:bg-blue-50/20 p-3 font-semibold text-gray-900 border-r border-gray-200 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] flex items-center gap-2">
-                                        <i class="fas fa-door-open text-blue-300 w-4"></i> <span x-text="room.roomNumber"></span>
+                                <tr class="hover:bg-blue-50/20 transition-colors group h-[50px]">
+                                    <td class="sticky left-0 bg-white group-hover:bg-blue-50/20 p-3 font-semibold text-gray-900 border-r border-gray-200 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">
+                                        <div class="flex items-center gap-2">
+                                            <i class="fas fa-door-open text-blue-300 w-4"></i> <span x-text="room.roomNumber"></span>
+                                        </div>
                                     </td>
                                     
                                     <!-- Days loop inside Room -->
                                     <template x-for="day in daysInMonth" :key="day">
-                                        <td class="border-r border-gray-100 p-1 relative hover:bg-blue-50 cursor-crosshair" @click="openCellBookingModal(room, day)">
+                                        <td class="border-r border-gray-100 p-1 relative hover:bg-blue-50 cursor-pointer transition-all group/cell" @click="openCellBookingModal(room, day)">
                                             
-                                            <!-- Render Bookings for this Cell -->
-                                            <template x-for="booking in getCellBookings(room.id, day)" :key="booking.id">
-                                                <div :class="{
-                                                    'bg-blue-500': booking.eventType === 'ACADEMIC',
-                                                    'bg-purple-500': booking.eventType === 'CLUB',
-                                                    'bg-orange-400': booking.eventType !== 'ACADEMIC' && booking.eventType !== 'CLUB',
-                                                    'opacity-50 line-through': booking.status === 'DISPLACED'
-                                                 }" class="text-white rounded p-1 mb-1 text-[10px] font-bold shadow-sm flex flex-col justify-center cursor-pointer relative"
-                                                 @click.stop="alert('Booking Details: ' + booking.title + ' (' + booking.startTime + ' - ' + booking.endTime + ')')">
-                                                    
-                                                    <span class="truncate" x-text="booking.title"></span>
-                                                    <span class="text-[8px] opacity-80 truncate" x-text="booking.startTime + ' - ' + booking.endTime"></span>
-                                                    
-                                                    <template x-if="booking.status === 'DISPLACED'">
-                                                        <div class="absolute right-0 top-0 bottom-0 bg-red-600/90 text-white text-[8px] flex items-center px-1 font-black">DISPLACED</div>
-                                                    </template>
-                                                </div>
-                                            </template>
-
+                                            <div class="flex items-center justify-center w-full h-full min-h-[30px]">
+                                                <!-- Render Minimal Booking Indicator -->
+                                                <template x-if="getCellBookings(room.id, day).length > 0">
+                                                    <div class="flex items-center gap-1">
+                                                        <div class="w-2 h-2 rounded-full bg-blue-500 shadow-sm animate-pulse"></div>
+                                                        <span class="text-[9px] font-black text-blue-600" x-text="getCellBookings(room.id, day).length"></span>
+                                                    </div>
+                                                </template>
+                                                
+                                                <template x-if="getCellBookings(room.id, day).length === 0">
+                                                    <i class="fas fa-plus text-[10px] text-gray-200 opacity-0 group-hover/cell:opacity-100 transition-opacity"></i>
+                                                </template>
+                                            </div>
                                         </td>
                                     </template>
 
@@ -131,68 +127,192 @@
                 </div>
 
             </div>
+            
+            <!-- Room Monthly Calendars Section -->
+            <div class="mt-8 flex flex-col">
+                <h2 class="text-2xl font-extrabold text-[#0a192f] mb-4">Room Monthly Overview</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <template x-for="room in rooms" :key="room.id">
+                        <div class="bg-white border border-gray-200 rounded-2xl shadow-sm p-4 hover:shadow-md transition-shadow">
+                            <h3 class="text-base font-black text-gray-800 mb-3 text-center border-b border-gray-100 pb-2 flex justify-center items-center gap-2">
+                                <i class="fas fa-door-open text-blue-500"></i> Room <span x-text="room.roomNumber"></span>
+                            </h3>
+                            
+                            <!-- Calendar Grid -->
+                            <div class="grid grid-cols-7 gap-1 text-center">
+                                <!-- Weekday Headers -->
+                                <template x-for="dayName in ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']" :key="dayName">
+                                    <div class="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1" x-text="dayName"></div>
+                                </template>
+                                
+                                <!-- Empty cells for offset -->
+                                <template x-for="blank in getMonthStartOffset()" :key="'blank-'+blank">
+                                    <div class="p-1"></div>
+                                </template>
+                                
+                                <!-- Days of the month -->
+                                <template x-for="day in daysInMonth" :key="day">
+                                    <div class="p-1 border border-gray-100 rounded-lg flex flex-col items-center justify-center min-h-[50px] bg-gray-50/50 hover:bg-blue-50 cursor-pointer transition-colors group/cal" @click="openCellBookingModal(room, day)">
+                                        <div class="text-[10px] font-bold text-gray-600 group-hover/cal:text-blue-700" x-text="day"></div>
+                                        <div class="mt-0.5 min-h-[16px] flex items-center justify-center">
+                                            <template x-if="getCellBookings(room.id, day).length > 0">
+                                                <div class="bg-blue-100/80 text-blue-700 text-[8px] font-black px-1.5 py-0.5 rounded-full inline-flex items-center gap-1 shadow-sm">
+                                                    <span x-text="getCellBookings(room.id, day).length"></span> slot
+                                                </div>
+                                            </template>
+                                            <template x-if="getCellBookings(room.id, day).length === 0">
+                                                <div class="text-[8px] text-gray-300 opacity-0 group-hover/cal:opacity-100 transition-opacity">
+                                                    <i class="fas fa-plus"></i>
+                                                </div>
+                                            </template>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
         </main>
 
-        <!-- Booking Modal -->
+        <!-- Combined Day Details & Booking Modal -->
         <div x-show="isModalOpen" x-cloak class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
             <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
                 <div x-show="isModalOpen" class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true" @click="isModalOpen = false"></div>
 
                 <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
 
-                <div x-show="isModalOpen" class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-                    <form @submit.prevent="submitBooking">
-                        <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                            <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title" x-text="'Book Slot on ' + formDate"></h3>
-                            <div class="mt-4 space-y-4">
-                                
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700">Room</label>
-                                    <select x-model="formData.roomId" required class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md border">
-                                        <option value="" disabled>Select a room</option>
-                                        <template x-for="room in rooms" :key="room.id">
-                                            <option :value="room.id" x-text="room.roomNumber"></option>
-                                        </template>
-                                    </select>
-                                </div>
-
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700">Event Title</label>
-                                    <input type="text" x-model="formData.title" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2 text-sm focus:border-blue-500 focus:ring-blue-500">
-                                </div>
-
-                                <div class="flex gap-4">
-                                    <div class="flex-1">
-                                        <label class="block text-sm font-medium text-gray-700">Start Time</label>
-                                        <input type="time" x-model="formData.startTime" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2 text-sm focus:border-blue-500 focus:ring-blue-500">
+                <div x-show="isModalOpen" class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-xl sm:w-full">
+                    <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4 max-h-[80vh] overflow-y-auto">
+                        <h3 class="text-lg leading-6 font-bold text-[#0a192f] border-b pb-3 mb-4" id="modal-title" x-text="modalTitle"></h3>
+                        
+                        <!-- Modal Error Toast -->
+                        <div x-show="formErrorMessage" x-cloak class="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative text-sm" role="alert">
+                            <span class="block sm:inline" x-text="formErrorMessage"></span>
+                            <span class="absolute top-0 bottom-0 right-0 px-4 py-3" @click="formErrorMessage = ''">
+                                <svg class="fill-current h-4 w-4 text-red-500 mt-0.5" role="button" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><title>Close</title><path d="M14.348 14.849a1.2 1.2 0 0 1-1.697 0L10 11.819l-2.651 3.029a1.2 1.2 0 1 1-1.697-1.697l2.758-3.15-2.759-3.152a1.2 1.2 0 1 1 1.697-1.697L10 8.183l2.651-3.031a1.2 1.2 0 1 1 1.697 1.697l-2.758 3.152 2.758 3.15a1.2 1.2 0 0 1 0 1.698z"/></svg>
+                            </span>
+                        </div>
+                        
+                        
+                        <!-- List of Existing Bookings in this cell -->
+                        <div x-show="modalView === 'list'">
+                            <div class="flex justify-between items-center mb-4">
+                                <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider">Scheduled Events</h4>
+                                <button x-show="isTeacherOrAdmin" @click="modalView = 'form'" class="bg-[#0a192f] text-white text-[10px] font-black px-3 py-1.5 rounded-md hover:bg-gray-800 transition shadow-sm flex items-center gap-1.5">
+                                    <i class="fas fa-plus"></i> BOOK A SLOT
+                                </button>
+                            </div>
+                            
+                            <div class="space-y-3 mb-6">
+                                <template x-if="cellBookings.length === 0">
+                                    <div class="py-12 flex flex-col items-center justify-center bg-gray-50 rounded-xl border border-dashed border-gray-200">
+                                        <i class="fas fa-calendar-day text-gray-300 text-3xl mb-2"></i>
+                                        <p class="text-sm text-gray-500 italic">No events scheduled yet.</p>
                                     </div>
-                                    <div class="flex-1">
-                                        <label class="block text-sm font-medium text-gray-700">End Time</label>
-                                        <input type="time" x-model="formData.endTime" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2 text-sm focus:border-blue-500 focus:ring-blue-500">
+                                </template>
+                                <template x-for="booking in cellBookings" :key="booking.id">
+                                    <div class="border rounded-xl p-4 flex justify-between items-center bg-white shadow-sm hover:shadow transition-shadow border-gray-100">
+                                        <div class="flex-1">
+                                            <div class="flex items-center gap-2 mb-1">
+                                                <span class="font-black text-sm text-[#0a192f]" x-text="booking.title"></span>
+                                                <span x-show="booking.status === 'PENDING'" class="text-[9px] bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded-full font-black tracking-widest uppercase border border-yellow-200">PENDING</span>
+                                                <span x-show="booking.status === 'APPROVED'" class="text-[9px] bg-green-100 text-green-800 px-2 py-0.5 rounded-full font-black tracking-widest uppercase border border-green-200">APPROVED</span>
+                                                <template x-if="modalTitle.includes('All Bookings')">
+                                                    <span class="text-[9px] bg-blue-50 text-blue-700 px-2 py-0.5 rounded-md font-black border border-blue-100" x-text="'Room ' + (rooms.find(r => r.id === booking.roomId)?.roomNumber || 'N/A')"></span>
+                                                </template>
+                                            </div>
+                                            <div class="text-[11px] text-gray-500 flex flex-wrap gap-x-4 gap-y-1 font-medium">
+                                                <span class="flex items-center gap-1.5"><i class="far fa-clock text-blue-400"></i> <span x-text="booking.startTime + ' - ' + booking.endTime"></span></span>
+                                                <span class="flex items-center gap-1.5"><i class="fas fa-tag text-purple-400"></i> <span x-text="booking.eventType"></span></span>
+                                                <span class="flex items-center gap-1.5"><i class="fas fa-user-circle text-gray-400"></i> <span x-text="booking.teacherName"></span> • <span x-text="booking.departmentName"></span></span>
+                                            </div>
+                                        </div>
+                                        <div x-show="isAdmin && booking.status === 'PENDING'">
+                                            <button type="button" @click.prevent="approveBooking(booking.id)" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-xs font-bold hover:bg-blue-700 shadow-md transition-all">Approve</button>
+                                        </div>
                                     </div>
-                                </div>
-
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700">Event Type</label>
-                                    <select x-model="formData.eventType" required class="mt-1 block w-full pl-3 pr-10 py-2 text-base border border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md">
-                                        <option value="ACADEMIC">Academic</option>
-                                        <option value="CLUB">Extracurricular / Club</option>
-                                        <option value="EXAM">Exam</option>
-                                    </select>
-                                </div>
-
+                                </template>
                             </div>
                         </div>
-                        <div class="bg-gray-50 px-4 py-3 sm:px-6 flex flex-row-reverse gap-2">
-                            <button type="submit" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm" :disabled="isSubmitting">
-                                <span x-show="!isSubmitting">Confirm Booking</span>
-                                <span x-show="isSubmitting">Booking...</span>
-                            </button>
-                            <button type="button" @click="isModalOpen = false" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
-                                Cancel
-                            </button>
+
+                        <!-- Add New Booking Form (Teacher / Admin only) -->
+                        <div x-show="modalView === 'form' && isTeacherOrAdmin" class="pt-2">
+                            <div class="flex items-center gap-2 mb-4">
+                                <button @click="modalView = 'list'" class="text-gray-400 hover:text-gray-700 transition"><i class="fas fa-arrow-left"></i></button>
+                                <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider">Book New Slot</h4>
+                            </div>
+                            <form @submit.prevent="submitBooking">
+                                <div class="space-y-4">
+                                    
+                                    <div class="flex gap-4">
+                                        <div class="flex-1">
+                                            <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1.5">Room</label>
+                                            <select x-model="formData.roomId" required class="mt-1 block w-full pl-3 pr-10 py-2.5 text-sm border-gray-200 focus:outline-none focus:ring-blue-500 focus:border-blue-500 rounded-xl border bg-gray-50/50 font-semibold text-gray-900">
+                                                <option value="" disabled>Select a room</option>
+                                                <template x-for="room in rooms" :key="room.id">
+                                                    <option :value="room.id" x-text="'Room ' + room.roomNumber"></option>
+                                                </template>
+                                            </select>
+                                        </div>
+                                        <div class="flex-1">
+                                            <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1.5">Event Type</label>
+                                            <select x-model="formData.eventType" required class="mt-1 block w-full pl-3 pr-10 py-2.5 text-sm border border-gray-200 focus:outline-none focus:ring-blue-500 focus:border-blue-500 rounded-xl bg-gray-50/50 font-semibold text-gray-900">
+                                                <option value="ACADEMIC">Academic</option>
+                                                <option value="CLUB">Extracurricular / Club</option>
+                                                <option value="EXAM">Exam</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1.5">Event Title</label>
+                                        <input type="text" x-model="formData.title" required placeholder="e.g. CSE 4101 Final Project" class="mt-1 block w-full rounded-xl border-gray-200 shadow-sm border p-2.5 text-sm font-semibold text-gray-900 bg-gray-50/50 focus:border-blue-500 focus:ring-blue-500 placeholder-gray-300">
+                                    </div>
+
+                                    <div class="flex gap-4">
+                                        <div class="flex-1">
+                                            <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1.5">Department</label>
+                                            <input type="text" x-model="formData.departmentName" required class="mt-1 block w-full rounded-xl border-gray-200 shadow-sm border p-2.5 text-sm font-semibold text-gray-900 bg-gray-50/50 focus:border-blue-500 focus:ring-blue-500">
+                                        </div>
+                                        <div class="flex-1">
+                                            <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1.5">Teacher</label>
+                                            <input type="text" x-model="formData.teacherName" required class="mt-1 block w-full rounded-xl border-gray-200 shadow-sm border p-2.5 text-sm font-semibold text-gray-900 bg-gray-50/50 focus:border-blue-500 focus:ring-blue-500">
+                                        </div>
+                                    </div>
+
+                                    <div class="flex gap-4">
+                                        <div class="flex-1">
+                                            <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1.5">Start Time</label>
+                                            <input type="time" x-model="formData.startTime" required class="mt-1 block w-full rounded-xl border-gray-200 shadow-sm border p-2.5 text-sm font-semibold text-gray-900 bg-gray-50/50 focus:border-blue-500 focus:ring-blue-500">
+                                        </div>
+                                        <div class="flex-1">
+                                            <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1.5">End Time</label>
+                                            <input type="time" x-model="formData.endTime" required class="mt-1 block w-full rounded-xl border-gray-200 shadow-sm border p-2.5 text-sm font-semibold text-gray-900 bg-gray-50/50 focus:border-blue-500 focus:ring-blue-500">
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1.5">Additional Info</label>
+                                        <textarea x-model="formData.additionalInfo" rows="2" class="mt-1 block w-full rounded-xl border-gray-200 shadow-sm border p-2.5 text-sm font-semibold text-gray-900 bg-gray-50/50 focus:border-blue-500 focus:ring-blue-500"></textarea>
+                                    </div>
+
+                                    <div class="flex flex-row-reverse gap-2 mt-4 pb-4">
+                                        <button type="submit" class="w-full inline-flex justify-center rounded-xl border border-transparent shadow-lg px-6 py-3 bg-blue-600 text-sm font-black text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:w-auto transition-all" :disabled="isSubmitting">
+                                            <span x-show="!isSubmitting">CONFIRM BOOKING</span>
+                                            <span x-show="isSubmitting" class="flex items-center gap-2"><i class="fas fa-circle-notch animate-spin"></i> BOOKING...</span>
+                                        </button>
+                                        <button type="button" @click="modalView = 'list'" class="w-full inline-flex justify-center rounded-xl border border-gray-200 px-6 py-3 bg-white text-sm font-bold text-gray-600 hover:bg-gray-50 sm:w-auto transition-all">CANCEL</button>
+                                    </div>
+                                </div>
+                            </form>
                         </div>
-                    </form>
+                    </div>
+                    <div class="bg-gray-50 px-4 py-3 sm:px-6 flex flex-row-reverse" x-show="modalView === 'list'">
+                        <button type="button" @click="isModalOpen = false" class="mt-3 w-full inline-flex justify-center rounded-lg border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:w-auto sm:text-sm">
+                            Close
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -200,6 +320,9 @@
     </div>
 
     <!-- Alpine Logic -->
+    <script th:inline="javascript">
+        window.USER_ROLE = /*[[${#authentication.principal.authorities[0].authority}]]*/ 'ROLE_STUDENT';
+    </script>
     <script>
         document.addEventListener('alpine:init', () => {
             Alpine.data('eventBookingSystem', () => ({
@@ -211,7 +334,17 @@
                 isModalOpen: false,
                 isSubmitting: false,
                 errorMessage: '',
+                formErrorMessage: '',
                 formDate: '',
+                modalTitle: '',
+                cellBookings: [],
+                modalView: 'list', // 'list' or 'form'
+                get isTeacherOrAdmin() {
+                    return window.USER_ROLE === 'ROLE_TEACHER' || window.USER_ROLE === 'ROLE_ADMIN';
+                },
+                get isAdmin() {
+                    return window.USER_ROLE === 'ROLE_ADMIN';
+                },
                 
                 formData: {
                     roomId: '',
@@ -219,7 +352,10 @@
                     startTime: '10:00',
                     endTime: '11:00',
                     eventType: 'ACADEMIC',
-                    title: ''
+                    title: '',
+                    departmentName: '',
+                    teacherName: '',
+                    additionalInfo: ''
                 },
 
                 get currentMonthDisplay() {
@@ -264,6 +400,11 @@
                     this.daysInMonth = new Date(this.currentYear, this.currentMonth, 0).getDate();
                 },
 
+                getMonthStartOffset() {
+                    const firstDay = new Date(this.currentYear, this.currentMonth - 1, 1).getDay();
+                    return Array.from({length: firstDay}, (_, i) => i);
+                },
+
                 getDayOfWeek(day) {
                     const d = new Date(this.currentYear, this.currentMonth - 1, day);
                     const days = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
@@ -302,30 +443,70 @@
                     return this.bookings.filter(b => b.roomId === roomId && b.specificDate === dateStr);
                 },
 
-                openCellBookingModal(room, day) {
-                    this.errorMessage = '';
-                    this.formDate = this.formatDateParam(day);
-                    this.formData = {
-                        roomId: room.id,
-                        specificDate: this.formDate,
-                        startTime: '10:00',
-                        endTime: '11:00',
-                        eventType: 'ACADEMIC',
-                        title: ''
-                    };
-                    this.isModalOpen = true;
+                getDayBookings(day) {
+                    const dateStr = this.formatDateParam(day);
+                    return this.bookings.filter(b => b.specificDate === dateStr);
                 },
 
-                openNewBookingModal() {
+                openDayBookingModal(day) {
                     this.errorMessage = '';
-                    this.formDate = this.formatDateParam(new Date().getDate());
+                    this.formErrorMessage = '';
+                    this.formDate = this.formatDateParam(day);
+                    this.modalTitle = `All Bookings - ${this.formDate}`;
+                    this.cellBookings = this.getDayBookings(day);
+                    this.modalView = 'list';
                     this.formData = {
                         roomId: this.rooms.length > 0 ? this.rooms[0].id : '',
                         specificDate: this.formDate,
                         startTime: '10:00',
                         endTime: '11:00',
                         eventType: 'ACADEMIC',
-                        title: ''
+                        title: '',
+                        departmentName: '',
+                        teacherName: '',
+                        additionalInfo: ''
+                    };
+                    this.isModalOpen = true;
+                },
+
+                openCellBookingModal(room, day) {
+                    this.errorMessage = '';
+                    this.formErrorMessage = '';
+                    this.formDate = this.formatDateParam(day);
+                    this.modalTitle = `Room ${room.roomNumber} - ${this.formDate}`;
+                    this.cellBookings = this.getCellBookings(room.id, day);
+                    this.modalView = 'list';
+                    this.formData = {
+                        roomId: room.id,
+                        specificDate: this.formDate,
+                        startTime: '10:00',
+                        endTime: '11:00',
+                        eventType: 'ACADEMIC',
+                        title: '',
+                        departmentName: '',
+                        teacherName: '',
+                        additionalInfo: ''
+                    };
+                    this.isModalOpen = true;
+                },
+
+                openNewBookingModal() {
+                    this.errorMessage = '';
+                    this.formErrorMessage = '';
+                    this.formDate = this.formatDateParam(new Date().getDate());
+                    this.modalTitle = `Quick Booking - ${this.formDate}`;
+                    this.cellBookings = [];
+                    this.modalView = 'form';
+                    this.formData = {
+                        roomId: this.rooms.length > 0 ? this.rooms[0].id : '',
+                        specificDate: this.formDate,
+                        startTime: '10:00',
+                        endTime: '11:00',
+                        eventType: 'ACADEMIC',
+                        title: '',
+                        departmentName: '',
+                        teacherName: '',
+                        additionalInfo: ''
                     };
                     this.isModalOpen = true;
                 },
@@ -353,12 +534,35 @@
                             await this.fetchBookings(); // Refresh grid
                         } else {
                             const errText = await res.text();
-                            this.errorMessage = errText || "Failed to book slot. It might be already taken.";
+                            this.formErrorMessage = errText || "Failed to book slot. It might be already taken.";
                         }
                     } catch (e) {
-                        this.errorMessage = "Network error. Please try again.";
+                        this.formErrorMessage = "Network error. Please try again.";
                     } finally {
                         this.isSubmitting = false;
+                    }
+                },
+                
+                async approveBooking(bookingId) {
+                    this.formErrorMessage = '';
+                    try {
+                        const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+                        const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+
+                        const res = await fetch(`/api/v1/bookings/${bookingId}/approve`, {
+                            method: 'POST',
+                            headers: { [csrfHeader]: csrfToken }
+                        });
+
+                        if (res.ok) {
+                            await this.fetchBookings();
+                            this.cellBookings = this.cellBookings.map(b => b.id === bookingId ? {...b, status: 'APPROVED'} : b);
+                        } else {
+                            const errText = await res.text();
+                            this.formErrorMessage = errText || "Failed to approve booking.";
+                        }
+                    } catch (e) {
+                         this.formErrorMessage = "Network error. Please try again.";
                     }
                 }
             }));

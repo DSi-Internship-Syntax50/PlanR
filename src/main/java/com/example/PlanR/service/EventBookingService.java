@@ -31,31 +31,25 @@ public class EventBookingService {
     @Autowired
     private UserRepository userRepository;
 
-    public List<EventBookingResponseDto> getBookingsForMonth(LocalDate targetDate) {
+    public List<EventBookingResponseDto> getBookingsForMonth(LocalDate targetDate, String username, boolean isAdmin) {
         LocalDate startDate = targetDate.withDayOfMonth(1);
         LocalDate endDate = targetDate.withDayOfMonth(targetDate.lengthOfMonth());
         return bookingRepository.findBySpecificDateBetween(startDate, endDate)
                 .stream()
+                .filter(b -> isAdmin 
+                        || b.getStatus() == BookingStatus.APPROVED 
+                        || (b.getRequestedBy() != null && b.getRequestedBy().getEmail().equals(username)))
                 .map(EventBookingResponseDto::new)
                 .collect(Collectors.toList());
     }
 
     @Transactional(isolation = Isolation.SERIALIZABLE)
-    public EventBookingResponseDto bookSlot(EventBookingRequestDto requestDto) {
+    public EventBookingResponseDto bookSlot(EventBookingRequestDto requestDto, String username) {
         Room room = roomRepository.findById(requestDto.getRoomId())
                 .orElseThrow(() -> new RuntimeException("Room not found"));
 
-        // Use default admin if userId not sent for testing purposes
-        User requestor = null;
-        if (requestDto.getUserId() != null) {
-            requestor = userRepository.findById(requestDto.getUserId())
-                    .orElseThrow(() -> new RuntimeException("User not found"));
-        } else {
-             List<User> users = userRepository.findAll();
-             if(!users.isEmpty()) {
-                 requestor = users.get(0);
-             }
-        }
+        User requestor = userRepository.findByEmail(username)
+                .orElseThrow(() -> new RuntimeException("User not found: " + username));
 
         if (requestDto.getStartTime().isAfter(requestDto.getEndTime())) {
             throw new IllegalArgumentException("Start time must be before end time");
@@ -68,6 +62,10 @@ public class EventBookingService {
                 requestDto.getEndTime()
         );
 
+        if (!overlaps.isEmpty()) {
+            throw new RuntimeException("Slot is already booked by another event.");
+        }
+
         EventBooking newBooking = new EventBooking();
         newBooking.setRoom(room);
         newBooking.setRequestedBy(requestor);
@@ -76,38 +74,26 @@ public class EventBookingService {
         newBooking.setEndTime(requestDto.getEndTime());
         newBooking.setEventType(requestDto.getEventType());
         newBooking.setTitle(requestDto.getTitle());
-        newBooking.setStatus(BookingStatus.APPROVED); // Auto approve for now
-
-        if (!overlaps.isEmpty()) {
-             // Let's check priority override logic
-             // Rule: ACADEMIC overrides EXTRACURRICULAR (CLUB)
-             if (requestDto.getEventType() == EventType.ACADEMIC) {
-                 boolean canOverrideAll = true;
-                 for (EventBooking overlap : overlaps) {
-                     if (overlap.getEventType() == EventType.ACADEMIC || overlap.getEventType() == EventType.EXAM) {
-                         canOverrideAll = false;
-                         break; // Can't override another high priority event
-                     }
-                 }
-
-                 if (canOverrideAll) {
-                     // Displace existing events
-                     bookingRepository.save(newBooking); // Save first to get ID
-                     for (EventBooking overlap : overlaps) {
-                         overlap.setStatus(BookingStatus.DISPLACED);
-                         overlap.setDisplacedByEventId(newBooking.getId());
-                         bookingRepository.save(overlap);
-                     }
-                     return new EventBookingResponseDto(newBooking);
-                 } else {
-                     throw new RuntimeException("Overlapping with another high-priority event.");
-                 }
-             } else {
-                 throw new RuntimeException("Overlapping slots perfectly booked by another event.");
-             }
+        newBooking.setDepartmentName(requestDto.getDepartmentName());
+        newBooking.setTeacherName(requestDto.getTeacherName());
+        newBooking.setAdditionalInfo(requestDto.getAdditionalInfo());
+        
+        // Auto-approve if requestor is Admin, else PENDING
+        if (requestor.getRole() == com.example.PlanR.model.enums.Role.ADMIN) {
+            newBooking.setStatus(BookingStatus.APPROVED);
+        } else {
+            newBooking.setStatus(BookingStatus.PENDING); 
         }
 
         bookingRepository.save(newBooking);
         return new EventBookingResponseDto(newBooking);
+    }
+    
+    @Transactional
+    public void approveBooking(Long bookingId) {
+        EventBooking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new RuntimeException("Booking not found"));
+        booking.setStatus(BookingStatus.APPROVED);
+        bookingRepository.save(booking);
     }
 }

@@ -12,6 +12,9 @@ public class EventBookingRequestDto {
     private LocalTime endTime;
     private EventType eventType;
     private String title;
+    private String departmentName;
+    private String teacherName;
+    private String additionalInfo;
 
     private Long userId;
 
@@ -71,5 +74,29 @@ public class EventBookingRequestDto {
 
     public void setTitle(String title) {
         this.title = title;
+    }
+
+    public String getDepartmentName() {
+        return departmentName;
+    }
+
+    public void setDepartmentName(String departmentName) {
+        this.departmentName = departmentName;
+    }
+
+    public String getTeacherName() {
+        return teacherName;
+    }
+
+    public void setTeacherName(String teacherName) {
+        this.teacherName = teacherName;
+    }
+
+    public String getAdditionalInfo() {
+        return additionalInfo;
+    }
+
+    public void setAdditionalInfo(String additionalInfo) {
+        this.additionalInfo = additionalInfo;
     }
 }
