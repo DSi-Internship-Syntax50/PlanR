@@ -17,4 +17,8 @@ public interface MasterRoutineRepository extends JpaRepository<MasterRoutine, Lo
     List<MasterRoutine> findOverlappingRoutines(@Param("roomId") Long roomId, @Param("dayOfWeek") DayOfWeek dayOfWeek, @Param("startSlot") Integer startSlot, @Param("endSlot") Integer endSlot);
 
     List<MasterRoutine> findByTeacherIdAndDayOfWeekOrderByStartSlotIndexAsc(Long teacherId, DayOfWeek dayOfWeek);
+
+    List<MasterRoutine> findByRoomId(Long roomId);
+
+    List<MasterRoutine> findByRoomIsNull();
 }
