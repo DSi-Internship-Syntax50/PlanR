@@ -6,6 +6,7 @@ import com.example.PlanR.model.ScheduleRequest;
 import com.example.PlanR.model.enums.DayOfWeek;
 import com.example.PlanR.model.enums.RequestType;
 import com.example.PlanR.repository.CourseRepository;
+import com.example.PlanR.repository.MasterRoutineRepository;
 import com.example.PlanR.service.RecommendationService;
 import com.example.PlanR.service.ScheduleActionService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,16 +28,38 @@ public class ScheduleController {
     @Autowired
     private CourseRepository courseRepository;
 
+    // Added this repository so the controller can fetch the routines
+    @Autowired
+    private MasterRoutineRepository routineRepository;
+
     public static class RequestDto {
         public Long routineId;
         public RequestType requestType;
         public Long requestedRoomId;
         public DayOfWeek requestedDay;
         public Integer requestedStartSlot;
-        public Long requesterId; 
+        public Long requesterId;
     }
 
-    // --- Suggestion Endpoint ---
+    // --- NEW ENDPOINTS REQUIRED FOR ROUTINE BUILDER FRONTEND ---
+
+    @GetMapping("/courses")
+    public ResponseEntity<List<Course>> getAllCourses() {
+        return ResponseEntity.ok(courseRepository.findAll());
+    }
+
+    @GetMapping("/routine/{batch}")
+    public ResponseEntity<List<MasterRoutine>> getRoutineByBatch(@PathVariable String batch) {
+        return ResponseEntity.ok(routineRepository.findAllByCourseBatchOrderByDayOfWeekAscStartSlotIndexAsc(batch));
+    }
+
+    @DeleteMapping("/routine/{id}")
+    public ResponseEntity<Void> freeSlot(@PathVariable Long id) {
+        routineRepository.deleteById(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    // -----------------------------------------------------------
 
     @GetMapping("/suggest-rooms")
     public ResponseEntity<List<RecommendationService.RoomRecommendation>> getRoomSuggestions(
@@ -47,13 +70,23 @@ public class ScheduleController {
         Course course = courseRepository.findById(courseId)
                 .orElseThrow(() -> new RuntimeException("Course not found"));
 
-        List<RecommendationService.RoomRecommendation> suggestions = 
-                recommendationService.recommendRooms(course, dayOfWeek, startSlotIndex);
-                
+        List<RecommendationService.RoomRecommendation> suggestions = recommendationService.recommendRooms(course,
+                dayOfWeek, startSlotIndex);
+
         return ResponseEntity.ok(suggestions);
     }
 
-    // --- Direct Execution (Admin / Coordinator) ---
+    @PostMapping("/allocate-class")
+    public ResponseEntity<MasterRoutine> allocateClass(
+            @RequestParam Long courseId,
+            @RequestParam Long teacherId,
+            @RequestParam(required = false) Long roomId,
+            @RequestParam DayOfWeek dayOfWeek,
+            @RequestParam int startSlotIndex) {
+
+        MasterRoutine routine = actionService.allocateClass(courseId, teacherId, roomId, dayOfWeek, startSlotIndex);
+        return ResponseEntity.ok(routine);
+    }
 
     @PostMapping("/allocate")
     public ResponseEntity<MasterRoutine> allocateRoom(@RequestParam Long routineId, @RequestParam Long roomId) {
@@ -71,29 +104,22 @@ public class ScheduleController {
         return ResponseEntity.ok(routine);
     }
 
-    // --- Request Workflows (Teachers / Students) ---
-
     @PostMapping("/requests")
     public ResponseEntity<ScheduleRequest> submitRequest(@RequestBody RequestDto request) {
-        // Here you would typically get the requesterId from the JWT or Spring Security Context.
-        // E.g., Long userId = ((UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getId();
-        // Since we are mocking security contexts, we accept requesterId in the body:
         ScheduleRequest created = actionService.requestAction(
-                request.routineId, 
-                request.requesterId, 
-                request.requestType, 
-                request.requestedRoomId, 
-                request.requestedDay, 
-                request.requestedStartSlot
-        );
+                request.routineId,
+                request.requesterId,
+                request.requestType,
+                request.requestedRoomId,
+                request.requestedDay,
+                request.requestedStartSlot);
         return ResponseEntity.ok(created);
     }
 
     @PostMapping("/requests/{requestId}/approve")
     public ResponseEntity<ScheduleRequest> approveRequest(
-            @PathVariable Long requestId, 
+            @PathVariable Long requestId,
             @RequestParam Long approverId) {
-        // Approver ID should also ideally come from SecurityContext
         ScheduleRequest approved = actionService.approveRequest(requestId, approverId);
         return ResponseEntity.ok(approved);
     }

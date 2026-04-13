@@ -20,6 +20,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/login", "/css/**", "/js/**", "/images/**").permitAll()
                         .requestMatchers("/admin/**").hasRole("SUPERADMIN") // STRICTLY locks down user creation
+                        .requestMatchers("/routine-builder", "/api/schedule/**").hasAnyRole("SUPERADMIN", "COORDINATOR")
                         .anyRequest().authenticated())
                 .formLogin(form -> form
                         // Custom login page
