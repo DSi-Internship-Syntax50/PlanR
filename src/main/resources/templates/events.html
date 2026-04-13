@@ -2,20 +2,24 @@
 <html xmlns:th="http://www.thymeleaf.org" lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
     <title>Event Bookings spreadsheet - PlanR</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Alpine.js -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <!-- FontAwesome 6 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Custom CSS -->
     <link rel="stylesheet" th:href="@{/css/style.css}">
     <style>
-        /* Custom scrollbar for spreadsheet */
         .spreadsheet-container::-webkit-scrollbar { height: 12px; width: 12px; }
         .spreadsheet-container::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 8px;}
         .spreadsheet-container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 8px;}
         .spreadsheet-container::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
         .cell-content { min-width: 100px; display: inline-block;}
+        [x-cloak] { display: none !important; }
     </style>
 </head>
 <body class="bg-[#f3f6f8] font-['Inter',sans-serif]">
@@ -23,7 +27,7 @@
     <!-- Sidebar fragment -->
     <div th:replace="~{fragments/sidebar :: sidebar}"></div>
 
-    <div class="ml-64 flex flex-col min-h-screen">
+    <div class="ml-64 flex flex-col min-h-screen" x-data="eventBookingSystem()" x-init="initData()">
         
         <!-- Header fragment -->
         <div th:replace="~{fragments/header :: header}"></div>
@@ -33,32 +37,37 @@
             <div class="flex justify-between items-start mb-6">
                 <div>
                     <h1 class="text-4xl font-extrabold text-[#0a192f] tracking-tight">Event Bookings Spreadsheet</h1>
-                    <p class="text-gray-500 font-medium mt-3 text-sm">Monthly chronological spreadsheet for tracking academic and extracurricular events overriding master routines.</p>
+                    <p class="text-gray-500 font-medium mt-3 text-sm">Monthly chronological spreadsheet for tracking academic and extracurricular events.</p>
                 </div>
                 <div class="flex gap-3">
                     <div class="bg-white border border-gray-200 rounded-lg p-1 mr-4 flex text-sm shadow-sm font-semibold text-gray-600">
-                        <button class="px-3 py-1.5 hover:bg-gray-50 rounded"><i class="fas fa-chevron-left text-xs"></i></button>
-                        <span class="px-4 py-1.5 border-x border-gray-100 flex items-center justify-center min-w-[120px]">October 2024</span>
-                        <button class="px-3 py-1.5 hover:bg-gray-50 rounded"><i class="fas fa-chevron-right text-xs"></i></button>
+                        <button @click="prevMonth()" class="px-3 py-1.5 hover:bg-gray-50 rounded"><i class="fas fa-chevron-left text-xs"></i></button>
+                        <span class="px-4 py-1.5 border-x border-gray-100 flex items-center justify-center min-w-[120px]" x-text="currentMonthDisplay"></span>
+                        <button @click="nextMonth()" class="px-3 py-1.5 hover:bg-gray-50 rounded"><i class="fas fa-chevron-right text-xs"></i></button>
                     </div>
 
-                    <button class="px-5 py-2.5 bg-white border border-gray-200 text-gray-700 font-bold rounded-lg text-sm shadow-sm hover:bg-gray-50 transition-colors flex items-center gap-2">
-                        <i class="fas fa-filter"></i> Filter
-                    </button>
-                    <button class="px-5 py-2.5 bg-[#0a192f] text-white font-bold rounded-lg text-sm shadow-md hover:bg-gray-800 transition-colors flex items-center gap-2">
-                        <i class="fas fa-plus"></i> Log New Event
+                    <button class="px-5 py-2.5 bg-[#0a192f] text-white font-bold rounded-lg text-sm shadow-md hover:bg-gray-800 transition-colors flex items-center gap-2" @click="openNewBookingModal()">
+                        <i class="fas fa-plus"></i> Quick Booking
                     </button>
                 </div>
+            </div>
+
+            <!-- Error Toast -->
+            <div x-show="errorMessage" x-cloak class="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+                <span class="block sm:inline" x-text="errorMessage"></span>
+                <span class="absolute top-0 bottom-0 right-0 px-4 py-3" @click="errorMessage = ''">
+                    <svg class="fill-current h-6 w-6 text-red-500" role="button" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><title>Close</title><path d="M14.348 14.849a1.2 1.2 0 0 1-1.697 0L10 11.819l-2.651 3.029a1.2 1.2 0 1 1-1.697-1.697l2.758-3.15-2.759-3.152a1.2 1.2 0 1 1 1.697-1.697L10 8.183l2.651-3.031a1.2 1.2 0 1 1 1.697 1.697l-2.758 3.152 2.758 3.15a1.2 1.2 0 0 1 0 1.698z"/></svg>
+                </span>
             </div>
 
             <!-- Spreadsheet Wrap -->
             <div class="flex-1 bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden flex flex-col relative">
                 
                 <div class="p-4 border-b border-gray-100 bg-gray-50 flex gap-4 items-center text-xs font-bold text-gray-500">
-                    <span class="flex items-center gap-2"><div class="w-3 h-3 rounded-sm bg-blue-500"></div> Academic (High Priority)</span>
+                    <span class="flex items-center gap-2"><div class="w-3 h-3 rounded-sm bg-blue-500"></div> Academic</span>
                     <span class="flex items-center gap-2"><div class="w-3 h-3 rounded-sm bg-purple-500"></div> Extracurricular</span>
-                    <span class="flex items-center gap-2 pr-4 border-r border-gray-200"><div class="w-3 h-3 rounded-sm bg-orange-400"></div> Maintenance</span>
-                    <span class="text-gray-400"><i class="fas fa-info-circle"></i> AI automatic override: Academic events will automatically displace extracurricular events if double-booked.</span>
+                    <span class="flex items-center gap-2 pr-4 border-r border-gray-200"><div class="w-3 h-3 rounded-sm bg-orange-400"></div> Other</span>
+                    <span class="text-gray-400"><i class="fas fa-info-circle"></i> Click any empty cell to book a time slot for that date and room.</span>
                 </div>
 
                 <!-- Spreadsheet Grid -->
@@ -69,117 +78,53 @@
                                 <th class="w-48 min-w-[192px] sticky left-0 z-30 bg-white p-3 text-xs font-black text-gray-800 uppercase tracking-wider border-b-2 border-r border-gray-200 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">
                                     Venues & Spaces
                                 </th>
-                                <!-- Days 1 to 31 -->
-                                <th:block th:each="i: ${#numbers.sequence(1, 31)}">
+                                <!-- Days 1 to 31 loop -->
+                                <template x-for="day in daysInMonth" :key="day">
                                     <th class="w-24 min-w-[96px] p-2 text-center text-[10px] font-bold text-gray-500 border-b-2 border-r border-gray-100">
                                         <div class="flex flex-col">
-                                            <span class="text-gray-400 uppercase leading-none" th:text="${i % 7 == 0 ? 'SUN' : i % 7 == 1 ? 'MON' : i % 7 == 2 ? 'TUE' : i % 7 == 3 ? 'WED' : i % 7 == 4 ? 'THU' : i % 7 == 5 ? 'FRI' : 'SAT'}"></span>
-                                            <span class="text-base text-gray-900 mt-1" th:text="${i}"></span>
+                                            <span class="text-gray-400 uppercase leading-none" x-text="getDayOfWeek(day)"></span>
+                                            <span class="text-base text-gray-900 mt-1" x-text="day"></span>
                                         </div>
                                     </th>
-                                </th:block>
+                                </template>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-100 relative z-10 text-gray-700">
                             
-                            <!-- Row: Main Auditorium -->
-                            <tr class="hover:bg-blue-50/20 transition-colors group">
-                                <td class="sticky left-0 bg-white group-hover:bg-blue-50/20 p-3 font-semibold text-gray-900 border-r border-gray-200 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] flex items-center gap-2">
-                                    <i class="fas fa-university text-blue-300 w-4"></i> Main Auditorium
-                                </td>
-                                <!-- 31 Cells -->
-                                <td class="border-r border-gray-100 p-1 relative"></td>
-                                <td class="border-r border-gray-100 p-1 relative"></td>
-                                <!-- Academic Event spanning 2 days -->
-                                <td colspan="2" class="border-r border-gray-100 p-1 relative z-10">
-                                    <div class="bg-blue-500 text-white rounded p-1.5 text-[10px] font-bold shadow-sm flex flex-col justify-center h-full cursor-pointer hover:bg-blue-600 transition" title="Freshers Orientation (Academic)">
-                                        <span class="truncate">Freshers Orientation</span>
-                                        <span class="text-[8px] opacity-80 truncate">10:00 AM - 4:00 PM</span>
-                                    </div>
-                                </td>
-                                <!-- empty rest -->
-                                <th:block th:each="i: ${#numbers.sequence(5, 14)}">
-                                    <td class="border-r border-gray-100 p-1 bg-[repeating-linear-gradient(-45deg,transparent,transparent_5px,#f9fafb_5px,#f9fafb_10px)] cursor-crosshair hover:bg-gray-100"></td>
-                                </th:block>
-                                <td class="border-r border-gray-100 p-1 relative z-10">
-                                     <div class="bg-purple-500 text-white rounded p-1.5 text-[10px] font-bold shadow-sm flex flex-col justify-center h-full cursor-pointer hover:bg-purple-600 transition">
-                                        <span class="truncate">Cultural Night</span>
-                                    </div>
-                                </td>
-                                 <th:block th:each="i: ${#numbers.sequence(16, 31)}">
-                                    <td class="border-r border-gray-100 p-1 cursor-crosshair hover:bg-gray-100"></td>
-                                </th:block>
-                            </tr>
-
-                            <!-- Row: Seminar Hall C -->
-                            <tr class="hover:bg-blue-50/20 transition-colors group">
-                                <td class="sticky left-0 bg-white group-hover:bg-blue-50/20 p-3 font-semibold text-gray-900 border-r border-gray-200 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] flex items-center gap-2">
-                                    <i class="fas fa-chalkboard-teacher text-indigo-300 w-4"></i> Seminar Hall C
-                                </td>
-                                <td class="border-r border-gray-100 p-1 cursor-crosshair hover:bg-gray-100"></td>
-                                <td class="border-r border-gray-100 p-1 cursor-crosshair hover:bg-gray-100"></td>
-                                <td class="border-r border-gray-100 p-1 cursor-crosshair hover:bg-gray-100"></td>
-                                <td class="border-r border-gray-100 p-1 relative z-10">
-                                    <div class="bg-blue-500 text-white rounded p-1.5 text-[10px] font-bold shadow-sm flex flex-col justify-center h-full">
-                                        <span class="truncate">CSE Thesis Def.</span>
-                                    </div>
-                                </td>
-                                <td class="border-r border-gray-100 p-1 cursor-crosshair hover:bg-gray-100"></td>
-                                <td class="border-r border-gray-100 p-1 cursor-crosshair hover:bg-gray-100"></td>
-                                <td colspan="3" class="border-r border-gray-100 p-1 relative z-10">
-                                     <div class="bg-orange-400 text-white rounded p-1.5 text-[10px] font-bold shadow-sm flex flex-col justify-center h-full">
-                                        <span class="truncate"><i class="fas fa-tools"></i> AC Maintenance & Repair</span>
-                                    </div>
-                                </td>
-                                <th:block th:each="i: ${#numbers.sequence(10, 24)}">
-                                    <td class="border-r border-gray-100 p-1 cursor-crosshair hover:bg-gray-100"></td>
-                                </th:block>
-                                <td class="border-r border-gray-100 p-1 relative z-10">
-                                    <div class="bg-purple-500 text-white rounded p-1.5 text-[10px] font-bold shadow-sm flex flex-col justify-center h-full relative overflow-hidden">
-                                        <div class="absolute right-0 top-0 bottom-0 bg-red-600/90 text-white text-[8px] flex items-center px-1 font-black">DISPLACED</div>
-                                        <span class="truncate line-through opacity-70">Debate Club</span>
-                                    </div>
-                                </td>
-                                <td colspan="2" class="border-r border-gray-100 p-1 relative z-10">
-                                     <div class="bg-blue-500 text-white border-2 border-red-500 shadow-[0_0_10px_rgba(239,68,68,0.5)] rounded p-1.5 text-[10px] font-bold shadow-sm flex flex-col justify-center h-full z-20">
-                                        <span class="truncate">Faculty Workshop</span>
-                                        <span class="text-[8px] truncate text-red-100">Priority Overrode Club Event</span>
-                                    </div>
-                                </td>
-                                <th:block th:each="i: ${#numbers.sequence(28, 31)}">
-                                    <td class="border-r border-gray-100 p-1 cursor-crosshair hover:bg-gray-100"></td>
-                                </th:block>
-                            </tr>
-
-                            <!-- Row: Indoor Stadium -->
-                            <tr class="hover:bg-blue-50/20 transition-colors group">
-                                <td class="sticky left-0 bg-white group-hover:bg-blue-50/20 p-3 font-semibold text-gray-900 border-r border-gray-200 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] flex items-center gap-2">
-                                    <i class="fas fa-volleyball-ball text-green-300 w-4"></i> Indoor Stadium
-                                </td>
-                                <th:block th:each="i: ${#numbers.sequence(1, 10)}">
-                                    <td class="border-r border-gray-100 p-1 cursor-crosshair hover:bg-gray-100 bg-[repeating-linear-gradient(-45deg,transparent,transparent_5px,#f9fafb_5px,#f9fafb_10px)]"></td>
-                                </th:block>
-                                <td colspan="5" class="border-r border-gray-100 p-1 relative z-10">
-                                    <div class="bg-purple-500 text-white rounded p-1.5 text-[10px] font-bold shadow-sm flex flex-col justify-center h-full">
-                                        <span class="truncate">Inter-University Sports Week</span>
-                                    </div>
-                                </td>
-                                <th:block th:each="i: ${#numbers.sequence(16, 31)}">
-                                    <td class="border-r border-gray-100 p-1 cursor-crosshair hover:bg-gray-100"></td>
-                                </th:block>
-                            </tr>
-                            
-                             <!-- Empty Row filler -->
-                             <th:block th:each="j: ${#numbers.sequence(1, 15)}">
+                            <template x-for="room in rooms" :key="room.id">
                                 <tr class="hover:bg-blue-50/20 transition-colors group h-12">
-                                <td class="sticky left-0 bg-white group-hover:bg-blue-50/20 p-3 font-medium text-gray-500 border-r border-gray-200 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] text-xs">
-                                    Room 20<span th:text="${j}"></span>
-                                </td>
-                                <th:block th:each="i: ${#numbers.sequence(1, 31)}">
-                                    <td class="border-r border-gray-100 p-1 cursor-crosshair hover:bg-blue-50/50"></td>
-                                </th:block>
+                                    <td class="sticky left-0 bg-white group-hover:bg-blue-50/20 p-3 font-semibold text-gray-900 border-r border-gray-200 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] flex items-center gap-2">
+                                        <i class="fas fa-door-open text-blue-300 w-4"></i> <span x-text="room.roomNumber"></span>
+                                    </td>
+                                    
+                                    <!-- Days loop inside Room -->
+                                    <template x-for="day in daysInMonth" :key="day">
+                                        <td class="border-r border-gray-100 p-1 relative hover:bg-blue-50 cursor-crosshair" @click="openCellBookingModal(room, day)">
+                                            
+                                            <!-- Render Bookings for this Cell -->
+                                            <template x-for="booking in getCellBookings(room.id, day)" :key="booking.id">
+                                                <div :class="{
+                                                    'bg-blue-500': booking.eventType === 'ACADEMIC',
+                                                    'bg-purple-500': booking.eventType === 'CLUB',
+                                                    'bg-orange-400': booking.eventType !== 'ACADEMIC' && booking.eventType !== 'CLUB',
+                                                    'opacity-50 line-through': booking.status === 'DISPLACED'
+                                                 }" class="text-white rounded p-1 mb-1 text-[10px] font-bold shadow-sm flex flex-col justify-center cursor-pointer relative"
+                                                 @click.stop="alert('Booking Details: ' + booking.title + ' (' + booking.startTime + ' - ' + booking.endTime + ')')">
+                                                    
+                                                    <span class="truncate" x-text="booking.title"></span>
+                                                    <span class="text-[8px] opacity-80 truncate" x-text="booking.startTime + ' - ' + booking.endTime"></span>
+                                                    
+                                                    <template x-if="booking.status === 'DISPLACED'">
+                                                        <div class="absolute right-0 top-0 bottom-0 bg-red-600/90 text-white text-[8px] flex items-center px-1 font-black">DISPLACED</div>
+                                                    </template>
+                                                </div>
+                                            </template>
+
+                                        </td>
+                                    </template>
+
                                 </tr>
-                            </th:block>
+                            </template>
 
                         </tbody>
                     </table>
@@ -187,6 +132,237 @@
 
             </div>
         </main>
+
+        <!-- Booking Modal -->
+        <div x-show="isModalOpen" x-cloak class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+            <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+                <div x-show="isModalOpen" class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true" @click="isModalOpen = false"></div>
+
+                <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+                <div x-show="isModalOpen" class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                    <form @submit.prevent="submitBooking">
+                        <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                            <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title" x-text="'Book Slot on ' + formDate"></h3>
+                            <div class="mt-4 space-y-4">
+                                
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">Room</label>
+                                    <select x-model="formData.roomId" required class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md border">
+                                        <option value="" disabled>Select a room</option>
+                                        <template x-for="room in rooms" :key="room.id">
+                                            <option :value="room.id" x-text="room.roomNumber"></option>
+                                        </template>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">Event Title</label>
+                                    <input type="text" x-model="formData.title" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2 text-sm focus:border-blue-500 focus:ring-blue-500">
+                                </div>
+
+                                <div class="flex gap-4">
+                                    <div class="flex-1">
+                                        <label class="block text-sm font-medium text-gray-700">Start Time</label>
+                                        <input type="time" x-model="formData.startTime" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2 text-sm focus:border-blue-500 focus:ring-blue-500">
+                                    </div>
+                                    <div class="flex-1">
+                                        <label class="block text-sm font-medium text-gray-700">End Time</label>
+                                        <input type="time" x-model="formData.endTime" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm border p-2 text-sm focus:border-blue-500 focus:ring-blue-500">
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">Event Type</label>
+                                    <select x-model="formData.eventType" required class="mt-1 block w-full pl-3 pr-10 py-2 text-base border border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md">
+                                        <option value="ACADEMIC">Academic</option>
+                                        <option value="CLUB">Extracurricular / Club</option>
+                                        <option value="EXAM">Exam</option>
+                                    </select>
+                                </div>
+
+                            </div>
+                        </div>
+                        <div class="bg-gray-50 px-4 py-3 sm:px-6 flex flex-row-reverse gap-2">
+                            <button type="submit" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm" :disabled="isSubmitting">
+                                <span x-show="!isSubmitting">Confirm Booking</span>
+                                <span x-show="isSubmitting">Booking...</span>
+                            </button>
+                            <button type="button" @click="isModalOpen = false" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                                Cancel
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
     </div>
+
+    <!-- Alpine Logic -->
+    <script>
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('eventBookingSystem', () => ({
+                rooms: [],
+                bookings: [],
+                currentYear: 2024,
+                currentMonth: 10,
+                daysInMonth: 31,
+                isModalOpen: false,
+                isSubmitting: false,
+                errorMessage: '',
+                formDate: '',
+                
+                formData: {
+                    roomId: '',
+                    specificDate: '',
+                    startTime: '10:00',
+                    endTime: '11:00',
+                    eventType: 'ACADEMIC',
+                    title: ''
+                },
+
+                get currentMonthDisplay() {
+                    return new Date(this.currentYear, this.currentMonth - 1, 1).toLocaleString('default', { month: 'long', year: 'numeric' });
+                },
+
+                async initData() {
+                    // Start by getting true month/year dynamically (using current system date)
+                    const now = new Date();
+                    this.currentYear = now.getFullYear();
+                    this.currentMonth = now.getMonth() + 1;
+                    this.updateDaysInMonth();
+                    
+                    await this.fetchRooms();
+                    await this.fetchBookings();
+                    
+                    // Polling automatically fetches latest bookings from database every 30 seconds
+                    setInterval(() => this.fetchBookings(), 30000); 
+                },
+
+                async prevMonth() {
+                    this.currentMonth--;
+                    if (this.currentMonth < 1) {
+                        this.currentMonth = 12;
+                        this.currentYear--;
+                    }
+                    this.updateDaysInMonth();
+                    await this.fetchBookings(); // Immediately re-sync specific month's data
+                },
+
+                async nextMonth() {
+                    this.currentMonth++;
+                    if (this.currentMonth > 12) {
+                        this.currentMonth = 1;
+                        this.currentYear++;
+                    }
+                    this.updateDaysInMonth();
+                    await this.fetchBookings(); // Immediately re-sync specific month's data
+                },
+
+                updateDaysInMonth() {
+                    this.daysInMonth = new Date(this.currentYear, this.currentMonth, 0).getDate();
+                },
+
+                getDayOfWeek(day) {
+                    const d = new Date(this.currentYear, this.currentMonth - 1, day);
+                    const days = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+                    return days[d.getDay()];
+                },
+
+                formatDateParam(day) {
+                    const m = this.currentMonth.toString().padStart(2, '0');
+                    const d = day.toString().padStart(2, '0');
+                    return `${this.currentYear}-${m}-${d}`;
+                },
+
+                async fetchRooms() {
+                    try {
+                        const res = await fetch('/api/v1/rooms');
+                        if(res.ok) this.rooms = await res.json();
+                    } catch (e) {
+                         console.error("Failed to load rooms");
+                    }
+                },
+
+                async fetchBookings() {
+                    try {
+                        const monthStr = `${this.currentYear}-${this.currentMonth.toString().padStart(2, '0')}-01`;
+                        const res = await fetch(`/api/v1/bookings?month=${monthStr}`);
+                        if(res.ok) {
+                            this.bookings = await res.json();
+                        }
+                    } catch(e) {
+                        console.error("Failed to fetch bookings");
+                    }
+                },
+
+                getCellBookings(roomId, day) {
+                    const dateStr = this.formatDateParam(day);
+                    return this.bookings.filter(b => b.roomId === roomId && b.specificDate === dateStr);
+                },
+
+                openCellBookingModal(room, day) {
+                    this.errorMessage = '';
+                    this.formDate = this.formatDateParam(day);
+                    this.formData = {
+                        roomId: room.id,
+                        specificDate: this.formDate,
+                        startTime: '10:00',
+                        endTime: '11:00',
+                        eventType: 'ACADEMIC',
+                        title: ''
+                    };
+                    this.isModalOpen = true;
+                },
+
+                openNewBookingModal() {
+                    this.errorMessage = '';
+                    this.formDate = this.formatDateParam(new Date().getDate());
+                    this.formData = {
+                        roomId: this.rooms.length > 0 ? this.rooms[0].id : '',
+                        specificDate: this.formDate,
+                        startTime: '10:00',
+                        endTime: '11:00',
+                        eventType: 'ACADEMIC',
+                        title: ''
+                    };
+                    this.isModalOpen = true;
+                },
+
+                async submitBooking() {
+                    this.isSubmitting = true;
+                    this.errorMessage = '';
+                    try {
+                        const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+                        const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+
+                        const payload = { ...this.formData };
+                        
+                        const res = await fetch('/api/v1/bookings', {
+                            method: 'POST',
+                            headers: { 
+                                'Content-Type': 'application/json',
+                                [csrfHeader]: csrfToken
+                            },
+                            body: JSON.stringify(payload)
+                        });
+
+                        if (res.ok) {
+                            this.isModalOpen = false;
+                            await this.fetchBookings(); // Refresh grid
+                        } else {
+                            const errText = await res.text();
+                            this.errorMessage = errText || "Failed to book slot. It might be already taken.";
+                        }
+                    } catch (e) {
+                        this.errorMessage = "Network error. Please try again.";
+                    } finally {
+                        this.isSubmitting = false;
+                    }
+                }
+            }));
+        });
+    </script>
 </body>
 </html>

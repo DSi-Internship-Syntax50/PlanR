@@ -1,22 +1,54 @@
 package com.example.PlanR.config;
 
 import com.example.PlanR.model.Department;
+import com.example.PlanR.model.Room;
 import com.example.PlanR.model.User;
 import com.example.PlanR.model.enums.Role;
+import com.example.PlanR.model.enums.RoomType;
 import com.example.PlanR.repository.DepartmentRepository;
+import com.example.PlanR.repository.RoomRepository;
 import com.example.PlanR.repository.UserRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.util.Arrays;
+
 @Configuration
 public class DataSeeder {
 
     @Bean
-    CommandLineRunner initDatabase(UserRepository userRepository, DepartmentRepository departmentRepository, PasswordEncoder passwordEncoder) {
+    CommandLineRunner initDatabase(UserRepository userRepository, DepartmentRepository departmentRepository, RoomRepository roomRepository, PasswordEncoder passwordEncoder) {
         return args -> {
-            // Check if test user already exists to prevent duplicate entries on restart
+            
+            // Seed Rooms if empty to restore original hardcoded UI rooms
+            if (roomRepository.count() == 0) {
+                Room auditorium = new Room();
+                auditorium.setRoomNumber("Main Auditorium");
+                auditorium.setType(RoomType.SEMINAR); 
+                
+                Room seminarHall = new Room();
+                seminarHall.setRoomNumber("Seminar Hall C");
+                seminarHall.setType(RoomType.LAB); 
+                
+                Room stadium = new Room();
+                stadium.setRoomNumber("Indoor Stadium");
+                stadium.setType(RoomType.THEORY);
+
+                roomRepository.saveAll(Arrays.asList(auditorium, seminarHall, stadium));
+
+                // Add Room 201 to 215 like the old UI
+                for (int i = 1; i <= 15; i++) {
+                    Room r = new Room();
+                    r.setRoomNumber("Room 20" + i);
+                    r.setType(RoomType.THEORY);
+                    roomRepository.save(r);
+                }
+                System.out.println("Seeded original hardcoded rooms.");
+            }
+
+            // Check if test user already exists
             if (userRepository.findByEmail("admin@planr.com").isEmpty()) {
                 
                 // 1. Create a dummy department first

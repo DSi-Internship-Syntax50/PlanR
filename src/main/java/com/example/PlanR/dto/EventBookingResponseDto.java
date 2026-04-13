@@ -1,55 +1,41 @@
-package com.example.PlanR.model;
+package com.example.PlanR.dto;
 
+import com.example.PlanR.model.EventBooking;
 import com.example.PlanR.model.enums.BookingStatus;
 import com.example.PlanR.model.enums.EventType;
-import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.time.LocalTime;
 
-@Entity
-@Table(name = "events_and_bookings")
-public class EventBooking {
+public class EventBookingResponseDto {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    @ManyToOne
-    @JoinColumn(name = "room_id")
-    private Room room;
-
-    @ManyToOne
-    @JoinColumn(name = "requested_by")
-    private User requestedBy;
-
-    @Column(name = "specific_date")
+    private Long roomId;
+    private String roomName;
     private LocalDate specificDate;
-
-    @Column(name = "start_time")
     private LocalTime startTime;
-
-    @Column(name = "end_time")
     private LocalTime endTime;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "event_type")
     private EventType eventType;
-
-    @Enumerated(EnumType.STRING)
     private BookingStatus status;
-
     private String title;
-
-    @Version
-    private Long version;
-
-    @Column(name = "displaced_by_event_id")
+    private String requestedByUsername;
     private Long displacedByEventId;
 
-    // Constructors
-    public EventBooking() {}
+    public EventBookingResponseDto() {}
 
-    // Getters and Setters
+    public EventBookingResponseDto(EventBooking booking) {
+        this.id = booking.getId();
+        this.roomId = booking.getRoom() != null ? booking.getRoom().getId() : null;
+        this.roomName = booking.getRoom() != null ? booking.getRoom().getRoomNumber() : null;
+        this.specificDate = booking.getSpecificDate();
+        this.startTime = booking.getStartTime();
+        this.endTime = booking.getEndTime();
+        this.eventType = booking.getEventType();
+        this.status = booking.getStatus();
+        this.title = booking.getTitle();
+        this.requestedByUsername = booking.getRequestedBy() != null ? booking.getRequestedBy().getName() : null;
+        this.displacedByEventId = booking.getDisplacedByEventId();
+    }
+
     public Long getId() {
         return id;
     }
@@ -58,20 +44,20 @@ public class EventBooking {
         this.id = id;
     }
 
-    public Room getRoom() {
-        return room;
+    public Long getRoomId() {
+        return roomId;
     }
 
-    public void setRoom(Room room) {
-        this.room = room;
+    public void setRoomId(Long roomId) {
+        this.roomId = roomId;
     }
 
-    public User getRequestedBy() {
-        return requestedBy;
+    public String getRoomName() {
+        return roomName;
     }
 
-    public void setRequestedBy(User requestedBy) {
-        this.requestedBy = requestedBy;
+    public void setRoomName(String roomName) {
+        this.roomName = roomName;
     }
 
     public LocalDate getSpecificDate() {
@@ -122,12 +108,12 @@ public class EventBooking {
         this.title = title;
     }
 
-    public Long getVersion() {
-        return version;
+    public String getRequestedByUsername() {
+        return requestedByUsername;
     }
 
-    public void setVersion(Long version) {
-        this.version = version;
+    public void setRequestedByUsername(String requestedByUsername) {
+        this.requestedByUsername = requestedByUsername;
     }
 
     public Long getDisplacedByEventId() {
