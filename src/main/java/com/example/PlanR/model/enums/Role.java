@@ -1,7 +1,8 @@
 package com.example.PlanR.model.enums;
 
 public enum Role {
-    ADMIN,
+    SUPERADMIN,
+    COORDINATOR,
     TEACHER,
     STUDENT
 }

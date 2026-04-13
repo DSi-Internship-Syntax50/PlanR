@@ -14,27 +14,36 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 public class DataSeeder {
 
     @Bean
-    CommandLineRunner initDatabase(UserRepository userRepository, DepartmentRepository departmentRepository, PasswordEncoder passwordEncoder) {
+    CommandLineRunner initDatabase(UserRepository userRepository, DepartmentRepository departmentRepository,
+            PasswordEncoder passwordEncoder) {
         return args -> {
-            // Check if test user already exists to prevent duplicate entries on restart
-            if (userRepository.findByEmail("admin@planr.com").isEmpty()) {
-                
-                // 1. Create a dummy department first
-                Department cse = new Department("CSE", "Computer Science and Engineering");
-                departmentRepository.save(cse);
+            // Check if superadmin already exists
+            if (userRepository.findByEmail("superadmin@planr.com").isEmpty()) {
 
-                // 2. Create the test user
-                User adminUser = new User("System Admin", "admin@planr.com");
-                adminUser.setPassword(passwordEncoder.encode("password123")); // Bcrypt Hash
-                adminUser.setRole(Role.ADMIN);
-                adminUser.setDepartment(cse);
+                // Create a dummy system department
+                Department systemDept = departmentRepository.save(new Department("SYS", "System Administration"));
                 
-                userRepository.save(adminUser);
-                
+                // Add default academic departments
+                if (departmentRepository.count() <= 1) {
+                    departmentRepository.save(new Department("CSE", "Computer Science and Engineering"));
+                    departmentRepository.save(new Department("EEE", "Electrical and Electronic Engineering"));
+                    departmentRepository.save(new Department("BBA", "Business Administration"));
+                    departmentRepository.save(new Department("CE", "Civil Engineering"));
+                }
+
+                // Create the singular Superadmin
+                User superAdmin = new User("System Administrator", "superadmin@planr.com");
+                superAdmin.setPassword(passwordEncoder.encode("superadmin123")); // Remember to change this in
+                                                                                 // production
+                superAdmin.setRole(Role.SUPERADMIN);
+                superAdmin.setDepartment(systemDept);
+
+                userRepository.save(superAdmin);
+
                 System.out.println("=========================================");
-                System.out.println("TEST USER CREATED:");
-                System.out.println("Email: admin@planr.com");
-                System.out.println("Password: password123");
+                System.out.println("SUPERADMIN INITIALIZED:");
+                System.out.println("Email: superadmin@planr.com");
+                System.out.println("Password: superadmin123");
                 System.out.println("=========================================");
             }
         };
