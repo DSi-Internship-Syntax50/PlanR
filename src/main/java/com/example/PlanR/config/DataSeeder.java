@@ -15,8 +15,7 @@ import com.example.PlanR.repository.UserRepository;
 public class DataSeeder {
 
     @Bean
-    CommandLineRunner initDatabase(UserRepository userRepository, DepartmentRepository departmentRepository,
-            PasswordEncoder passwordEncoder) {
+    public CommandLineRunner initDatabase(UserRepository userRepository, DepartmentRepository departmentRepository, PasswordEncoder passwordEncoder) {
         return args -> {
             // Check if superadmin already exists
             if (userRepository.findByEmail("superadmin@planr.com").isEmpty()) {
