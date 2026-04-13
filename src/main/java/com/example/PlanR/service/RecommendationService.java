@@ -1,18 +1,18 @@
 package com.example.PlanR.service;
 
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
 import com.example.PlanR.model.Course;
 import com.example.PlanR.model.MasterRoutine;
 import com.example.PlanR.model.Room;
 import com.example.PlanR.model.enums.DayOfWeek;
 import com.example.PlanR.repository.MasterRoutineRepository;
 import com.example.PlanR.repository.RoomRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class RecommendationService {
@@ -47,7 +47,7 @@ public class RecommendationService {
 
             // Check room type (Simplified matching based on our robust schemas: isLab
             // implies Lab type)
-            boolean roomTypeOk = true;
+            boolean roomTypeOk;
             if (course.getIsLab() != null && course.getIsLab()) {
                 roomTypeOk = room.getType() == com.example.PlanR.model.enums.RoomType.LAB; // Assuming LAB exists in
                                                                                            // enum
