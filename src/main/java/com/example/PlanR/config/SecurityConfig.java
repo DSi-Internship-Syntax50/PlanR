@@ -21,9 +21,12 @@ public class SecurityConfig {
                 .requestMatchers("/login", "/register", "/css/**", "/js/**").permitAll()
                 // Example of restricting an endpoint to ADMIN only
                 .requestMatchers("/admin/**").hasRole("ADMIN")
+                // Protect AI and other API endpoints
+                .requestMatchers("/api/ai/**", "/api/notifications/**").authenticated()
                 // Protect all other routes
                 .anyRequest().authenticated()
             )
+            .csrf(csrf -> csrf.ignoringRequestMatchers("/api/**"))
             .formLogin(form -> form
                 // Custom login page
                 .loginPage("/login")
