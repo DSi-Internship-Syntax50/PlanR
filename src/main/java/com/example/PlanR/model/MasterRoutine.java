@@ -39,6 +39,9 @@ public class MasterRoutine {
     @Enumerated(EnumType.STRING)
     private Section section;
 
+    @Column(name = "start_slot_index")
+    private Integer startSlotIndex;
+
     @OneToMany(mappedBy = "routine", cascade = CascadeType.ALL)
     private List<ClassOverride> overrides;
 
@@ -115,5 +118,13 @@ public class MasterRoutine {
 
     public void setOverrides(List<ClassOverride> overrides) {
         this.overrides = overrides;
+    }
+
+    public Integer getStartSlotIndex() {
+        return startSlotIndex;
+    }
+
+    public void setStartSlotIndex(Integer startSlotIndex) {
+        this.startSlotIndex = startSlotIndex;
     }
 }

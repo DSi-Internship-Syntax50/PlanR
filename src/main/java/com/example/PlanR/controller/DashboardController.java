@@ -3,9 +3,16 @@ package com.example.PlanR.controller;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.beans.factory.annotation.Autowired;
+import com.example.PlanR.repository.RoomRepository;
+import com.example.PlanR.model.Room;
+import java.util.List;
 
 @Controller
 public class DashboardController {
+
+    @Autowired
+    private RoomRepository roomRepository;
 
     @GetMapping({"/", "/dashboard"})
     public String showCoordinatorCanvas(Model model) {
@@ -31,6 +38,8 @@ public class DashboardController {
 
     @GetMapping("/allocation")
     public String showAllocationHub(Model model) {
+        List<Room> rooms = roomRepository.findAll();
+        model.addAttribute("rooms", rooms);
         return "allocation"; // Loads allocation.html
     }
 
