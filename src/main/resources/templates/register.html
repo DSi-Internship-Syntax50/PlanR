@@ -6,7 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Register - PlanR</title>
     <!-- Google Fonts: Inter -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -48,12 +49,25 @@
             animation: move 25s infinite alternate;
         }
 
-        .blob-1 { top: -10%; right: -10%; }
-        .blob-2 { bottom: -10%; left: -10%; animation-delay: -7s; }
+        .blob-1 {
+            top: -10%;
+            right: -10%;
+        }
+
+        .blob-2 {
+            bottom: -10%;
+            left: -10%;
+            animation-delay: -7s;
+        }
 
         @keyframes move {
-            from { transform: translate(0, 0) scale(1); }
-            to { transform: translate(-100px, 50px) scale(1.2); }
+            from {
+                transform: translate(0, 0) scale(1);
+            }
+
+            to {
+                transform: translate(-100px, 50px) scale(1.2);
+            }
         }
 
         .register-card {
@@ -69,8 +83,15 @@
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .brand {
@@ -92,8 +113,15 @@
             box-shadow: 0 0 20px rgba(37, 99, 235, 0.3);
         }
 
-        .brand h1 { font-size: 24px; font-weight: 800; letter-spacing: -1px; }
-        .brand span { color: var(--primary); }
+        .brand h1 {
+            font-size: 24px;
+            font-weight: 800;
+            letter-spacing: -1px;
+        }
+
+        .brand span {
+            color: var(--primary);
+        }
 
         .form-grid {
             display: grid;
@@ -101,7 +129,9 @@
             gap: 16px;
         }
 
-        .form-group { margin-bottom: 0; }
+        .form-group {
+            margin-bottom: 0;
+        }
 
         .form-group label {
             display: block;
@@ -113,7 +143,10 @@
             letter-spacing: 1px;
         }
 
-        .input-wrapper { position: relative; }
+        .input-wrapper {
+            position: relative;
+        }
+
         .input-wrapper i {
             position: absolute;
             left: 14px;
@@ -123,7 +156,8 @@
             font-size: 13px;
         }
 
-        .form-group input, .form-group select {
+        .form-group input,
+        .form-group select {
             width: 100%;
             background: rgba(0, 0, 0, 0.2);
             border: 1px solid var(--glass-border);
@@ -143,7 +177,8 @@
             background-size: 16px;
         }
 
-        .form-group input:focus, .form-group select:focus {
+        .form-group input:focus,
+        .form-group select:focus {
             outline: none;
             border-color: var(--primary);
             box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
@@ -195,7 +230,9 @@
             font-weight: 600;
         }
 
-        .footer-link a:hover { text-decoration: underline; }
+        .footer-link a:hover {
+            text-decoration: underline;
+        }
     </style>
 </head>
 
@@ -211,7 +248,7 @@
             <h1>Create <span>Account</span></h1>
         </div>
 
-        <form th:action="@{/register}" th:object="${registrationForm}" method="post">
+        <form th:action="@{/admin/users/create}" th:object="${registrationForm}" method="post">
             <div class="form-grid">
                 <!-- Full Name -->
                 <div class="form-group">
@@ -257,7 +294,8 @@
                                 th:text="${dept.shortCode + ' - ' + dept.name}"></option>
                         </select>
                     </div>
-                    <span th:if="${#fields.hasErrors('departmentId')}" th:errors="*{departmentId}" class="error-message"></span>
+                    <span th:if="${#fields.hasErrors('departmentId')}" th:errors="*{departmentId}"
+                        class="error-message"></span>
                 </div>
 
                 <!-- Password -->
@@ -265,7 +303,8 @@
                     <label for="password">Security Identifier</label>
                     <div class="input-wrapper">
                         <i class="fas fa-lock"></i>
-                        <input type="password" id="password" th:field="*{password}" placeholder="Min. 6 strong characters" />
+                        <input type="password" id="password" th:field="*{password}"
+                            placeholder="Min. 6 strong characters" />
                     </div>
                     <span th:if="${#fields.hasErrors('password')}" th:errors="*{password}" class="error-message"></span>
                 </div>
@@ -276,7 +315,7 @@
             </button>
 
             <div class="footer-link">
-                Existing operative? <a th:href="@{/login}">Sign In here</a>
+                User Creation Done? <a th:href="@{/dashboard}">Back To Dashboard</a>
             </div>
         </form>
     </div>

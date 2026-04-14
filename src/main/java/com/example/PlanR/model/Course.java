@@ -25,6 +25,16 @@ public class Course {
 
     private String batch;
 
+    @Column(name = "student_capacity")
+    private Integer studentCapacity;
+
+    @Column(name = "slot_count")
+    private Integer slotCount;
+
+    @ManyToOne
+    @JoinColumn(name = "teacher_id")
+    private User teacher;
+
     @OneToMany(mappedBy = "course", cascade = CascadeType.ALL)
     private List<MasterRoutine> routines;
 
@@ -86,5 +96,29 @@ public class Course {
 
     public void setRoutines(List<MasterRoutine> routines) {
         this.routines = routines;
+    }
+
+    public Integer getStudentCapacity() {
+        return studentCapacity;
+    }
+
+    public void setStudentCapacity(Integer studentCapacity) {
+        this.studentCapacity = studentCapacity;
+    }
+
+    public Integer getSlotCount() {
+        return slotCount;
+    }
+
+    public void setSlotCount(Integer slotCount) {
+        this.slotCount = slotCount;
+    }
+
+    public User getTeacher() {
+        return teacher;
+    }
+
+    public void setTeacher(User teacher) {
+        this.teacher = teacher;
     }
 }

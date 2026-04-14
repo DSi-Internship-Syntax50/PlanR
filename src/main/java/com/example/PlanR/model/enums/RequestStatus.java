@@ -1,8 +1,7 @@
 package com.example.PlanR.model.enums;
 
-public enum BookingStatus {
+public enum RequestStatus {
     PENDING,
     APPROVED,
-    REJECTED,
-    DISPLACED
+    REJECTED
 }

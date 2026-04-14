@@ -5,23 +5,26 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
 public class SecurityConfig {
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http, CustomUserDetailsService userDetailsService) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, CustomUserDetailsService userDetailsService)
+            throws Exception {
         http
             .authorizeHttpRequests(auth -> auth
-                // Publicly accessible routes
-                .requestMatchers("/login", "/register", "/css/**", "/js/**").permitAll()
-                // Example of restricting an endpoint to ADMIN only
-                .requestMatchers("/admin/**").hasRole("ADMIN")
-                // Protect AI and other API endpoints
+                // Combined publicly accessible routes
+                .requestMatchers("/login", "/register", "/css/**", "/js/**", "/images/**").permitAll()
+                // Combined Admin constraints
+                .requestMatchers("/admin/**").hasAnyRole("SUPERADMIN", "ADMIN")
+                // Protect AI and Notification endpoints
                 .requestMatchers("/api/ai/**", "/api/notifications/**").authenticated()
                 // Protect all other routes
                 .anyRequest().authenticated()
@@ -48,7 +51,13 @@ public class SecurityConfig {
                 .deleteCookies("JSESSIONID", "SESSION") 
                 .permitAll()
             )
-            .userDetailsService(userDetailsService);
+            .userDetailsService(userDetailsService)
+            // Custom exception handling from dev branch
+            .exceptionHandling(ex -> ex
+                .accessDeniedHandler((request, response, accessDeniedException) -> {
+                    response.sendRedirect("/dashboard");
+                })
+            );
 
         return http.build();
     }

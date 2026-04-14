@@ -1,54 +1,15 @@
-package com.example.PlanR.model;
+package com.example.PlanR.dto;
 
 import com.example.PlanR.model.enums.RoomType;
-import jakarta.persistence.*;
-import java.util.List;
 
-@Entity
-@Table(name = "rooms")
-public class Room {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    @Column(name = "room_number")
+public class RoomCreateDto {
     private String roomNumber;
-
-    @Enumerated(EnumType.STRING)
     private RoomType type;
-
     private Integer capacity;
-
-    @Column(name = "has_computers")
     private Boolean hasComputers;
-
-    @Column(name = "has_hardware_kits")
     private Boolean hasHardwareKits;
-
-    @Column(name = "floor_number")
     private Integer floorNumber;
-
-    @Column(name = "block_name")
     private String block;
-
-    @OneToMany(mappedBy = "room", cascade = CascadeType.ALL)
-    private List<MasterRoutine> routines;
-    
-    @OneToMany(mappedBy = "room", cascade = CascadeType.ALL)
-    private List<EventBooking> bookings;
-
-  
-    public Room() {}
-
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
 
     public String getRoomNumber() {
         return roomNumber;
@@ -88,22 +49,6 @@ public class Room {
 
     public void setHasHardwareKits(Boolean hasHardwareKits) {
         this.hasHardwareKits = hasHardwareKits;
-    }
-
-    public List<MasterRoutine> getRoutines() {
-        return routines;
-    }
-
-    public void setRoutines(List<MasterRoutine> routines) {
-        this.routines = routines;
-    }
-
-    public List<EventBooking> getBookings() {
-        return bookings;
-    }
-
-    public void setBookings(List<EventBooking> bookings) {
-        this.bookings = bookings;
     }
 
     public Integer getFloorNumber() {
