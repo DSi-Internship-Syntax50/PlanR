@@ -42,8 +42,6 @@ public class User {
     @OneToMany(mappedBy = "requestedBy", cascade = CascadeType.ALL)
     private List<EventBooking> requestedEvents;
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
-    private List<Notification> notifications;
 
     // Constructors
     public User() {}
@@ -150,11 +148,4 @@ public class User {
         this.requestedEvents = requestedEvents;
     }
 
-    public List<Notification> getNotifications() {
-        return notifications;
-    }
-
-    public void setNotifications(List<Notification> notifications) {
-        this.notifications = notifications;
-    }
 }

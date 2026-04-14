@@ -6,7 +6,6 @@ import com.example.PlanR.model.User;
 import com.example.PlanR.model.enums.Role;
 import com.example.PlanR.repository.DepartmentRepository;
 import com.example.PlanR.repository.UserRepository;
-import com.example.PlanR.service.NotificationService;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,13 +30,11 @@ public class RegistrationController {
     private final UserRepository userRepository;
     private final DepartmentRepository departmentRepository;
     private final PasswordEncoder passwordEncoder;
-    private final NotificationService notificationService;
 
-    public RegistrationController(UserRepository userRepository, DepartmentRepository departmentRepository, PasswordEncoder passwordEncoder, NotificationService notificationService) {
+    public RegistrationController(UserRepository userRepository, DepartmentRepository departmentRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.departmentRepository = departmentRepository;
         this.passwordEncoder = passwordEncoder;
-        this.notificationService = notificationService;
     }
 
     @GetMapping("/create")
@@ -94,8 +91,6 @@ public class RegistrationController {
             userRepository.save(user);
             logger.info("User {} created successfully by admin with role {}", email, user.getRole());
 
-            // Send welcome notification
-            notificationService.createNotification(user, "Welcome to PlanR", "Your account has been initialized. You can now access your schedules and seat plans.");
 
             // Redirect back to the form with a success parameter
             return "redirect:/admin/users/create?success=true";

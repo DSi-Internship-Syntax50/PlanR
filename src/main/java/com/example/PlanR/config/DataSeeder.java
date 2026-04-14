@@ -3,7 +3,6 @@ package com.example.PlanR.config;
 import com.example.PlanR.model.*;
 import com.example.PlanR.model.enums.*;
 import com.example.PlanR.repository.*;
-import com.example.PlanR.service.NotificationService;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -23,8 +22,7 @@ public class DataSeeder {
             CourseRepository courseRepository,
             RoomRepository roomRepository,
             MasterRoutineRepository routineRepository,
-            PasswordEncoder passwordEncoder,
-            NotificationService notificationService) {
+            PasswordEncoder passwordEncoder) {
         
         return args -> {
             // 1. Seed Rooms if empty (from dev branch)
@@ -61,8 +59,8 @@ public class DataSeeder {
                 departmentRepository.save(new Department("CE", "Civil Engineering"));
             }
 
-            Department cse = departmentRepository.findByShortName("CSE").orElse(null);
-            Department sys = departmentRepository.findByShortName("SYS").orElse(null);
+            Department cse = departmentRepository.findByShortCode("CSE").orElse(null);
+            Department sys = departmentRepository.findByShortCode("SYS").orElse(null);
 
             // 3. Seed Superadmin (from dev branch)
             if (userRepository.findByEmail("superadmin@planr.com").isEmpty()) {
@@ -99,7 +97,7 @@ public class DataSeeder {
                 routine.setCourse(math);
                 routine.setRoom(room);
                 routine.setSection(Section.A);
-                routine.setDayOfWeek(java.time.LocalDate.now().getDayOfWeek());
+                routine.setDayOfWeek(com.example.PlanR.model.enums.DayOfWeek.valueOf(java.time.LocalDate.now().getDayOfWeek().name()));
                 routine.setStartTime(LocalTime.now().plusMinutes(15).withSecond(0).withNano(0));
                 routine.setEndTime(routine.getStartTime().plusHours(1));
                 routineRepository.save(routine);
@@ -107,16 +105,16 @@ public class DataSeeder {
                 System.out.println("ADMIN & MOCK DATA INITIALIZED: admin@planr.com / password123");
             }
 
-            // 5. Ensure EVERY user has a welcome notification
-            userRepository.findAll().forEach(user -> {
-                if (notificationService.getUnreadCount(user) == 0) {
-                    notificationService.createNotification(
-                        user, 
-                        "Welcome to PlanR", 
-                        "System initialization complete. Explore your logic maps and seat plans!"
-                    );
-                }
-            });
+            // 5. Seed Israt (Student user from feedback)
+            if (userRepository.findByEmail("israt@gmail.com").isEmpty()) {
+                User israt = new User("Israt Jahan", "israt@gmail.com");
+                israt.setPassword(passwordEncoder.encode("password123"));
+                israt.setRole(Role.STUDENT);
+                israt.setDepartment(cse);
+                israt.setCurrentBatch("4.2");
+                userRepository.save(israt);
+                System.out.println("STUDENT INITIALIZED: israt@gmail.com / password123");
+            }
         };
     }
 }

@@ -24,8 +24,8 @@ public class SecurityConfig {
                 .requestMatchers("/login", "/register", "/css/**", "/js/**", "/images/**").permitAll()
                 // Combined Admin constraints
                 .requestMatchers("/admin/**").hasAnyRole("SUPERADMIN", "ADMIN")
-                // Protect AI and Notification endpoints
-                .requestMatchers("/api/ai/**", "/api/notifications/**").authenticated()
+                // Protect AI endpoints
+                .requestMatchers("/api/ai/**").authenticated()
                 // Protect all other routes
                 .anyRequest().authenticated()
             )
