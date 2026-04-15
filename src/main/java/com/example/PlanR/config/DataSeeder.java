@@ -2,7 +2,8 @@ package com.example.PlanR.config;
 
 import java.time.LocalTime;
 import java.util.Arrays;
-
+import java.util.Random;
+import java.util.List;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -43,6 +44,22 @@ public class DataSeeder {
                 System.out.println("MIGRATION: Updated " + migrated + " user(s) from ADMIN to COORDINATOR role.");
             }
 
+            // 2. Seed Departments if empty
+            if (departmentRepository.count() == 0) {
+                departmentRepository.save(new Department("CSE", "Computer Science and Engineering"));
+                departmentRepository.save(new Department("EEE", "Electrical and Electronic Engineering"));
+                departmentRepository.save(new Department("BBA", "Business Administration"));
+                departmentRepository.save(new Department("CE", "Civil Engineering"));
+                departmentRepository.save(new Department("ARCHI", "Architecture"));
+            }
+
+                Department cse = departmentRepository.findByShortCode("CSE").orElse(null);
+                Department eee = departmentRepository.findByShortCode("EEE").orElse(null);
+                Department bba = departmentRepository.findByShortCode("BBA").orElse(null);
+                Department ce = departmentRepository.findByShortCode("CE").orElse(null);
+                Department archi = departmentRepository.findByShortCode("ARCHI").orElse(null);
+
+
             // 1. Seed Rooms if empty
             if (roomRepository.count() == 0) {
                 Room auditorium = new Room();
@@ -62,9 +79,7 @@ public class DataSeeder {
                 stadium.setType(RoomType.THEORY);
                 stadium.setCapacity(500);
                 stadium.setBlock(" ");
-
                 roomRepository.saveAll(Arrays.asList(auditorium, seminarHall, stadium));
-
                 // Add Room 201 to 215 like the old UI
                 for (int fl = 1; fl < 5; fl++) {
                     for (int i = 1; i <= 7; i++) {
@@ -76,13 +91,13 @@ public class DataSeeder {
                             r.setBlock(st);
                             r.setRoomNumber("0" + i);
                             r.setType(RoomType.THEORY);
-                            
-                            switch (i%5) {
-                                case 0 -> r.setDept("CSE");
-                                case 1 -> r.setDept("EEE");
-                                case 2 -> r.setDept("BBA");
-                                case 3 -> r.setDept("CE");
-                                default -> r.setDept("Archi");
+
+                            switch (i % 5) {
+                                case 0 -> r.setDept(cse);
+                                case 1 -> r.setDept(eee);
+                                case 2 -> r.setDept(bba);
+                                case 3 -> r.setDept(ce);
+                                default -> r.setDept(archi);
                             }
                             roomRepository.save(r);
 
@@ -92,16 +107,6 @@ public class DataSeeder {
                 System.out.println("Seeded original hardcoded rooms.");
             }
 
-            // 2. Seed Departments if empty
-            if (departmentRepository.count() == 0) {
-                departmentRepository.save(new Department("SYS", "System Administration"));
-                departmentRepository.save(new Department("CSE", "Computer Science and Engineering"));
-                departmentRepository.save(new Department("EEE", "Electrical and Electronic Engineering"));
-                departmentRepository.save(new Department("BBA", "Business Administration"));
-                departmentRepository.save(new Department("CE", "Civil Engineering"));
-            }
-
-            Department cse = departmentRepository.findByShortCode("CSE").orElse(null);
             Department sys = departmentRepository.findByShortCode("SYS").orElse(null);
 
             // 3. Seed Superadmin
@@ -202,6 +207,65 @@ public class DataSeeder {
 
                 System.out.println("✅ Routine Builder Test Data Seeded successfully!");
                 System.out.println("Test Teacher ID: " + teacher.getId() + " | Email: teacher@planr.com");
+            }
+
+            // ==========================================
+            // 6. ANALYTICS MOCK DATA
+            // ==========================================
+            if (routineRepository.count() < 15) {
+                System.out.println("📊 Seeding additional realistic data for Analytics...");
+
+                List<Department> departments = departmentRepository.findAll();
+                List<Room> allRooms = roomRepository.findAll();
+                Random random = new Random(42); // deterministic random
+
+                com.example.PlanR.model.enums.DayOfWeek[] days = {
+                        com.example.PlanR.model.enums.DayOfWeek.MONDAY,
+                        com.example.PlanR.model.enums.DayOfWeek.TUESDAY,
+                        com.example.PlanR.model.enums.DayOfWeek.WEDNESDAY,
+                        com.example.PlanR.model.enums.DayOfWeek.THURSDAY,
+                        com.example.PlanR.model.enums.DayOfWeek.FRIDAY,
+                        com.example.PlanR.model.enums.DayOfWeek.SATURDAY
+                };
+
+                for (Department dept : departments) {
+                    if (dept.getShortCode().equals("SYS"))
+                        continue; // Skip SYS
+
+                    // Add some dummy courses for this department
+                    for (int i = 1; i <= Math.max(3, random.nextInt(6)); i++) {
+                        Course dummyCourse = new Course();
+                        dummyCourse.setCourseCode(dept.getShortCode() + " " + (1000 + random.nextInt(4000)));
+                        dummyCourse.setTitle("Dummy Course " + i + " " + dept.getShortCode());
+                        dummyCourse.setDepartment(dept);
+                        dummyCourse.setBatch("Batch " + random.nextInt(5));
+                        dummyCourse.setSlotCount(random.nextInt(3) + 1); // 1, 2, or 3 slots
+                        dummyCourse.setIsLab(random.nextBoolean());
+                        courseRepository.save(dummyCourse);
+
+                        // Assign 1 to 3 routines for this course across the week
+                        int numRoutines = random.nextInt(3) + 1;
+                        for (int j = 0; j < numRoutines; j++) {
+                            MasterRoutine r = new MasterRoutine();
+                            r.setCourse(dummyCourse);
+                            r.setDayOfWeek(days[random.nextInt(days.length)]);
+
+                            // 10% chance to be overbooked (room is null)
+                            if (random.nextInt(100) > 10 && !allRooms.isEmpty()) {
+                                r.setRoom(allRooms.get(random.nextInt(allRooms.size())));
+                            }
+
+                            r.setSection(Section.A);
+                            r.setStartSlotIndex(random.nextInt(8) + 1); // slots 1 to 8
+                            r.setStartTime(LocalTime.of(8 + r.getStartSlotIndex(), 0));
+                            r.setEndTime(r.getStartTime().plusHours(1)); // Approx
+
+                            routineRepository.save(r);
+                        }
+                    }
+                }
+
+                System.out.println("✅ Analytics Data Seeded successfully!");
             }
         };
     }

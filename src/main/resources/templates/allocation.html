@@ -3,9 +3,9 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="_csrf" th:content="${_csrf?.token}"/>
-    <meta name="_csrf_header" th:content="${_csrf?.headerName}"/>
-    
+    <meta name="_csrf" th:content="${_csrf?.token}" />
+    <meta name="_csrf_header" th:content="${_csrf?.headerName}" />
+
     <title>Room Allocation System - PlanR</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -21,8 +21,13 @@
         }
 
         @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
         }
 
         .calendar-grid-header {
@@ -48,11 +53,13 @@
                         facilities, and spatial requirements. Enforce strict conflict avoidance and mapping rules.</p>
                 </div>
                 <div class="flex gap-3">
-                    <button class="px-5 py-2.5 bg-white border border-gray-200 text-gray-700 font-semibold rounded-lg text-sm shadow-sm hover:bg-gray-50 transition-colors flex items-center justify-center gap-2">
+                    <button
+                        class="px-5 py-2.5 bg-white border border-gray-200 text-gray-700 font-semibold rounded-lg text-sm shadow-sm hover:bg-gray-50 transition-colors flex items-center justify-center gap-2">
                         <i class="fas fa-filter"></i> Filters
                     </button>
                     <div sec:authorize="hasAnyRole('SUPERADMIN', 'COORDINATOR')">
-                        <button onclick="openAddRoomModal()" class="px-5 py-2.5 bg-[#0a192f] text-white font-semibold rounded-lg text-sm shadow-md hover:bg-gray-800 transition-colors flex items-center justify-center gap-2">
+                        <button onclick="openAddRoomModal()"
+                            class="px-5 py-2.5 bg-[#0a192f] text-white font-semibold rounded-lg text-sm shadow-md hover:bg-gray-800 transition-colors flex items-center justify-center gap-2">
                             <i class="fas fa-plus"></i> Add New Room
                         </button>
                     </div>
@@ -60,39 +67,52 @@
             </div>
 
             <div class="grid grid-cols-12 gap-6">
-                <div class="col-span-4 bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col min-h-[600px]">
+                <div
+                    class="col-span-4 bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col min-h-[600px]">
                     <div class="p-5 border-b border-gray-100 bg-gray-50/50">
-                        <h3 class="font-bold text-gray-900 mb-4"><i class="fas fa-door-open text-blue-600 mr-2"></i> Facilities Directory</h3>
+                        <h3 class="font-bold text-gray-900 mb-4"><i class="fas fa-door-open text-blue-600 mr-2"></i>
+                            Facilities Directory</h3>
                         <div class="relative">
-                            <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm"></i>
-                            <input type="text" placeholder="Search rooms..." class="w-full bg-white border border-gray-200 text-sm rounded-lg py-2.5 pl-9 pr-4 focus:ring-2 focus:ring-blue-500 outline-none transition-all">
+                            <i
+                                class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm"></i>
+                            <input type="text" placeholder="Search rooms..."
+                                class="w-full bg-white border border-gray-200 text-sm rounded-lg py-2.5 pl-9 pr-4 focus:ring-2 focus:ring-blue-500 outline-none transition-all">
                         </div>
                     </div>
                     <div class="flex-1 overflow-y-auto p-4 space-y-3" id="roomList">
-                        <div th:each="room : ${rooms}" 
-                             th:data-room-id="${room.id}"
-                             th:data-room-name="${room.roomNumber}" 
-                             th:data-room-floor="${room.floorNumber}"
-                             th:data-room-block="${room.block}"
-                             th:data-room-dept="${room.dept}"
-                             class="room-card p-4 rounded-xl border border-gray-100 bg-white hover:bg-blue-50/80 cursor-pointer transition-all shadow-sm relative">
-                            <div class="selected-badge hidden absolute top-0 right-0 bg-blue-600 text-white text-[9px] font-bold px-2 py-1 rounded-bl-xl rounded-tr-xl">
+                        <div th:each="room : ${rooms}" th:data-room-id="${room.id}"
+                            th:data-room-name="${room.roomNumber}" th:data-room-floor="${room.floorNumber}"
+                            th:data-room-block="${room.block}" th:data-room-dept="${room.dept?.shortCode}"
+                            class="room-card p-4 rounded-xl border border-gray-100 bg-white hover:bg-blue-50/80 cursor-pointer transition-all shadow-sm relative">
+                            <div
+                                class="selected-badge hidden absolute top-0 right-0 bg-blue-600 text-white text-[9px] font-bold px-2 py-1 rounded-bl-xl rounded-tr-xl">
                                 SELECTED
                             </div>
                             <div class="flex justify-between items-start mb-2 mt-1">
                                 <h4 class="font-bold text-gray-900 room-title">
-                                    <span th:if="${room.floorNumber != null}" th:text="|${room.floorNumber}${room.block ?: ''}${room.roomNumber}|">Room 401</span>
-                                    <span th:unless="${room.floorNumber != null}" th:text="${room.roomNumber}">Room 401</span>
+                                    <span th:if="${room.floorNumber != null}"
+                                        th:text="|${room.floorNumber}${room.block ?: ''}${room.roomNumber}|">Room
+                                        401</span>
+                                    <span th:unless="${room.floorNumber != null}" th:text="${room.roomNumber}">Room
+                                        401</span>
                                 </h4>
-                                <span class="bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider" th:text="${room.type}">Type</span>
+                                <span
+                                    class="bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider"
+                                    th:text="${room.type}">Type</span>
                             </div>
                             <div class="text-xs text-gray-500 flex items-center justify-between">
                                 <span class="flex items-center gap-1 font-semibold text-gray-700">
-                                    <i class="fas fa-users text-gray-400"></i> Cap: <span th:text="${room.capacity}">120</span>
+                                    <i class="fas fa-users text-gray-400"></i> Cap: <span
+                                        th:text="${room.capacity}">120</span>
                                 </span>
                                 <div class="flex gap-1">
-                                    <span class="bg-gray-100 text-gray-600 px-2 py-1 rounded border border-gray-200 text-[10px] font-bold" th:if="${room.dept != null and !room.dept.isEmpty()}" th:text="${room.dept}"></span>
-                                    <span class="bg-gray-100 text-gray-600 px-2 py-1 rounded border border-gray-200 text-[10px] font-bold" th:if="${room.block != null and !room.block.isEmpty()}">
+                                    <span
+                                        class="bg-gray-100 text-gray-600 px-2 py-1 rounded border border-gray-200 text-[10px] font-bold"
+                                        th:if="${room.dept != null}" th:text="${room.dept.shortCode}"></span>
+
+                                    <span
+                                        class="bg-gray-100 text-gray-600 px-2 py-1 rounded border border-gray-200 text-[10px] font-bold"
+                                        th:if="${room.block != null and !room.block.isEmpty()}">
                                         Block <span th:text="${room.block}"></span>
                                     </span>
                                 </div>
@@ -106,21 +126,27 @@
                         <div>
                             <h2 class="text-2xl font-extrabold text-gray-900 flex items-center gap-3">
                                 <span id="selectedRoomTitle">Select a Room</span>
-                                <span id="roomStatusBadge" class="hidden bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-bold uppercase tracking-wider items-center gap-1">
+                                <span id="roomStatusBadge"
+                                    class="hidden bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-bold uppercase tracking-wider items-center gap-1">
                                     <i class="fas fa-check-circle"></i> Viewing
                                 </span>
                             </h2>
-                            <p class="text-sm text-gray-500 font-medium mt-1">Timeline view of allocated courses for this facility.</p>
+                            <p class="text-sm text-gray-500 font-medium mt-1">Timeline view of allocated courses for
+                                this facility.</p>
                         </div>
                     </div>
 
-                    <div class="flex-1 flex flex-col border border-gray-200 rounded-xl overflow-hidden bg-gray-50/50 shadow-inner relative">
-                        <div id="calendarLoading" class="absolute inset-0 bg-white/70 flex justify-center items-center z-10 hidden">
+                    <div
+                        class="flex-1 flex flex-col border border-gray-200 rounded-xl overflow-hidden bg-gray-50/50 shadow-inner relative">
+                        <div id="calendarLoading"
+                            class="absolute inset-0 bg-white/70 flex justify-center items-center z-10 hidden">
                             <div class="loader"></div>
                         </div>
 
-                        <div class="calendar-grid-header border-b border-gray-200 bg-white text-xs font-bold text-gray-400 uppercase tracking-wide text-center">
-                            <div class="py-3 border-r border-gray-200 flex items-center justify-center bg-gray-50/50"><i class="fas fa-clock text-gray-300"></i></div>
+                        <div
+                            class="calendar-grid-header border-b border-gray-200 bg-white text-xs font-bold text-gray-400 uppercase tracking-wide text-center">
+                            <div class="py-3 border-r border-gray-200 flex items-center justify-center bg-gray-50/50"><i
+                                    class="fas fa-clock text-gray-300"></i></div>
                             <div class="py-3 border-r border-gray-200">Mon</div>
                             <div class="py-3 border-r border-gray-200">Tue</div>
                             <div class="py-3 border-r border-gray-200">Wed</div>
@@ -129,7 +155,8 @@
                         </div>
 
                         <div id="calendarBody" class="flex-1 overflow-y-auto">
-                            <div class="flex flex-col items-center justify-center h-full text-gray-400 mt-20" id="calendarPlaceholder">
+                            <div class="flex flex-col items-center justify-center h-full text-gray-400 mt-20"
+                                id="calendarPlaceholder">
                                 <i class="fas fa-calendar-alt text-4xl mb-3 text-gray-300"></i>
                                 <p>Select a room to view its schedule timeline</p>
                             </div>
@@ -144,16 +171,19 @@
         <div class="bg-white rounded-xl shadow-2xl p-6 w-[500px] max-w-[90vw] animate-[fadeIn_0.2s_ease-out]">
             <div class="flex justify-between items-center mb-4">
                 <h3 class="text-lg font-bold text-gray-900">Allocate Course</h3>
-                <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times"></i></button>
+                <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600"><i
+                        class="fas fa-times"></i></button>
             </div>
-            <p class="text-sm text-gray-500 mb-4">Select an unassigned course to allocate to <span id="modalRoomName" class="font-bold text-blue-600"></span> on <span id="modalDayTime" class="font-bold"></span>.</p>
+            <p class="text-sm text-gray-500 mb-4">Select an unassigned course to allocate to <span id="modalRoomName"
+                    class="font-bold text-blue-600"></span> on <span id="modalDayTime" class="font-bold"></span>.</p>
 
             <div class="max-h-[300px] overflow-y-auto mb-4 border rounded-lg bg-gray-50 p-2" id="unassignedList">
                 <div class="text-center text-sm text-gray-500 py-4" id="unassignedLoading">Loading...</div>
             </div>
 
             <div class="flex justify-end gap-2">
-                <button onclick="closeModal()" class="px-4 py-2 border rounded-lg text-sm font-semibold hover:bg-gray-50">Cancel</button>
+                <button onclick="closeModal()"
+                    class="px-4 py-2 border rounded-lg text-sm font-semibold hover:bg-gray-50">Cancel</button>
             </div>
         </div>
     </div>
@@ -163,17 +193,20 @@
         <div class="bg-white rounded-xl shadow-2xl p-6 w-[500px] max-w-[90vw]">
             <div class="flex justify-between items-center mb-4 border-b pb-3">
                 <h3 class="text-lg font-bold text-gray-900">Create New Room</h3>
-                <button onclick="closeAddRoomModal()" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times"></i></button>
+                <button onclick="closeAddRoomModal()" class="text-gray-400 hover:text-gray-600"><i
+                        class="fas fa-times"></i></button>
             </div>
             <form id="addRoomForm" class="space-y-4">
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Room Number *</label>
-                        <input type="text" id="r_roomNumber" required class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-blue-500 focus:border-blue-500">
+                        <input type="text" id="r_roomNumber" required
+                            class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-blue-500 focus:border-blue-500">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Room Type *</label>
-                        <select id="r_type" class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-blue-500 focus:border-blue-500">
+                        <select id="r_type"
+                            class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-blue-500 focus:border-blue-500">
                             <option value="THEORY">Theory (Lecture)</option>
                             <option value="LAB">Lab</option>
                         </select>
@@ -182,34 +215,43 @@
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Capacity</label>
-                        <input type="number" id="r_capacity" class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-blue-500 focus:border-blue-500">
+                        <input type="number" id="r_capacity"
+                            class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-blue-500 focus:border-blue-500">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Floor</label>
-                        <input type="number" id="r_floorNumber" class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-blue-500 focus:border-blue-500">
+                        <input type="number" id="r_floorNumber"
+                            class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-blue-500 focus:border-blue-500">
                     </div>
                 </div>
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Block / Building</label>
-                        <input type="text" id="r_block" class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-blue-500 focus:border-blue-500">
+                        <input type="text" id="r_block"
+                            class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-blue-500 focus:border-blue-500">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Department</label>
-                        <input type="text" id="r_dept" class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-blue-500 focus:border-blue-500">
+                        <input type="text" id="r_dept"
+                            class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-blue-500 focus:border-blue-500">
                     </div>
                 </div>
                 <div class="flex gap-4">
                     <label class="flex items-center gap-2 text-sm text-gray-700">
-                        <input type="checkbox" id="r_hasComputers" class="rounded text-blue-600 focus:ring-blue-500"> Has Computers
+                        <input type="checkbox" id="r_hasComputers" class="rounded text-blue-600 focus:ring-blue-500">
+                        Has Computers
                     </label>
                     <label class="flex items-center gap-2 text-sm text-gray-700">
-                        <input type="checkbox" id="r_hasHardwareKits" class="rounded text-blue-600 focus:ring-blue-500"> Has Hardware Kits
+                        <input type="checkbox" id="r_hasHardwareKits" class="rounded text-blue-600 focus:ring-blue-500">
+                        Has Hardware Kits
                     </label>
                 </div>
                 <div class="flex justify-end gap-2 pt-3 border-t mt-5">
-                    <button type="button" onclick="closeAddRoomModal()" class="px-4 py-2 border rounded-lg text-sm font-semibold hover:bg-gray-50">Cancel</button>
-                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700">Save Room</button>
+                    <button type="button" onclick="closeAddRoomModal()"
+                        class="px-4 py-2 border rounded-lg text-sm font-semibold hover:bg-gray-50">Cancel</button>
+                    <button type="submit"
+                        class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700">Save
+                        Room</button>
                 </div>
             </form>
         </div>
@@ -265,7 +307,7 @@
                     const nText = currentRoomName || '';
 
                     document.getElementById("selectedRoomTitle").innerText = `${fText}${bText}${nText} Timeline`;
-                    
+
                     const badge = document.getElementById("roomStatusBadge");
                     badge.classList.remove("hidden");
                     badge.classList.add("flex");
@@ -295,7 +337,7 @@
 
         function renderTimeline(routines) {
             const bodyDiv = document.getElementById("calendarBody");
-            
+
             // Switch body to a True CSS Grid for reliable row spanning
             bodyDiv.className = "flex-1 overflow-y-auto grid grid-cols-[80px_repeat(5,1fr)] auto-rows-[110px]";
             bodyDiv.innerHTML = "";
@@ -487,7 +529,7 @@
 
                     if (res.ok) {
                         alert("Room created successfully!");
-                        window.location.reload(); 
+                        window.location.reload();
                     } else if (res.status === 403) {
                         alert("You are not authorized to create a room.");
                     } else {
@@ -500,4 +542,5 @@
         }
     </script>
 </body>
+
 </html>
