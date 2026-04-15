@@ -113,16 +113,8 @@ public class DataSeeder {
                 System.out.println("ADMIN & MOCK DATA INITIALIZED: admin@planr.com / password123");
             }
 
-            // 5. Seed Israt (Student user from feedback)
-            if (userRepository.findByEmail("israt@gmail.com").isEmpty()) {
-                User israt = new User("Israt Jahan", "israt@gmail.com");
-                israt.setPassword(passwordEncoder.encode("password123"));
-                israt.setRole(Role.STUDENT);
-                israt.setDepartment(cse);
-                israt.setCurrentBatch("4.2");
-                userRepository.save(israt);
-                System.out.println("STUDENT INITIALIZED: israt@gmail.com / password123");
-            }
+            
+            
         };
     }
 }
