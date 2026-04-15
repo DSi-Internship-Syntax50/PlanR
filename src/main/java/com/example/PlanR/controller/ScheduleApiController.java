@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/schedule")
@@ -36,52 +37,48 @@ public class ScheduleApiController {
         this.userRepository = userRepository;
     }
 
-    // 1. AUTO-GENERATE BUTTON LOGIC
+    // 1. AUTO-GENERATE (Now requires Department ID)
     @PostMapping("/auto-generate")
-    public ResponseEntity<?> autoGenerate(
-            @RequestParam String batch, 
-            @RequestParam int theoryCount, 
-            @RequestParam int labCount,
-            @RequestParam(defaultValue = "2") int theoryClassesPerWeek) {
-        
-        scheduleService.autoGenerateRoutine(batch, theoryCount, labCount, theoryClassesPerWeek);
-        return ResponseEntity.ok().body(Map.of("message", "Routine generated successfully!"));
+    public ResponseEntity<?> autoGenerate(@RequestParam Long departmentId, @RequestParam String batch) {
+        try {
+            scheduleService.autoGenerateRoutine(departmentId, batch);
+            return ResponseEntity.ok().body(Map.of("message", "Routine successfully generated!"));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("message", e.getMessage()));
+        }
     }
 
     // 2. FETCH ROUTINE TO PAINT THE GRID
-    @GetMapping("/routine/{batch}")
-    public ResponseEntity<List<Map<String, Object>>> getRoutineForBatch(@PathVariable String batch) {
+    @GetMapping("/routine")
+    public ResponseEntity<List<Map<String, Object>>> getRoutineForBatch(@RequestParam Long departmentId, @RequestParam String batch) {
         List<MasterRoutine> routines = routineRepository.findAll(); 
         List<Map<String, Object>> response = new ArrayList<>();
         
         for (MasterRoutine rt : routines) {
-            // Only return routines for the currently selected batch
-            if (rt.getCourse() != null && batch.equals(rt.getCourse().getBatch())) {
+            if (rt.getCourse() != null 
+                && batch.equals(rt.getCourse().getBatch()) 
+                && rt.getCourse().getDepartment() != null 
+                && rt.getCourse().getDepartment().getId().equals(departmentId)) {
+                
                 Map<String, Object> dto = new HashMap<>();
                 dto.put("id", rt.getId());
                 dto.put("dayOfWeek", rt.getDayOfWeek().name());
                 dto.put("startSlotIndex", rt.getStartSlotIndex());
                 
-                // Package Course details
                 Map<String, Object> courseDto = new HashMap<>();
                 courseDto.put("courseCode", rt.getCourse().getCourseCode());
                 courseDto.put("title", rt.getCourse().getTitle());
                 courseDto.put("isLab", rt.getCourse().getIsLab());
-                courseDto.put("slotCount", Boolean.TRUE.equals(rt.getCourse().getIsLab()) ? 3 : 1); 
+                
+                int slotCount = rt.getCourse().getRequiredSlots() != null ? rt.getCourse().getRequiredSlots() : (Boolean.TRUE.equals(rt.getCourse().getIsLab()) ? 3 : 1);
+                courseDto.put("slotCount", slotCount); 
                 dto.put("course", courseDto);
                 
-                // Package Teacher details (Use dummy ID 1 if null for testing)
-                if (rt.getTeacher() != null) {
-                    dto.put("teacher", Map.of("id", rt.getTeacher().getId()));
-                } else {
-                    dto.put("teacher", Map.of("id", 1)); 
-                }
-
-                // Package Room details if assigned
+                dto.put("teacher", Map.of("id", rt.getTeacher() != null ? rt.getTeacher().getId() : 1)); 
+                
                 if (rt.getRoom() != null) {
                     dto.put("room", Map.of("roomNumber", rt.getRoom().getRoomNumber()));
                 }
-                
                 response.add(dto);
             }
         }
@@ -90,8 +87,11 @@ public class ScheduleApiController {
 
     // 3. FETCH COURSES FOR THE MODAL DROPDOWN
     @GetMapping("/courses")
-    public ResponseEntity<List<Map<String, Object>>> getCourses() {
-        List<Course> courses = courseRepository.findAll();
+    public ResponseEntity<List<Map<String, Object>>> getCourses(@RequestParam Long departmentId, @RequestParam String batch) {
+        List<Course> courses = courseRepository.findAll().stream()
+                .filter(c -> batch.equals(c.getBatch()) && c.getDepartment() != null && c.getDepartment().getId().equals(departmentId))
+                .collect(Collectors.toList());
+                
         List<Map<String, Object>> response = new ArrayList<>();
         
         for(Course c : courses) {
@@ -99,37 +99,31 @@ public class ScheduleApiController {
             dto.put("id", c.getId());
             dto.put("courseCode", c.getCourseCode());
             dto.put("title", c.getTitle());
-            dto.put("batch", c.getBatch());
-            dto.put("slotCount", Boolean.TRUE.equals(c.getIsLab()) ? 3 : 1);
+            
+            int slotCount = c.getRequiredSlots() != null ? c.getRequiredSlots() : (Boolean.TRUE.equals(c.getIsLab()) ? 3 : 1);
+            dto.put("slotCount", slotCount);
             response.add(dto);
         }
         return ResponseEntity.ok(response);
     }
 
-    // 4. MANUALLY ALLOCATE A CLASS FROM THE MODAL
+    // 4. MANUALLY ALLOCATE
     @PostMapping("/allocate-class")
     public ResponseEntity<?> allocateClass(
             @RequestParam Long courseId,
             @RequestParam Long teacherId, 
             @RequestParam DayOfWeek dayOfWeek,
             @RequestParam int startSlotIndex) {
-
         try {
-            Course course = courseRepository.findById(courseId)
-                    .orElseThrow(() -> new IllegalArgumentException("Invalid Course ID"));
-            
-            // We use .orElse(null) here so testing works even if teacher ID 1 doesn't exist yet
+            Course course = courseRepository.findById(courseId).orElseThrow(() -> new IllegalArgumentException("Invalid Course ID"));
             User teacher = userRepository.findById(teacherId).orElse(null); 
-
             MasterRoutine routine = new MasterRoutine();
             routine.setCourse(course);
             routine.setTeacher(teacher);
             routine.setDayOfWeek(dayOfWeek);
             routine.setStartSlotIndex(startSlotIndex);
-            
             routineRepository.save(routine);
             return ResponseEntity.ok(Map.of("message", "Class scheduled successfully!"));
-
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("message", e.getMessage()));
         }
@@ -138,11 +132,7 @@ public class ScheduleApiController {
     // 5. DELETE A ROUTINE SLOT
     @DeleteMapping("/routine/{id}")
     public ResponseEntity<?> deleteRoutine(@PathVariable Long id) {
-        try {
-            routineRepository.deleteById(id);
-            return ResponseEntity.ok(Map.of("message", "Slot freed successfully"));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("message", "Could not delete"));
-        }
+        routineRepository.deleteById(id);
+        return ResponseEntity.ok(Map.of("message", "Slot freed successfully"));
     }
 }
