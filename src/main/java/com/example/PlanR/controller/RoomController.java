@@ -7,10 +7,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import com.example.PlanR.dto.RoomCreateDto;
 import com.example.PlanR.model.Department;
 import com.example.PlanR.model.Room;
+import com.example.PlanR.dto.RoomCreateDto;
 import com.example.PlanR.repository.DepartmentRepository;
 import com.example.PlanR.repository.RoomRepository;
 
