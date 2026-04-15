@@ -14,6 +14,9 @@ public class DashboardController {
     @Autowired
     private RoomRepository roomRepository;
 
+    @Autowired
+    private com.example.PlanR.repository.DepartmentRepository departmentRepository;
+
     @GetMapping({"/", "/dashboard"})
     public String showCoordinatorCanvas(Model model) {
         // You can pass dynamic data here later (e.g., active conflicts, schedule health)
@@ -45,6 +48,10 @@ public class DashboardController {
 
     @GetMapping("/operations")
     public String showSeatPlanTool(Model model) {
+        List<Room> rooms = roomRepository.findAll();
+        List<com.example.PlanR.model.Department> departments = departmentRepository.findAll();
+        model.addAttribute("rooms", rooms);
+        model.addAttribute("departments", departments);
         return "seatplan"; // Loads seatplan.html
     }
 
