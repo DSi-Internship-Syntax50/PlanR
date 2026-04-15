@@ -45,7 +45,7 @@ public class Room {
 
     @Column(name = "block_name")
     private String block;
-    
+
     @ManyToOne
     @JoinColumn(name = "department_id")
     @JsonIgnore
@@ -54,14 +54,13 @@ public class Room {
     @OneToMany(mappedBy = "room", cascade = CascadeType.ALL)
     @JsonIgnore
     private List<MasterRoutine> routines;
-    
+
     @OneToMany(mappedBy = "room", cascade = CascadeType.ALL)
     @JsonIgnore
     private List<EventBooking> bookings;
 
-  
-    public Room() {}
-
+    public Room() {
+    }
 
     public Long getId() {
         return id;
@@ -95,13 +94,11 @@ public class Room {
         this.capacity = capacity;
     }
 
-    public void setDept(Department dept)
-    {
+    public void setDept(Department dept) {
         this.dept = dept;
     }
 
-    public Department getDept()
-    {
+    public Department getDept() {
         return dept;
     }
 

@@ -28,9 +28,6 @@ public class DashboardController {
     @Autowired
     private RoomRepository roomRepository;
 
-    @Autowired
-    private com.example.PlanR.repository.DepartmentRepository departmentRepository;
-
     private MasterRoutineRepository masterRoutineRepository;
 
     @Autowired
