@@ -45,7 +45,7 @@ public class SecurityConfig {
                 .usernameParameter("username")
                 .passwordParameter("password")
                 // Redirect here on successful login
-                .defaultSuccessUrl("/dashboard", true)
+                .defaultSuccessUrl("/allocation", true)
                 // Redirect here on failed login
                 .failureUrl("/login?error=true")
                 .permitAll()
