@@ -40,6 +40,15 @@ public class User {
     @Column(name = "is_cr")
     private Boolean isCr;
 
+    @Column(name = "admitted_semester")
+    private String admittedSemester;
+
+    @Column(name = "enrollment_status")
+    private String enrollmentStatus;
+
+    @Column(name = "lab_clearance_status")
+    private String labClearanceStatus;
+
     @OneToMany(mappedBy = "teacher", cascade = CascadeType.ALL)
     @JsonIgnore
     private List<MasterRoutine> taughtRoutines;
@@ -154,4 +163,27 @@ public class User {
         this.requestedEvents = requestedEvents;
     }
 
+    public String getAdmittedSemester() {
+        return admittedSemester;
+    }
+
+    public void setAdmittedSemester(String admittedSemester) {
+        this.admittedSemester = admittedSemester;
+    }
+
+    public String getEnrollmentStatus() {
+        return enrollmentStatus;
+    }
+
+    public void setEnrollmentStatus(String enrollmentStatus) {
+        this.enrollmentStatus = enrollmentStatus;
+    }
+
+    public String getLabClearanceStatus() {
+        return labClearanceStatus;
+    }
+
+    public void setLabClearanceStatus(String labClearanceStatus) {
+        this.labClearanceStatus = labClearanceStatus;
+    }
 }

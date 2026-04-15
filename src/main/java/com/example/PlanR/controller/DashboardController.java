@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import com.example.PlanR.repository.RoomRepository;
 import com.example.PlanR.model.Room;
 import java.util.List;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 @Controller
 public class DashboardController {
@@ -32,6 +33,7 @@ public class DashboardController {
     }
 
     @GetMapping("/faculty")
+    @PreAuthorize("hasRole('SUPERADMIN')")
     public String showFacultyHub(Model model) {
         return "faculty"; 
     }
@@ -59,6 +61,7 @@ public class DashboardController {
     }
 
     @GetMapping("/settings")
+    @PreAuthorize("hasRole('SUPERADMIN')")
     public String showSettings(Model model) {
         return "settings"; // Loads settings.html
     }

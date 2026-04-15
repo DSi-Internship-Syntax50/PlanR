@@ -11,14 +11,14 @@
         <div class="hidden md:flex gap-8 text-xs font-bold tracking-wider text-gray-400">
             <a href="/canvas" class="text-blue-600 bg-blue-50 px-4 py-2 rounded-lg transition-all shadow-sm">CANVAS</a>
             <a href="/schedules" class="hover:text-gray-800 hover:bg-gray-50 px-4 py-2 rounded-lg transition-all">SCHEDULES</a>
-            <a href="/faculty" class="hover:text-gray-800 hover:bg-gray-50 px-4 py-2 rounded-lg transition-all">FACULTY</a>
+            <a href="/faculty" sec:authorize="hasRole('SUPERADMIN')" class="hover:text-gray-800 hover:bg-gray-50 px-4 py-2 rounded-lg transition-all">FACULTY</a>
         </div>
         
         <div class="flex items-center gap-5">
             <span th:if="${user != null}" class="bg-blue-50 text-blue-700 px-3 py-1.5 rounded-lg text-[10px] uppercase tracking-widest font-extrabold border border-blue-100" th:text="${user.role}">ROLE</span>
             <span th:unless="${user != null}" class="bg-blue-50 text-blue-700 px-3 py-1.5 rounded-lg text-[10px] uppercase tracking-widest font-extrabold border border-blue-100">GUEST</span>
             
-            <a href="/settings" class="w-10 h-10 rounded-full flex items-center justify-center text-gray-500 hover:text-blue-600 hover:bg-blue-50 transition-all"><i class="fas fa-cog text-lg"></i></a>
+            <a href="/settings" sec:authorize="hasRole('SUPERADMIN')" class="w-10 h-10 rounded-full flex items-center justify-center text-gray-500 hover:text-blue-600 hover:bg-blue-50 transition-all"><i class="fas fa-cog text-lg"></i></a>
             
             <a href="/my-profile" class="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center font-bold text-sm shadow-md cursor-pointer hover:shadow-lg transition-transform transform hover:-translate-y-0.5 border-2 border-white">
                 <span th:text="${#strings.substring(user != null && user.name != null && !user.name.isEmpty() ? user.name : 'A', 0, 1)}">A</span>

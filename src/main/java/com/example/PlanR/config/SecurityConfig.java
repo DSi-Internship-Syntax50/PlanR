@@ -23,9 +23,8 @@ public class SecurityConfig {
                 // Publicly accessible routes
                 .requestMatchers("/login", "/css/**", "/js/**", "/images/**").permitAll()
                 // STRICTLY locks down user creation to Superadmin
-                .requestMatchers("/admin/**").hasRole("SUPERADMIN") 
-                // Routine builder access
-                .requestMatchers("/routine-builder", "/generate-routine", "/api/schedule/**").hasAnyRole("SUPERADMIN", "COORDINATOR")
+                // RESTRICT Faculty and Settings to Superadmin
+                .requestMatchers("/faculty", "/settings").hasRole("SUPERADMIN")
                 // Protect AI endpoints
                 .requestMatchers("/api/ai/**").authenticated()
                 // Protect all other routes
