@@ -1,23 +1,24 @@
 package com.example.PlanR.service;
 
+import java.time.LocalDate;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.example.PlanR.dto.EventBookingRequestDto;
 import com.example.PlanR.dto.EventBookingResponseDto;
 import com.example.PlanR.model.EventBooking;
 import com.example.PlanR.model.Room;
 import com.example.PlanR.model.User;
 import com.example.PlanR.model.enums.BookingStatus;
-import com.example.PlanR.model.enums.EventType;
+import com.example.PlanR.model.enums.Role;
 import com.example.PlanR.repository.EventBookingRepository;
 import com.example.PlanR.repository.RoomRepository;
 import com.example.PlanR.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Isolation;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.time.LocalDate;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class EventBookingService {
@@ -78,9 +79,10 @@ public class EventBookingService {
         newBooking.setTeacherName(requestDto.getTeacherName());
         newBooking.setAdditionalInfo(requestDto.getAdditionalInfo());
         
-        // Auto-approve if requestor is COORDINATOR or SUPERADMIN, else PENDING
-        if (requestor.getRole() == com.example.PlanR.model.enums.Role.COORDINATOR
-                || requestor.getRole() == com.example.PlanR.model.enums.Role.SUPERADMIN) {
+        // Auto-approve if requestor has elevated privileges, else PENDING
+        if (requestor.getRole() == Role.SUPERADMIN 
+                || requestor.getRole() == Role.ADMIN 
+                || requestor.getRole() == Role.COORDINATOR) {
             newBooking.setStatus(BookingStatus.APPROVED);
         } else {
             newBooking.setStatus(BookingStatus.PENDING); 
