@@ -51,23 +51,6 @@ public class ScheduleController {
         public Long requesterId;
     }
 
-    // --- NEW ENDPOINTS REQUIRED FOR ROUTINE BUILDER FRONTEND ---
-
-    @GetMapping("/courses")
-    public ResponseEntity<List<Course>> getAllCourses() {
-        return ResponseEntity.ok(courseRepository.findAll());
-    }
-
-    @GetMapping("/routine/{batch}")
-    public ResponseEntity<List<MasterRoutine>> getRoutineByBatch(@PathVariable String batch) {
-        return ResponseEntity.ok(routineRepository.findAllByCourseBatchOrderByDayOfWeekAscStartSlotIndexAsc(batch));
-    }
-
-    @DeleteMapping("/routine/{id}")
-    public ResponseEntity<Void> freeSlot(@PathVariable Long id) {
-        routineRepository.deleteById(id);
-        return ResponseEntity.noContent().build();
-    }
 
     // Removed the second (duplicate) declaration of routineRepository that was here
 
@@ -86,18 +69,6 @@ public class ScheduleController {
                 dayOfWeek, startSlotIndex);
 
         return ResponseEntity.ok(suggestions);
-    }
-
-    @PostMapping("/allocate-class")
-    public ResponseEntity<MasterRoutine> allocateClass(
-            @RequestParam Long courseId,
-            @RequestParam Long teacherId,
-            @RequestParam(required = false) Long roomId,
-            @RequestParam DayOfWeek dayOfWeek,
-            @RequestParam int startSlotIndex) {
-
-        MasterRoutine routine = actionService.allocateClass(courseId, teacherId, roomId, dayOfWeek, startSlotIndex);
-        return ResponseEntity.ok(routine);
     }
 
     // --- Room Routines Endpoint ---

@@ -6,6 +6,7 @@
     <title>Routine Builder - PlanR</title>
     <meta name="_csrf" th:content="${_csrf.token}"/>
     <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" th:href="@{/css/style.css}">
@@ -40,6 +41,12 @@
                         </select>
                     </div>
                     <div class="w-px h-8 bg-gray-200 mx-2"></div>
+                    
+                    <button onclick="autoGenerate()"
+                        class="px-5 py-2.5 bg-green-600 text-white font-semibold rounded-lg text-sm shadow-md hover:bg-green-700 transition-colors flex items-center gap-2">
+                        <i class="fas fa-magic"></i> Auto Generate
+                    </button>
+
                     <button onclick="openModal()"
                         class="px-5 py-2.5 bg-[#0a192f] text-white font-semibold rounded-lg text-sm shadow-md hover:bg-blue-900 transition-colors flex items-center gap-2">
                         <i class="fas fa-plus"></i> Schedule Class
@@ -254,6 +261,37 @@
                 });
                 if (!response.ok) throw new Error("Failed to delete slot");
                 loadRoutine();
+            } catch (err) { alert(err.message); }
+        }
+
+        // NEW AUTO GENERATE FUNCTION
+        async function autoGenerate() {
+            const batch = document.getElementById('batchSelect').value;
+            
+            const theoryCount = prompt(`How many THEORY courses for ${batch}?`, "4");
+            if (!theoryCount) return;
+            
+            const theoryClassesPerWeek = prompt(`How many classes PER WEEK for each theory course?`, "2");
+            if (!theoryClassesPerWeek) return;
+
+            const labCount = prompt(`How many LAB courses (3 consecutive slots) for ${batch}?`, "2");
+            if (!labCount) return;
+
+            const csrfToken = document.querySelector("meta[name='_csrf']").getAttribute("content");
+            const csrfHeader = document.querySelector("meta[name='_csrf_header']").getAttribute("content");
+
+            try {
+                const url = `/api/schedule/auto-generate?batch=${batch}&theoryCount=${theoryCount}&labCount=${labCount}&theoryClassesPerWeek=${theoryClassesPerWeek}`;
+                
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { [csrfHeader]: csrfToken }
+                });
+                
+                if (!response.ok) throw new Error("Failed to generate routine");
+                
+                alert("Routine generated successfully!");
+                loadRoutine(); 
             } catch (err) { alert(err.message); }
         }
     </script>
