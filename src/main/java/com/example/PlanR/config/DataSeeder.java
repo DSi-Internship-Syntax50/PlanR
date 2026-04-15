@@ -2,7 +2,8 @@ package com.example.PlanR.config;
 
 import java.time.LocalTime;
 import java.util.Arrays;
-
+import java.util.Random;
+import java.util.List;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -78,8 +79,6 @@ public class DataSeeder {
                 stadium.setType(RoomType.THEORY);
                 stadium.setCapacity(500);
                 stadium.setBlock(" ");
-
-
                 roomRepository.saveAll(Arrays.asList(auditorium, seminarHall, stadium));
                 // Add Room 201 to 215 like the old UI
                 for (int fl = 1; fl < 5; fl++) {
