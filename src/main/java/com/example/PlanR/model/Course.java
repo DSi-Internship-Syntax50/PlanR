@@ -1,5 +1,6 @@
 package com.example.PlanR.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import java.util.List;
 
@@ -13,6 +14,7 @@ public class Course {
 
     @ManyToOne
     @JoinColumn(name = "department_id")
+    @JsonIgnore
     private Department department;
 
     @Column(name = "course_code")
@@ -36,10 +38,12 @@ public class Course {
     private User teacher;
 
     @OneToMany(mappedBy = "course", cascade = CascadeType.ALL)
+    @JsonIgnore
     private List<MasterRoutine> routines;
 
     // Constructors
-    public Course() {}
+    public Course() {
+    }
 
     // Getters and Setters
     public Long getId() {
