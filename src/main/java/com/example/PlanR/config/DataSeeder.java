@@ -22,6 +22,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalTime;
 import java.util.Arrays;
+import java.util.List;
+import java.util.Random;
 
 @Configuration
 public class DataSeeder {
@@ -194,6 +196,65 @@ public class DataSeeder {
 
                 System.out.println("✅ Routine Builder Test Data Seeded successfully!");
                 System.out.println("Test Teacher ID: " + teacher.getId() + " | Email: teacher@planr.com");
+            }
+
+            // ==========================================
+            // 6. ANALYTICS MOCK DATA
+            // ==========================================
+            if (routineRepository.count() < 15) {
+                System.out.println("📊 Seeding additional realistic data for Analytics...");
+
+                List<Department> departments = departmentRepository.findAll();
+                List<Room> allRooms = roomRepository.findAll();
+                Random random = new Random(42); // deterministic random
+
+                com.example.PlanR.model.enums.DayOfWeek[] days = {
+                        com.example.PlanR.model.enums.DayOfWeek.MONDAY,
+                        com.example.PlanR.model.enums.DayOfWeek.TUESDAY,
+                        com.example.PlanR.model.enums.DayOfWeek.WEDNESDAY,
+                        com.example.PlanR.model.enums.DayOfWeek.THURSDAY,
+                        com.example.PlanR.model.enums.DayOfWeek.FRIDAY,
+                        com.example.PlanR.model.enums.DayOfWeek.SATURDAY
+                };
+
+                for (Department dept : departments) {
+                    if (dept.getShortCode().equals("SYS"))
+                        continue; // Skip SYS
+
+                    // Add some dummy courses for this department
+                    for (int i = 1; i <= Math.max(3, random.nextInt(6)); i++) {
+                        Course dummyCourse = new Course();
+                        dummyCourse.setCourseCode(dept.getShortCode() + " " + (1000 + random.nextInt(4000)));
+                        dummyCourse.setTitle("Dummy Course " + i + " " + dept.getShortCode());
+                        dummyCourse.setDepartment(dept);
+                        dummyCourse.setBatch("Batch " + random.nextInt(5));
+                        dummyCourse.setSlotCount(random.nextInt(3) + 1); // 1, 2, or 3 slots
+                        dummyCourse.setIsLab(random.nextBoolean());
+                        courseRepository.save(dummyCourse);
+
+                        // Assign 1 to 3 routines for this course across the week
+                        int numRoutines = random.nextInt(3) + 1;
+                        for (int j = 0; j < numRoutines; j++) {
+                            MasterRoutine r = new MasterRoutine();
+                            r.setCourse(dummyCourse);
+                            r.setDayOfWeek(days[random.nextInt(days.length)]);
+
+                            // 10% chance to be overbooked (room is null)
+                            if (random.nextInt(100) > 10 && !allRooms.isEmpty()) {
+                                r.setRoom(allRooms.get(random.nextInt(allRooms.size())));
+                            }
+
+                            r.setSection(Section.A);
+                            r.setStartSlotIndex(random.nextInt(8) + 1); // slots 1 to 8
+                            r.setStartTime(LocalTime.of(8 + r.getStartSlotIndex(), 0));
+                            r.setEndTime(r.getStartTime().plusHours(1)); // Approx
+
+                            routineRepository.save(r);
+                        }
+                    }
+                }
+
+                System.out.println("✅ Analytics Data Seeded successfully!");
             }
         };
     }
