@@ -48,22 +48,38 @@ public class DataSeeder {
                 Room auditorium = new Room();
                 auditorium.setRoomNumber("Main Auditorium");
                 auditorium.setType(RoomType.SEMINAR);
-                auditorium.setCapacity(200);
+                auditorium.setCapacity(500);
+                auditorium.setBlock(" ");
 
                 Room seminarHall = new Room();
                 seminarHall.setRoomNumber("Seminar Hall C");
                 seminarHall.setType(RoomType.LAB);
-                seminarHall.setCapacity(40);
+                seminarHall.setCapacity(500);
+                seminarHall.setBlock(" ");
 
-                roomRepository.saveAll(Arrays.asList(auditorium, seminarHall));
+                Room stadium = new Room();
+                stadium.setRoomNumber("Indoor Stadium");
+                stadium.setType(RoomType.THEORY);
+                stadium.setCapacity(500);
+                stadium.setBlock(" ");
 
-                // Add Room 201 to 215
-                for (int i = 1; i <= 15; i++) {
-                    Room r = new Room();
-                    r.setRoomNumber("Room 20" + i);
-                    r.setType(RoomType.THEORY);
-                    r.setCapacity(50);
-                    roomRepository.save(r);
+                roomRepository.saveAll(Arrays.asList(auditorium, seminarHall, stadium));
+
+                // Add Room 201 to 215 like the old UI
+                for (int fl = 1; fl < 5; fl++) {
+                    for (int i = 1; i <= 7; i++) {
+                        for (char ch = 'A'; ch <= 'C'; ch++) {
+                            Room r = new Room();
+                            r.setFloorNumber(fl);
+                            String st = "";
+                            st = st + ch;
+                            r.setBlock(st);
+                            r.setRoomNumber("0" + i);
+                            r.setType(RoomType.THEORY);
+                            roomRepository.save(r);
+
+                        }
+                    }
                 }
                 System.out.println("Seeded original hardcoded rooms.");
             }

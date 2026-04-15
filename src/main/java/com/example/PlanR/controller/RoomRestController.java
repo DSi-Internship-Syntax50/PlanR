@@ -1,7 +1,6 @@
 package com.example.PlanR.controller;
 
 import com.example.PlanR.dto.RoomDto;
-import com.example.PlanR.model.Room;
 import com.example.PlanR.repository.RoomRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
