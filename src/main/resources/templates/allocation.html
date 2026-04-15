@@ -232,8 +232,13 @@
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Department</label>
-                        <input type="text" id="r_dept"
+                        <select id="r_dept"
                             class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-blue-500 focus:border-blue-500">
+                            <option value="">-- No Department (Shared) --</option>
+                            <option th:each="department : ${departments}" th:value="${department.id}"
+                                th:text="${department.shortCode}">
+                            </option>
+                        </select>
                     </div>
                 </div>
                 <div class="flex gap-4">
@@ -510,7 +515,7 @@
                     capacity: document.getElementById("r_capacity").value ? parseInt(document.getElementById("r_capacity").value) : null,
                     floorNumber: document.getElementById("r_floorNumber").value ? parseInt(document.getElementById("r_floorNumber").value) : null,
                     block: document.getElementById("r_block").value,
-                    dept: document.getElementById("r_dept").value,
+                    deptId: document.getElementById("r_dept").value ? parseInt(document.getElementById("r_dept").value) : null,
                     hasComputers: document.getElementById("r_hasComputers").checked,
                     hasHardwareKits: document.getElementById("r_hasHardwareKits").checked
                 };

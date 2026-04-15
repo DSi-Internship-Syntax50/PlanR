@@ -69,7 +69,9 @@ public class DashboardController {
     @GetMapping("/allocation")
     public String showAllocationHub(Model model) {
         List<Room> rooms = roomRepository.findAll();
+        List<Department> departments = departmentRepository.findAll();
         model.addAttribute("rooms", rooms);
+        model.addAttribute("departments", departments);
         return "allocation";
     }
 

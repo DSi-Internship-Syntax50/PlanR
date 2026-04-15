@@ -68,7 +68,6 @@ public class SeatPlanService {
         int nextR = c == cols - 1 ? r + 1 : r;
         int nextC = c == cols - 1 ? 0 : c + 1;
 
-        int remainingCells = (rows - r) * cols + (cols - c); // oops the formula was wrong in my head, but wait: remaining is total - current.
         // at (0,0), remaining = rows*cols. at (r,c), index = r*cols + c.
         int currentIndex = r * cols + c;
         int remainingCellsProper = (rows * cols) - currentIndex;
@@ -108,7 +107,7 @@ public class SeatPlanService {
 
     private boolean isValid(String[][] grid, int r, int c, String code) {
         if (r > 0 && code.equals(grid[r - 1][c])) return false;
-        if (c > 0 && code.equals(grid[r][c - 1])) return false;
+        else if (c > 0 && code.equals(grid[r][c - 1])) return false;
         return true;
     }
 }

@@ -9,7 +9,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.PlanR.dto.RoomCreateDto;
+import com.example.PlanR.model.Department;
 import com.example.PlanR.model.Room;
+import com.example.PlanR.repository.DepartmentRepository;
 import com.example.PlanR.repository.RoomRepository;
 
 @RestController
@@ -18,6 +20,9 @@ public class RoomController {
 
     @Autowired
     private RoomRepository roomRepository;
+
+    @Autowired
+    private DepartmentRepository departmentRepository;
 
     @PostMapping
     @PreAuthorize("hasAnyRole('SUPERADMIN', 'COORDINATOR')")
@@ -37,7 +42,12 @@ public class RoomController {
             room.setHasHardwareKits(false);
         room.setFloorNumber(dto.getFloorNumber());
         room.setBlock(dto.getBlock());
-        room.setDept(dto.getDept());
+
+        // Look up Department by ID
+        if (dto.getDeptId() != null) {
+            Department dept = departmentRepository.findById(dto.getDeptId()).orElse(null);
+            room.setDept(dept);
+        }
 
         Room savedRoom = roomRepository.save(room);
         return ResponseEntity.ok(savedRoom);

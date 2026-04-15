@@ -1,6 +1,5 @@
 package com.example.PlanR.dto;
 
-import com.example.PlanR.model.Department;
 import com.example.PlanR.model.enums.RoomType;
 
 public class RoomCreateDto {
@@ -11,7 +10,7 @@ public class RoomCreateDto {
     private Boolean hasHardwareKits;
     private Integer floorNumber;
     private String block;
-    private Department dept;
+    private Long deptId;
 
     public String getRoomNumber() {
         return roomNumber;
@@ -69,11 +68,11 @@ public class RoomCreateDto {
         this.block = block;
     }
 
-    public Department getDept() {
-        return dept;
+    public Long getDeptId() {
+        return deptId;
     }
 
-    public void setDept(Department dept) {
-        this.dept = dept;
+    public void setDeptId(Long deptId) {
+        this.deptId = deptId;
     }
 }
