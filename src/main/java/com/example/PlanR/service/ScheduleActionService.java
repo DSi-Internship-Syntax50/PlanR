@@ -1,5 +1,8 @@
 package com.example.PlanR.service;
 
+import com.example.PlanR.exception.SlotConflictException;
+import com.example.PlanR.model.Course;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -10,11 +13,15 @@ import com.example.PlanR.model.User;
 import com.example.PlanR.model.enums.DayOfWeek;
 import com.example.PlanR.model.enums.RequestStatus;
 import com.example.PlanR.model.enums.RequestType;
+import com.example.PlanR.repository.CourseRepository;
 import com.example.PlanR.repository.MasterRoutineRepository;
 import com.example.PlanR.repository.RoomRepository;
 import com.example.PlanR.repository.ScheduleRequestRepository;
 import com.example.PlanR.repository.UserRepository;
 
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Service
 public class ScheduleActionService {
@@ -31,6 +38,39 @@ public class ScheduleActionService {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private CourseRepository courseRepository;
+
+    @Transactional
+    public MasterRoutine allocateClass(Long courseId, Long teacherId, Long roomId, DayOfWeek day, int startSlotIndex) {
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new RuntimeException("Course not found"));
+        User teacher = userRepository.findById(teacherId)
+                .orElseThrow(() -> new RuntimeException("Teacher not found"));
+
+        String batch = course.getBatch();
+        int slotCount = course.getSlotCount();
+
+        List<MasterRoutine> conflicts = routineRepository.findBatchConflicts(batch, day, startSlotIndex, slotCount);
+        if (!conflicts.isEmpty()) {
+            throw new SlotConflictException(batch, day, startSlotIndex, slotCount, conflicts);
+        }
+
+        MasterRoutine routine = new MasterRoutine();
+        routine.setCourse(course);
+        routine.setTeacher(teacher);
+        routine.setDayOfWeek(day);
+        routine.setStartSlotIndex(startSlotIndex);
+
+        if (roomId != null) {
+            Room room = roomRepository.findById(roomId)
+                    .orElseThrow(() -> new RuntimeException("Room not found"));
+            routine.setRoom(room);
+        }
+
+        return routineRepository.save(routine);
+    }
+
     public MasterRoutine allocateRoom(Long routineId, Long roomId) {
         MasterRoutine routine = routineRepository.findById(routineId)
                 .orElseThrow(() -> new RuntimeException("Routine not found"));
@@ -44,21 +84,21 @@ public class ScheduleActionService {
     public MasterRoutine reschedule(Long routineId, DayOfWeek newDay, Integer newStartSlot, Long newRoomId) {
         MasterRoutine routine = routineRepository.findById(routineId)
                 .orElseThrow(() -> new RuntimeException("Routine not found"));
-        
+
         routine.setDayOfWeek(newDay);
         routine.setStartSlotIndex(newStartSlot);
-        
+
         if (newRoomId != null) {
             Room room = roomRepository.findById(newRoomId)
                     .orElseThrow(() -> new RuntimeException("Room not found"));
             routine.setRoom(room);
         }
-        
+
         return routineRepository.save(routine);
     }
 
-    public ScheduleRequest requestAction(Long routineId, Long requesterId, RequestType requestType, 
-                                         Long requestedRoomId, DayOfWeek requestedDay, Integer requestedStartSlot) {
+    public ScheduleRequest requestAction(Long routineId, Long requesterId, RequestType requestType,
+            Long requestedRoomId, DayOfWeek requestedDay, Integer requestedStartSlot) {
         MasterRoutine routine = routineRepository.findById(routineId)
                 .orElseThrow(() -> new RuntimeException("Routine not found"));
         User requester = userRepository.findById(requesterId)
@@ -68,12 +108,12 @@ public class ScheduleActionService {
         request.setRoutineSchedule(routine);
         request.setRequester(requester);
         request.setRequestType(requestType);
-        
+
         if (requestedRoomId != null) {
             Room room = roomRepository.findById(requestedRoomId).orElse(null);
             request.setRequestedRoom(room);
         }
-        
+
         request.setRequestedDayOfWeek(requestedDay);
         request.setRequestedStartSlotIndex(requestedStartSlot);
         request.setStatus(RequestStatus.PENDING);
@@ -99,7 +139,8 @@ public class ScheduleActionService {
             }
         } else if (request.getRequestType() == RequestType.RESCHEDULE) {
             Long roomId = request.getRequestedRoom() != null ? request.getRequestedRoom().getId() : null;
-            reschedule(request.getRoutineSchedule().getId(), request.getRequestedDayOfWeek(), request.getRequestedStartSlotIndex(), roomId);
+            reschedule(request.getRoutineSchedule().getId(), request.getRequestedDayOfWeek(),
+                    request.getRequestedStartSlotIndex(), roomId);
         }
 
         request.setStatus(RequestStatus.APPROVED);

@@ -1,6 +1,7 @@
 package com.example.PlanR.model;
 
 import com.example.PlanR.model.enums.RoomType;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import java.util.List;
 
@@ -33,9 +34,11 @@ public class Room {
     private String block;
 
     @OneToMany(mappedBy = "room", cascade = CascadeType.ALL)
+    @JsonIgnore
     private List<MasterRoutine> routines;
     
     @OneToMany(mappedBy = "room", cascade = CascadeType.ALL)
+    @JsonIgnore
     private List<EventBooking> bookings;
 
   
