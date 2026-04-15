@@ -42,9 +42,12 @@ public class RoomController {
             room.setHasHardwareKits(false);
         room.setFloorNumber(dto.getFloorNumber());
         room.setBlock(dto.getBlock());
-        if (dto.getDept() != null) {
-            room.setDept(dto.getDept().getShortCode());
-            room.setDepartment(dto.getDept());
+        if (dto.getDeptId() != null) {
+            Department dept = departmentRepository.findById(dto.getDeptId()).orElse(null);
+            if (dept != null) {
+                room.setDept(dept.getShortCode());
+                room.setDepartment(dept);
+            }
         }
 
         Room savedRoom = roomRepository.save(room);
