@@ -22,11 +22,16 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 // Publicly accessible routes
                 .requestMatchers("/login", "/css/**", "/js/**", "/images/**").permitAll()
-                // STRICTLY locks down user creation to Superadmin
-                // RESTRICT Faculty and Settings to Superadmin
-                .requestMatchers("/faculty", "/settings").hasRole("SUPERADMIN")
+                
+                // STRICTLY locks down user creation, faculty, and settings to Superadmin
+                .requestMatchers("/admin/**", "/faculty", "/settings").hasRole("SUPERADMIN")
+                
+                // Routine builder access
+                .requestMatchers("/routine-builder", "/generate-routine", "/api/schedule/**").hasAnyRole("SUPERADMIN", "COORDINATOR")
+                
                 // Protect AI endpoints
                 .requestMatchers("/api/ai/**").authenticated()
+                
                 // Protect all other routes
                 .anyRequest().authenticated()
             )
@@ -40,7 +45,7 @@ public class SecurityConfig {
                 .usernameParameter("username")
                 .passwordParameter("password")
                 // Redirect here on successful login
-                .defaultSuccessUrl("/", true)
+                .defaultSuccessUrl("/dashboard", true)
                 // Redirect here on failed login
                 .failureUrl("/login?error=true")
                 .permitAll()
