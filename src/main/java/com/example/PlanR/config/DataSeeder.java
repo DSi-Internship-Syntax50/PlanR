@@ -35,7 +35,7 @@ public class DataSeeder {
             MasterRoutineRepository routineRepository,
             PasswordEncoder passwordEncoder,
             JdbcTemplate jdbcTemplate) {
-        
+
         return args -> {
             // 0. Migrate any legacy 'ADMIN' role to 'COORDINATOR' in the database (Ai-FAQ)
             int migrated = jdbcTemplate.update("UPDATE users SET role = 'COORDINATOR' WHERE role = 'ADMIN'");
@@ -96,6 +96,8 @@ public class DataSeeder {
                 adminUser.setPassword(passwordEncoder.encode("password123"));
                 adminUser.setRole(Role.COORDINATOR);
                 adminUser.setDepartment(cse);
+                adminUser.setStudentId("0000");
+                adminUser.setIsCr(false);
                 adminUser.setCurrentBatch("4.2");
                 userRepository.save(adminUser);
 
@@ -115,7 +117,8 @@ public class DataSeeder {
                 routine.setCourse(math);
                 routine.setRoom(room);
                 routine.setSection(Section.A);
-                routine.setDayOfWeek(com.example.PlanR.model.enums.DayOfWeek.valueOf(java.time.LocalDate.now().getDayOfWeek().name()));
+                routine.setDayOfWeek(com.example.PlanR.model.enums.DayOfWeek
+                        .valueOf(java.time.LocalDate.now().getDayOfWeek().name()));
                 routine.setStartTime(LocalTime.now().plusMinutes(15).withSecond(0).withNano(0));
                 routine.setEndTime(routine.getStartTime().plusHours(1));
                 routineRepository.save(routine);
@@ -127,8 +130,9 @@ public class DataSeeder {
             // 5. NEW LOGIC (Test Data for Routine Builder from dev)
             // ==========================================
 
-            // Changed condition to check for the test teacher instead of course count, 
-            // since the admin block above creates a course and would cause this to be skipped.
+            // Changed condition to check for the test teacher instead of course count,
+            // since the admin block above creates a course and would cause this to be
+            // skipped.
             if (userRepository.findByEmail("teacher@planr.com").isEmpty()) {
                 System.out.println("🌱 Seeding Initial Test Data for Routine Builder...");
 
