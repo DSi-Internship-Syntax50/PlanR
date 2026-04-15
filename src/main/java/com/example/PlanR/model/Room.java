@@ -13,6 +13,8 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
@@ -43,21 +45,24 @@ public class Room {
 
     @Column(name = "block_name")
     private String block;
-    
+
     @Column(name = "dept_name")
     private String dept;
+
+    @ManyToOne
+    @JoinColumn(name = "department_id")
+    private Department department;
 
     @OneToMany(mappedBy = "room", cascade = CascadeType.ALL)
     @JsonIgnore
     private List<MasterRoutine> routines;
-    
+
     @OneToMany(mappedBy = "room", cascade = CascadeType.ALL)
     @JsonIgnore
     private List<EventBooking> bookings;
 
-  
-    public Room() {}
-
+    public Room() {
+    }
 
     public Long getId() {
         return id;
@@ -91,14 +96,20 @@ public class Room {
         this.capacity = capacity;
     }
 
-    public void setDept(String dept)
-    {
+    public void setDept(String dept) {
         this.dept = dept;
     }
 
-    public String getDept()
-    {
+    public String getDept() {
         return dept;
+    }
+
+    public Department getDepartment() {
+        return department;
+    }
+
+    public void setDepartment(Department department) {
+        this.department = department;
     }
 
     public Boolean getHasComputers() {
