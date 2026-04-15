@@ -11,6 +11,7 @@ import com.example.PlanR.repository.MasterRoutineRepository;
 import com.example.PlanR.repository.DepartmentRepository;
 import com.example.PlanR.repository.UserRepository;
 
+import java.util.List;
 import com.example.PlanR.model.Room;
 import com.example.PlanR.model.User;
 import com.example.PlanR.model.MasterRoutine;
@@ -71,7 +72,9 @@ public class DashboardController {
     @GetMapping("/allocation")
     public String showAllocationHub(Model model) {
         List<Room> rooms = roomRepository.findAll();
+        List<Department> departments = departmentRepository.findAll();
         model.addAttribute("rooms", rooms);
+        model.addAttribute("departments", departments);
         return "allocation";
     }
 
