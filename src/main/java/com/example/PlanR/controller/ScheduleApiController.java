@@ -1,43 +1,50 @@
 package com.example.PlanR.controller;
 
-import com.example.PlanR.model.Course;
-import com.example.PlanR.model.MasterRoutine;
-import com.example.PlanR.model.User;
-import com.example.PlanR.model.enums.DayOfWeek;
-import com.example.PlanR.repository.CourseRepository;
-import com.example.PlanR.repository.MasterRoutineRepository;
-import com.example.PlanR.repository.UserRepository;
-import com.example.PlanR.service.ScheduleService;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.example.PlanR.exception.SlotConflictException;
+import com.example.PlanR.model.Course;
+import com.example.PlanR.model.MasterRoutine;
+import com.example.PlanR.model.enums.DayOfWeek;
+import com.example.PlanR.repository.CourseRepository;
+import com.example.PlanR.repository.MasterRoutineRepository;
+import com.example.PlanR.service.ScheduleActionService;
+import com.example.PlanR.service.ScheduleService;
+
 @RestController
 @RequestMapping("/api/schedule")
 public class ScheduleApiController {
 
     private final ScheduleService scheduleService;
+    private final ScheduleActionService scheduleActionService;
     private final MasterRoutineRepository routineRepository;
     private final CourseRepository courseRepository;
-    private final UserRepository userRepository;
 
     public ScheduleApiController(ScheduleService scheduleService, 
+                                 ScheduleActionService scheduleActionService,
                                  MasterRoutineRepository routineRepository,
-                                 CourseRepository courseRepository,
-                                 UserRepository userRepository) {
+                                 CourseRepository courseRepository) {
         this.scheduleService = scheduleService;
+        this.scheduleActionService = scheduleActionService;
         this.routineRepository = routineRepository;
         this.courseRepository = courseRepository;
-        this.userRepository = userRepository;
     }
 
-    // 1. AUTO-GENERATE (Now requires Department ID)
+    // 1. AUTO-GENERATE
     @PostMapping("/auto-generate")
     public ResponseEntity<?> autoGenerate(@RequestParam Long departmentId, @RequestParam String batch) {
         try {
@@ -76,8 +83,15 @@ public class ScheduleApiController {
                 
                 dto.put("teacher", Map.of("id", rt.getTeacher() != null ? rt.getTeacher().getId() : 1)); 
                 
+                // FIXED: Now mapping the room's floor number and block to the JSON
                 if (rt.getRoom() != null) {
-                    dto.put("room", Map.of("roomNumber", rt.getRoom().getRoomNumber()));
+                    Map<String, Object> roomDto = new HashMap<>();
+                    roomDto.put("id", rt.getRoom().getId());
+                    roomDto.put("roomNumber", rt.getRoom().getRoomNumber());
+                    roomDto.put("floorNumber", rt.getRoom().getFloorNumber());
+                    roomDto.put("block", rt.getRoom().getBlock());
+                    
+                    dto.put("room", roomDto);
                 }
                 response.add(dto);
             }
@@ -113,17 +127,15 @@ public class ScheduleApiController {
             @RequestParam Long courseId,
             @RequestParam Long teacherId, 
             @RequestParam DayOfWeek dayOfWeek,
-            @RequestParam int startSlotIndex) {
+            @RequestParam int startSlotIndex,
+            @RequestParam(required = false) Long roomId) { // Allow optional Room ID
         try {
-            Course course = courseRepository.findById(courseId).orElseThrow(() -> new IllegalArgumentException("Invalid Course ID"));
-            User teacher = userRepository.findById(teacherId).orElse(null); 
-            MasterRoutine routine = new MasterRoutine();
-            routine.setCourse(course);
-            routine.setTeacher(teacher);
-            routine.setDayOfWeek(dayOfWeek);
-            routine.setStartSlotIndex(startSlotIndex);
-            routineRepository.save(routine);
+            // Using your existing Action Service to handle conflicts properly!
+            scheduleActionService.allocateClass(courseId, teacherId, roomId, dayOfWeek, startSlotIndex);
             return ResponseEntity.ok(Map.of("message", "Class scheduled successfully!"));
+            
+        } catch (SlotConflictException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("message", e.getMessage()));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("message", e.getMessage()));
         }

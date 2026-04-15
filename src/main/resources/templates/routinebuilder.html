@@ -22,7 +22,7 @@
 
         <main class="flex-1 p-8 overflow-hidden">
             <div class="flex flex-col 2xl:flex-row justify-between items-start 2xl:items-center gap-6 mb-8">
-                
+
                 <div class="max-w-2xl">
                     <h1 class="text-4xl font-extrabold text-[#0a192f] tracking-tight">Master Routine Builder</h1>
                     <p class="text-gray-500 font-medium mt-3 text-sm leading-relaxed">Dynamically assign academic
@@ -203,8 +203,8 @@
 
                 for (let i = 1; i <= maxSlots; i++) {
                     row += `<td id="cell-${day}-${i}" class="p-2 border-r border-gray-100 align-top h-[115px] relative group hover:bg-gray-50/50 transition cursor-pointer" onclick="openModalWithPreset('${day}', ${i})">
-                                <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition"><i class="fas fa-plus text-blue-300"></i></div>
-                            </td>`;
+                        <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition"><i class="fas fa-plus text-blue-300"></i></div>
+                    </td>`;
                 }
                 row += `</tr>`;
                 gridBody.innerHTML += row;
@@ -215,32 +215,46 @@
                 const routines = await res.json();
 
                 routines.forEach(rt => {
+                    if (!rt || !rt.course) return;
+
                     const cell = document.getElementById(`cell-${rt.dayOfWeek}-${rt.startSlotIndex}`);
                     if (cell) {
-                        cell.colSpan = rt.course.slotCount;
+                        const slots = rt.course.slotCount || 1;
+                        cell.colSpan = slots;
                         cell.onclick = null;
 
-                        for (let i = 1; i < rt.course.slotCount; i++) {
+                        for (let i = 1; i < slots; i++) {
                             let hideCell = document.getElementById(`cell-${rt.dayOfWeek}-${rt.startSlotIndex + i}`);
                             if (hideCell) hideCell.style.display = 'none';
                         }
 
-                        const bgColor = rt.course.isLab ? 'bg-purple-50' : 'bg-blue-50';
-                        const borderColor = rt.course.isLab ? 'border-purple-500' : 'border-blue-500';
-                        const titleColor = rt.course.isLab ? 'text-purple-900' : 'text-blue-900';
-                        const roomBadge = rt.room
-                            ? `<span class="text-[9px] font-bold text-green-700 px-2 py-0.5 bg-green-100 rounded border border-green-200">Rm ${rt.room.roomNumber}</span>`
-                            : `<span class="text-[9px] font-bold text-orange-600 px-2 py-0.5 bg-orange-100 rounded border border-orange-200">Pending Room</span>`;
+                        const isLab = rt.course.isLab === true;
+                        const bgColor = isLab ? 'bg-purple-50' : 'bg-blue-50';
+                        const borderColor = isLab ? 'border-purple-500' : 'border-blue-500';
+                        const titleColor = isLab ? 'text-purple-900' : 'text-blue-900';
+
+                        let roomBadge = `<span class="text-[9px] font-bold text-orange-600 px-2 py-0.5 bg-orange-100 rounded border border-orange-200">Pending Room</span>`;
+
+                        if (rt.room) {
+                            const floor = (rt.room.floorNumber !== null && rt.room.floorNumber !== undefined) ? rt.room.floorNumber : '';
+                            const block = rt.room.block || '';
+                            const roomNum = rt.room.roomNumber || '';
+                            const roomName = `${floor}${block}${roomNum}`;
+                            
+                            roomBadge = `<h4 class="font-bold text-gray-900 room-title text-[10px]"><span>${roomName}</span></h4>`;
+                        }
+
+                        const teacherText = (rt.teacher && rt.teacher.id) ? `Tr: ${rt.teacher.id}` : 'Tr: TBA';
 
                         cell.innerHTML = `
                             <div class="${bgColor} border-l-[3px] ${borderColor} rounded p-3 h-full shadow-sm flex flex-col justify-between relative group/cell transition hover:shadow-md">
                                 <button onclick="deleteRoutine(${rt.id}, event)" class="absolute top-1 right-1 opacity-0 group-hover/cell:opacity-100 text-red-500 hover:bg-red-100 rounded transition p-1"><i class="fas fa-trash text-xs"></i></button>
                                 <div>
-                                    <div class="font-extrabold ${titleColor} text-sm">${rt.course.courseCode}</div>
-                                    <div class="text-[11px] font-semibold text-gray-600 leading-tight mt-0.5">${rt.course.title}</div>
+                                    <div class="font-extrabold ${titleColor} text-sm">${rt.course.courseCode || 'N/A'}</div>
+                                    <div class="text-[11px] font-semibold text-gray-600 leading-tight mt-0.5">${rt.course.title || 'No Title'}</div>
                                 </div>
                                 <div class="mt-2 pt-2 border-t border-black/5 flex justify-between items-end">
-                                    <div class="text-[9px] font-extrabold text-gray-700 bg-white px-1.5 py-0.5 rounded shadow-sm border border-gray-200">Tr: ${rt.teacher.id}</div>
+                                    <div class="text-[9px] font-extrabold text-gray-700 bg-white px-1.5 py-0.5 rounded shadow-sm border border-gray-200">${teacherText}</div>
                                     ${roomBadge}
                                 </div>
                             </div>
@@ -263,12 +277,15 @@
             const csrfHeader = document.querySelector("meta[name='_csrf_header']").getAttribute("content");
 
             try {
-                const response = await fetch(`/api/schedule/allocate-class?courseId=${courseId}&teacherId=${teacherId}&dayOfWeek=${dayOfWeek}&startSlotIndex=${startSlot}`, {
+                // FIXED: Appended &roomId= so it correctly aligns with the Controller mapping
+                const response = await fetch(`/api/schedule/allocate-class?courseId=${courseId}&teacherId=${teacherId}&dayOfWeek=${dayOfWeek}&startSlotIndex=${startSlot}&roomId=`, {
                     method: 'POST',
                     headers: { [csrfHeader]: csrfToken }
                 });
+                
                 if (response.status === 409) return alert("⚠️ SCHEDULING CONFLICT:\n\n" + (await response.json()).message);
                 if (!response.ok) throw new Error("Server rejected request: " + response.status);
+                
                 closeModal();
                 loadRoutine();
             } catch (err) { alert(err.message); }
@@ -305,9 +322,7 @@
             const csrfHeader = document.querySelector("meta[name='_csrf_header']").getAttribute("content");
 
             try {
-                const url = `/api/schedule/auto-generate?departmentId=${deptId}&batch=${batch}`;
-
-                const response = await fetch(url, {
+                const response = await fetch(`/api/schedule/auto-generate?departmentId=${deptId}&batch=${batch}`, {
                     method: 'POST',
                     headers: { [csrfHeader]: csrfToken }
                 });
@@ -323,5 +338,4 @@
         }
     </script>
 </body>
-
 </html>

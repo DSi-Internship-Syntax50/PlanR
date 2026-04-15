@@ -93,20 +93,35 @@ public class DataSeeder {
                             st = st + ch;
                             r.setBlock(st);
                             r.setRoomNumber("0" + i);
-                            
+
                             // Make some rooms Labs so the generator has places to put Lab courses!
                             if (i % 3 == 0) {
                                 r.setType(RoomType.LAB);
                             } else {
                                 r.setType(RoomType.THEORY);
                             }
-                            
-                            switch (i%5) {
-                                case 0 -> { r.setDept("CSE"); r.setDepartment(cseDept); }
-                                case 1 -> { r.setDept("EEE"); r.setDepartment(eeeDept); }
-                                case 2 -> { r.setDept("BBA"); r.setDepartment(bbaDept); }
-                                case 3 -> { r.setDept("CE");  r.setDepartment(ceDept); }
-                                default -> { r.setDept("Archi"); r.setDepartment(ceDept); } // Fallback to CE
+
+                            switch (i % 5) {
+                                case 0 -> {
+                                    r.setDept("CSE");
+                                    r.setDepartment(cseDept);
+                                }
+                                case 1 -> {
+                                    r.setDept("EEE");
+                                    r.setDepartment(eeeDept);
+                                }
+                                case 2 -> {
+                                    r.setDept("BBA");
+                                    r.setDepartment(bbaDept);
+                                }
+                                case 3 -> {
+                                    r.setDept("CE");
+                                    r.setDepartment(ceDept);
+                                }
+                                default -> {
+                                    r.setDept("Archi");
+                                    r.setDepartment(ceDept);
+                                } // Fallback to CE
                             }
                             roomRepository.save(r);
                         }
@@ -163,7 +178,7 @@ public class DataSeeder {
                 User student = new User("Jane Doe", "student@planr.com");
                 student.setPassword(passwordEncoder.encode("password123"));
                 student.setRole(Role.STUDENT);
-                student.setDepartment(cseDept); 
+                student.setDepartment(cseDept);
                 student.setStudentId("20210204001");
                 student.setCurrentBatch("2/1");
                 userRepository.save(student);
@@ -189,7 +204,7 @@ public class DataSeeder {
                 c1.setBatch("L3T1");
                 c1.setYear(3);
                 c1.setSemester(1);
-                c1.setRequiredSlots(1); 
+                c1.setRequiredSlots(1);
                 c1.setWeeklyClasses(3); // Meets 3 times a week
                 c1.setIsLab(false);
                 c1.setDepartment(cseDept);
@@ -223,7 +238,7 @@ public class DataSeeder {
                 c3.setDepartment(cseDept);
                 c3.setTeacher(teacher);
                 courseRepository.save(c3);
-                
+
                 // Theory Course 3
                 Course c4 = new Course();
                 c4.setCourseCode("CSE 3105");
@@ -272,8 +287,11 @@ public class DataSeeder {
                         dummyCourse.setTitle("Dummy Course " + i + " " + dept.getShortCode());
                         dummyCourse.setDepartment(dept);
                         dummyCourse.setBatch("Batch " + random.nextInt(5));
-                        dummyCourse.setSlotCount(random.nextInt(3) + 1); // 1, 2, or 3 slots
+                        dummyCourse.setRequiredSlots(random.nextInt(3) + 1); // 1, 2, or 3 slots
+                        dummyCourse.setWeeklyClasses(random.nextInt(3) + 6);
                         dummyCourse.setIsLab(random.nextBoolean());
+                        dummyCourse.setSemester((i % 2) + 1);
+                        dummyCourse.setYear((i % 4) + 1);
                         courseRepository.save(dummyCourse);
 
                         // Assign 1 to 3 routines for this course across the week
