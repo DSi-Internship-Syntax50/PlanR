@@ -82,7 +82,8 @@
                     <div class="flex-1 overflow-y-auto p-4 space-y-3" id="roomList">
                         <div th:each="room : ${rooms}" th:data-room-id="${room.id}"
                             th:data-room-name="${room.roomNumber}" th:data-room-floor="${room.floorNumber}"
-                            th:data-room-block="${room.block}" th:data-room-dept="${room.dept?.shortCode}"
+                            th:data-room-block="${room.block}"
+                            th:data-room-dept="${room.department != null ? room.department.shortCode : room.dept}"
                             class="room-card p-4 rounded-xl border border-gray-100 bg-white hover:bg-blue-50/80 cursor-pointer transition-all shadow-sm relative">
                             <div
                                 class="selected-badge hidden absolute top-0 right-0 bg-blue-600 text-white text-[9px] font-bold px-2 py-1 rounded-bl-xl rounded-tr-xl">
@@ -100,22 +101,15 @@
                                     class="bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider"
                                     th:text="${room.type}">Type</span>
                             </div>
-                            <div class="text-xs text-gray-500 flex items-center justify-between">
-                                <span class="flex items-center gap-1 font-semibold text-gray-700">
-                                    <i class="fas fa-users text-gray-400"></i> Cap: <span
-                                        th:text="${room.capacity}">120</span>
-                                </span>
-                                <div class="flex gap-1">
-                                    <span
-                                        class="bg-gray-100 text-gray-600 px-2 py-1 rounded border border-gray-200 text-[10px] font-bold"
-                                        th:if="${room.dept != null}" th:text="${room.dept.shortCode}"></span>
+                            <div class="mt-2 text-xs text-gray-500 font-medium flex items-center gap-2 flex-wrap">
+                                <span>Cap: <span th:text="${room.capacity}"></span></span>
 
-                                    <span
-                                        class="bg-gray-100 text-gray-600 px-2 py-1 rounded border border-gray-200 text-[10px] font-bold"
-                                        th:if="${room.block != null and !room.block.isEmpty()}">
-                                        Block <span th:text="${room.block}"></span>
-                                    </span>
-                                </div>
+                                <span
+                                    class="bg-gray-100 text-gray-600 px-2 py-1 rounded border border-gray-200 text-[10px] font-bold"
+                                    th:if="${room.department != null}" th:text="${room.department.shortCode}">
+                                </span>
+
+                                <span>Block <span th:text="${room.block}"></span></span>
                             </div>
                         </div>
                     </div>
