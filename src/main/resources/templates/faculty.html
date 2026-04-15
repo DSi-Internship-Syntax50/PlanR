@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Faculty Hub - PlanR</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body class="bg-[#f3f6f8] font-['Inter',sans-serif]">
+
+    <!-- Sidebar fragment -->
+    <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+
+    <div class="ml-64 flex flex-col min-h-screen">
+        
+        <!-- Header fragment -->
+        <div th:replace="~{fragments/header :: header}"></div>
+
+        <main class="flex-1 p-8">
+            <div class="mb-8 flex justify-between items-end">
+                <div>
+                    <h1 class="text-4xl font-extrabold text-[#0a192f] tracking-tight">Faculty Execution Hub</h1>
+                    <p class="text-gray-500 font-medium mt-3 text-sm">Monitor human capital, track fatigue, and manage invigilation workload constraints.</p>
+                </div>
+                <div class="flex gap-3">
+                    <button class="px-4 py-2 bg-white border border-gray-200 text-gray-700 font-bold rounded-lg text-xs shadow-sm hover:bg-gray-50 transition-colors flex items-center gap-2">
+                        <i class="fas fa-file-excel text-green-600"></i> Export Workloads
+                    </button>
+                    <!-- Navigates back to the CRUD table -->
+                    <a href="/settings" class="px-4 py-2 bg-[#0a192f] text-white font-bold rounded-lg text-xs shadow-md hover:bg-gray-800 transition-all flex items-center gap-2">
+                        Manage Directory
+                    </a>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-12 gap-6">
+                <!-- Faculty List -->
+                <div class="col-span-12 bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex flex-col">
+                    <h3 class="font-bold text-gray-900 mb-6 flex items-center gap-2">
+                        <i class="fas fa-chalkboard-teacher text-blue-600"></i> Faculty Directory
+                    </h3>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <!-- Dynamic Faculty Cards -->
+                        <div th:each="faculty : ${faculties}" class="border border-gray-100 p-4 rounded-xl shadow-sm hover:shadow-md transition-shadow bg-[#fcfdfd]">
+                            <div class="flex justify-between items-start mb-3">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-12 h-12 rounded-full bg-blue-50 text-blue-600 border border-blue-200 font-bold flex items-center justify-center text-sm shadow-inner" 
+                                         th:text="${faculty.name != null && faculty.name.length() >= 2 ? #strings.substring(faculty.name, 0, 2).toUpperCase() : 'NA'}">FA</div>
+                                    <div>
+                                        <h4 class="text-sm font-bold text-gray-900 leading-tight" th:text="${faculty.name}">Faculty Name</h4>
+                                        <p class="text-[10px] text-gray-500 font-medium mt-0.5" 
+                                           th:text="${(faculty.department != null ? faculty.department.shortCode : 'General') + ' • ' + (faculty.seniorityRank != null ? 'Level ' + faculty.seniorityRank : 'Faculty')}">Dept • Rank</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-4 flex flex-col gap-2 border-t border-gray-100 pt-3">
+                                <div class="flex justify-between items-center text-xs">
+                                    <span class="text-gray-500 font-medium">Email</span>
+                                    <span class="font-medium text-blue-600 truncate max-w-[150px]" th:title="${faculty.email}" th:text="${faculty.email != null ? faculty.email : 'N/A'}">email@example.com</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div th:if="${faculties == null || faculties.isEmpty()}" class="col-span-full text-center text-gray-500 text-sm py-8">
+                            No faculty members found in the directory.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

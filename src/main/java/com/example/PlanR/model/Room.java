@@ -1,8 +1,22 @@
 package com.example.PlanR.model;
 
-import com.example.PlanR.model.enums.RoomType;
-import jakarta.persistence.*;
 import java.util.List;
+
+import com.example.PlanR.model.enums.RoomType;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "rooms")
@@ -26,15 +40,29 @@ public class Room {
     @Column(name = "has_hardware_kits")
     private Boolean hasHardwareKits;
 
+    @Column(name = "floor_number")
+    private Integer floorNumber;
+
+    @Column(name = "block_name")
+    private String block;
+
+    @Column(name = "dept_name")
+    private String dept;
+
+    @ManyToOne
+    @JoinColumn(name = "department_id")
+    private Department department;
+
     @OneToMany(mappedBy = "room", cascade = CascadeType.ALL)
+    @JsonIgnore
     private List<MasterRoutine> routines;
-    
+
     @OneToMany(mappedBy = "room", cascade = CascadeType.ALL)
+    @JsonIgnore
     private List<EventBooking> bookings;
 
-  
-    public Room() {}
-
+    public Room() {
+    }
 
     public Long getId() {
         return id;
@@ -68,6 +96,22 @@ public class Room {
         this.capacity = capacity;
     }
 
+    public void setDept(String dept) {
+        this.dept = dept;
+    }
+
+    public String getDept() {
+        return dept;
+    }
+
+    public Department getDepartment() {
+        return department;
+    }
+
+    public void setDepartment(Department department) {
+        this.department = department;
+    }
+
     public Boolean getHasComputers() {
         return hasComputers;
     }
@@ -98,5 +142,21 @@ public class Room {
 
     public void setBookings(List<EventBooking> bookings) {
         this.bookings = bookings;
+    }
+
+    public Integer getFloorNumber() {
+        return floorNumber;
+    }
+
+    public void setFloorNumber(Integer floorNumber) {
+        this.floorNumber = floorNumber;
+    }
+
+    public String getBlock() {
+        return block;
+    }
+
+    public void setBlock(String block) {
+        this.block = block;
     }
 }

@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Routine Builder - PlanR</title>
+    <meta name="_csrf" th:content="${_csrf.token}" />
+    <meta name="_csrf_header" th:content="${_csrf.headerName}" />
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+
+<body class="bg-[#f3f6f8] font-['Inter',sans-serif]">
+
+    <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+
+    <div class="ml-64 flex flex-col min-h-screen">
+
+        <div th:replace="~{fragments/header :: header}"></div>
+
+        <main class="flex-1 p-8 overflow-hidden">
+            <div class="flex flex-col 2xl:flex-row justify-between items-start 2xl:items-center gap-6 mb-8">
+                
+                <div class="max-w-2xl">
+                    <h1 class="text-4xl font-extrabold text-[#0a192f] tracking-tight">Master Routine Builder</h1>
+                    <p class="text-gray-500 font-medium mt-3 text-sm leading-relaxed">Dynamically assign academic
+                        courses to batches. Room assignments will be handled separately by the Facilities team.</p>
+                </div>
+
+                <div class="flex flex-wrap gap-4 items-center bg-white p-2 rounded-xl shadow-sm border border-gray-100">
+
+                    <div class="flex items-center gap-2 pl-2">
+                        <i class="fas fa-building text-blue-500"></i>
+                        <label class="font-bold text-sm text-gray-700">Dept:</label>
+                        <select id="departmentSelect"
+                            class="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm font-bold focus:ring-2 focus:ring-blue-500 outline-none cursor-pointer"
+                            onchange="handleSelectionChange()">
+                            <option th:each="d : ${departments}" th:value="${d.id}" th:text="${d.shortCode}"></option>
+                        </select>
+                    </div>
+
+                    <div class="hidden sm:block w-px h-6 bg-gray-200 mx-1"></div>
+
+                    <div class="flex items-center gap-2">
+                        <i class="fas fa-users text-blue-500"></i>
+                        <label class="font-bold text-sm text-gray-700">Batch:</label>
+                        <select id="batchSelect"
+                            class="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm font-bold focus:ring-2 focus:ring-blue-500 outline-none cursor-pointer"
+                            onchange="handleSelectionChange()">
+                            <option value="L1T1">Year 1, Semester 1</option>
+                            <option value="L1T2">Year 1, Semester 2</option>
+                            <option value="L2T1">Year 2, Semester 1</option>
+                            <option value="L2T2">Year 2, Semester 2</option>
+                            <option value="L3T1" selected>Year 3, Semester 1</option>
+                            <option value="L3T2">Year 3, Semester 2</option>
+                            <option value="L4T1">Year 4, Semester 1</option>
+                            <option value="L4T2">Year 4, Semester 2</option>
+                        </select>
+                    </div>
+
+                    <div class="hidden sm:block w-px h-8 bg-gray-200 mx-2"></div>
+
+                    <button onclick="autoGenerate()"
+                        class="px-5 py-2.5 bg-green-600 text-white font-semibold rounded-lg text-sm shadow-md hover:bg-green-700 transition-colors flex items-center gap-2">
+                        <i class="fas fa-magic"></i> Auto Generate
+                    </button>
+
+                    <button onclick="openModal()"
+                        class="px-5 py-2.5 bg-[#0a192f] text-white font-semibold rounded-lg text-sm shadow-md hover:bg-blue-900 transition-colors flex items-center gap-2">
+                        <i class="fas fa-plus"></i> Schedule Class
+                    </button>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-x-auto">
+                <table class="w-full text-sm text-left table-fixed min-w-[1200px]">
+                    <thead
+                        class="bg-white text-gray-400 font-extrabold uppercase text-[10px] tracking-wider border-b border-gray-200">
+                        <tr id="routineHeaders">
+                        </tr>
+                    </thead>
+                    <tbody id="routineGrid" class="divide-y divide-gray-100">
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+
+    <div id="classModal"
+        class="hidden fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 transition-all duration-300">
+        <div class="bg-white p-7 rounded-2xl w-[450px] shadow-2xl">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-extrabold text-gray-900">Schedule New Class</h2>
+                <button onclick="closeModal()" class="text-gray-400 hover:text-red-500"><i
+                        class="fas fa-times text-lg"></i></button>
+            </div>
+
+            <form id="scheduleForm" onsubmit="submitClass(event)">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600 mb-1.5 uppercase tracking-wide">Select
+                            Course</label>
+                        <select id="courseId"
+                            class="w-full bg-gray-50 border border-gray-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                            required></select>
+                    </div>
+
+                    <div class="hidden">
+                        <input type="number" id="teacherId" value="1" required>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-600 mb-1.5 uppercase tracking-wide">Day of
+                                Week</label>
+                            <select id="dayOfWeek"
+                                class="w-full bg-gray-50 border border-gray-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none cursor-pointer">
+                                <option value="SUNDAY">Sunday</option>
+                                <option value="MONDAY">Monday</option>
+                                <option value="TUESDAY">Tuesday</option>
+                                <option value="WEDNESDAY">Wednesday</option>
+                                <option value="THURSDAY">Thursday</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-600 mb-1.5 uppercase tracking-wide">Start
+                                Slot</label>
+                            <select id="startSlot"
+                                class="w-full bg-gray-50 border border-gray-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none cursor-pointer"
+                                required>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-3 mt-8">
+                    <button type="button" onclick="closeModal()"
+                        class="px-5 py-2.5 bg-white border border-gray-300 rounded-lg text-gray-700 text-sm font-bold hover:bg-gray-50">Cancel</button>
+                    <button type="submit"
+                        class="px-5 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-bold shadow-md hover:bg-blue-700 flex items-center gap-2">
+                        <i class="fas fa-save"></i> Save Schedule
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const days = ["SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY"];
+        const maxSlots = 12;
+
+        function buildHeaders() {
+            let html = `<th class="w-20 p-4 border-r border-gray-100 text-center"><i class="far fa-clock text-gray-300 text-lg"></i></th>`;
+            let dropdownHtml = '';
+            for (let i = 1; i <= maxSlots; i++) {
+                html += `<th class="p-4 border-r border-gray-100 text-center">Slot ${i}</th>`;
+                dropdownHtml += `<option value="${i}">Slot ${i}</option>`;
+            }
+            document.getElementById('routineHeaders').innerHTML = html;
+            document.getElementById('startSlot').innerHTML = dropdownHtml;
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            buildHeaders();
+            handleSelectionChange();
+        });
+
+        function handleSelectionChange() {
+            const deptSelect = document.getElementById('departmentSelect');
+            if (deptSelect && deptSelect.value) {
+                loadCourses();
+                loadRoutine();
+            }
+        }
+
+        async function loadCourses() {
+            const deptId = document.getElementById('departmentSelect').value;
+            const batch = document.getElementById('batchSelect').value;
+
+            try {
+                const res = await fetch(`/api/schedule/courses?departmentId=${deptId}&batch=${batch}`);
+                const courses = await res.json();
+
+                const select = document.getElementById('courseId');
+                select.innerHTML = courses.map(c =>
+                    `<option value="${c.id}">${c.courseCode} - ${c.title} (${c.slotCount} slot${c.slotCount > 1 ? 's' : ''})</option>`
+                ).join('');
+                if (courses.length === 0) select.innerHTML = `<option value="" disabled selected>No courses for this batch & dept</option>`;
+            } catch (e) { console.error(e); }
+        }
+
+        async function loadRoutine() {
+            const deptId = document.getElementById('departmentSelect').value;
+            const batch = document.getElementById('batchSelect').value;
+            const gridBody = document.getElementById('routineGrid');
+            gridBody.innerHTML = '';
+
+            days.forEach(day => {
+                const dayLabel = day.charAt(0) + day.slice(1, 3).toLowerCase();
+                let row = `<tr id="row-${day}"><td class="p-4 border-r border-gray-100 font-extrabold text-gray-700 text-center bg-gray-50/30 uppercase text-xs tracking-wider">${dayLabel}</td>`;
+
+                for (let i = 1; i <= maxSlots; i++) {
+                    row += `<td id="cell-${day}-${i}" class="p-2 border-r border-gray-100 align-top h-[115px] relative group hover:bg-gray-50/50 transition cursor-pointer" onclick="openModalWithPreset('${day}', ${i})">
+                                <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition"><i class="fas fa-plus text-blue-300"></i></div>
+                            </td>`;
+                }
+                row += `</tr>`;
+                gridBody.innerHTML += row;
+            });
+
+            try {
+                const res = await fetch(`/api/schedule/routine?departmentId=${deptId}&batch=${batch}`);
+                const routines = await res.json();
+
+                routines.forEach(rt => {
+                    const cell = document.getElementById(`cell-${rt.dayOfWeek}-${rt.startSlotIndex}`);
+                    if (cell) {
+                        cell.colSpan = rt.course.slotCount;
+                        cell.onclick = null;
+
+                        for (let i = 1; i < rt.course.slotCount; i++) {
+                            let hideCell = document.getElementById(`cell-${rt.dayOfWeek}-${rt.startSlotIndex + i}`);
+                            if (hideCell) hideCell.style.display = 'none';
+                        }
+
+                        const bgColor = rt.course.isLab ? 'bg-purple-50' : 'bg-blue-50';
+                        const borderColor = rt.course.isLab ? 'border-purple-500' : 'border-blue-500';
+                        const titleColor = rt.course.isLab ? 'text-purple-900' : 'text-blue-900';
+                        const roomBadge = rt.room
+                            ? `<span class="text-[9px] font-bold text-green-700 px-2 py-0.5 bg-green-100 rounded border border-green-200">Rm ${rt.room.roomNumber}</span>`
+                            : `<span class="text-[9px] font-bold text-orange-600 px-2 py-0.5 bg-orange-100 rounded border border-orange-200">Pending Room</span>`;
+
+                        cell.innerHTML = `
+                            <div class="${bgColor} border-l-[3px] ${borderColor} rounded p-3 h-full shadow-sm flex flex-col justify-between relative group/cell transition hover:shadow-md">
+                                <button onclick="deleteRoutine(${rt.id}, event)" class="absolute top-1 right-1 opacity-0 group-hover/cell:opacity-100 text-red-500 hover:bg-red-100 rounded transition p-1"><i class="fas fa-trash text-xs"></i></button>
+                                <div>
+                                    <div class="font-extrabold ${titleColor} text-sm">${rt.course.courseCode}</div>
+                                    <div class="text-[11px] font-semibold text-gray-600 leading-tight mt-0.5">${rt.course.title}</div>
+                                </div>
+                                <div class="mt-2 pt-2 border-t border-black/5 flex justify-between items-end">
+                                    <div class="text-[9px] font-extrabold text-gray-700 bg-white px-1.5 py-0.5 rounded shadow-sm border border-gray-200">Tr: ${rt.teacher.id}</div>
+                                    ${roomBadge}
+                                </div>
+                            </div>
+                        `;
+                    }
+                });
+            } catch (e) { console.error(e); }
+        }
+
+        function openModal() { document.getElementById('classModal').classList.remove('hidden'); }
+        function openModalWithPreset(day, slot) { document.getElementById('dayOfWeek').value = day; document.getElementById('startSlot').value = slot; openModal(); }
+        function closeModal() { document.getElementById('classModal').classList.add('hidden'); }
+
+        async function submitClass(e) {
+            e.preventDefault();
+            const [courseId, teacherId, dayOfWeek, startSlot] = ['courseId', 'teacherId', 'dayOfWeek', 'startSlot'].map(id => document.getElementById(id).value);
+            if (!courseId) return alert("Select a course first.");
+
+            const csrfToken = document.querySelector("meta[name='_csrf']").getAttribute("content");
+            const csrfHeader = document.querySelector("meta[name='_csrf_header']").getAttribute("content");
+
+            try {
+                const response = await fetch(`/api/schedule/allocate-class?courseId=${courseId}&teacherId=${teacherId}&dayOfWeek=${dayOfWeek}&startSlotIndex=${startSlot}`, {
+                    method: 'POST',
+                    headers: { [csrfHeader]: csrfToken }
+                });
+                if (response.status === 409) return alert("⚠️ SCHEDULING CONFLICT:\n\n" + (await response.json()).message);
+                if (!response.ok) throw new Error("Server rejected request: " + response.status);
+                closeModal();
+                loadRoutine();
+            } catch (err) { alert(err.message); }
+        }
+
+        async function deleteRoutine(id, e) {
+            e.stopPropagation();
+            if (!confirm("Are you sure you want to free this slot?")) return;
+
+            const csrfToken = document.querySelector("meta[name='_csrf']").getAttribute("content");
+            const csrfHeader = document.querySelector("meta[name='_csrf_header']").getAttribute("content");
+
+            try {
+                const response = await fetch(`/api/schedule/routine/${id}`, {
+                    method: 'DELETE',
+                    headers: { [csrfHeader]: csrfToken }
+                });
+                if (!response.ok) throw new Error("Failed to delete slot");
+                loadRoutine();
+            } catch (err) { alert(err.message); }
+        }
+
+        async function autoGenerate() {
+            const deptId = document.getElementById('departmentSelect').value;
+            const batch = document.getElementById('batchSelect').value;
+
+            if (!deptId) return alert("Please select a department first.");
+
+            if (!confirm(`Generate schedule for ${batch} using the current database courses and rooms?`)) {
+                return;
+            }
+
+            const csrfToken = document.querySelector("meta[name='_csrf']").getAttribute("content");
+            const csrfHeader = document.querySelector("meta[name='_csrf_header']").getAttribute("content");
+
+            try {
+                const url = `/api/schedule/auto-generate?departmentId=${deptId}&batch=${batch}`;
+
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { [csrfHeader]: csrfToken }
+                });
+
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.message || "Failed to generate routine");
+
+                alert(data.message);
+                loadRoutine();
+            } catch (err) {
+                alert("Generation Error: " + err.message);
+            }
+        }
+    </script>
+</body>
+
+</html>

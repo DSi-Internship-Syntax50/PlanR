@@ -1,5 +1,6 @@
 package com.example.PlanR.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import java.util.List;
 
@@ -17,13 +18,16 @@ public class Department {
     private String name;
 
     @OneToMany(mappedBy = "department", cascade = CascadeType.ALL)
+    @JsonIgnore
     private List<Course> courses;
 
     @OneToMany(mappedBy = "department", cascade = CascadeType.ALL)
+    @JsonIgnore
     private List<User> users;
 
     // Constructors
-    public Department() {}
+    public Department() {
+    }
 
     public Department(String shortCode, String name) {
         this.shortCode = shortCode;

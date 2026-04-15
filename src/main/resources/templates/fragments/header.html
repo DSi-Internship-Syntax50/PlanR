@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+    <header th:fragment="header" id="mainHeader" class="h-[64px] mx-8 mt-6 bg-white/40 backdrop-blur-2xl border border-white/60 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] flex items-center justify-between px-6 sticky top-6 z-40 transition-transform duration-300 transform translate-y-0">
+        
+
+
+        <!-- Empty div to push everything to the right in the justify-between container -->
+        <div></div>
+
+        <div class="flex items-center gap-6">
+            <!-- Navigation Links -->
+            <div class="hidden md:flex gap-4 text-xs font-bold tracking-wider text-gray-500">
+                <a href="/faculty" class="hover:text-[#0a192f] hover:bg-gray-100/80 px-4 py-2 rounded-lg transition-all">FACULTY</a>
+                <a href="/students" class="hover:text-[#0a192f] hover:bg-gray-100/80 px-4 py-2 rounded-lg transition-all">STUDENTS</a>
+            </div>
+            
+            <!-- Separator Line -->
+            <div class="hidden md:block w-px h-8 bg-gray-200"></div>
+            
+            <!-- Profile & Roles -->
+            <div class="flex items-center gap-5">
+                <span th:if="${user != null}" class="bg-blue-50 text-blue-700 px-3 py-1.5 rounded-lg text-[10px] uppercase tracking-widest font-extrabold border border-blue-100" th:text="${user.role}">ROLE</span>
+                <span th:unless="${user != null}" class="bg-blue-50 text-blue-700 px-3 py-1.5 rounded-lg text-[10px] uppercase tracking-widest font-extrabold border border-blue-100">GUEST</span>
+                
+                <a href="/settings" class="w-10 h-10 rounded-full flex items-center justify-center text-gray-500 hover:text-blue-600 hover:bg-blue-50 transition-all"><i class="fas fa-cog text-lg"></i></a>
+                
+                <a href="/my-profile" class="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center font-bold text-sm shadow-md cursor-pointer hover:shadow-lg transition-transform transform hover:-translate-y-0.5 border-2 border-white">
+                    <span th:text="${#strings.substring(user != null && user.name != null && !user.name.isEmpty() ? user.name : 'A', 0, 1)}">A</span>
+                </a>
+            </div>
+        </div>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                // Navbar Scroll Logic
+                let scrollTimeout;
+                const header = document.getElementById('mainHeader');
+                window.addEventListener('scroll', () => {
+                    if (window.scrollY > 80) {
+                        header.classList.add('-translate-y-[150%]');
+                        window.clearTimeout(scrollTimeout);
+                        scrollTimeout = setTimeout(() => header.classList.remove('-translate-y-[150%]'), 300);
+                    } else {
+                        header.classList.remove('-translate-y-[150%]');
+                    }
+                });
+            });
+        </script>
+
+    </header>
+</body>
+</html>
