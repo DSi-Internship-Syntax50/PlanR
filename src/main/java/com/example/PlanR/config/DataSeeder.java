@@ -6,6 +6,7 @@ import com.example.PlanR.repository.*;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalTime;
@@ -22,9 +23,16 @@ public class DataSeeder {
             CourseRepository courseRepository,
             RoomRepository roomRepository,
             MasterRoutineRepository routineRepository,
-            PasswordEncoder passwordEncoder) {
+            PasswordEncoder passwordEncoder,
+            JdbcTemplate jdbcTemplate) {
         
         return args -> {
+            // 0. Migrate any legacy 'ADMIN' role to 'COORDINATOR' in the database
+            int migrated = jdbcTemplate.update("UPDATE users SET role = 'COORDINATOR' WHERE role = 'ADMIN'");
+            if (migrated > 0) {
+                System.out.println("MIGRATION: Updated " + migrated + " user(s) from ADMIN to COORDINATOR role.");
+            }
+
             // 1. Seed Rooms if empty (from dev branch)
             if (roomRepository.count() == 0) {
                 Room auditorium = new Room();
@@ -76,7 +84,7 @@ public class DataSeeder {
             if (userRepository.findByEmail("admin@planr.com").isEmpty()) {
                 User adminUser = new User("System Admin", "admin@planr.com");
                 adminUser.setPassword(passwordEncoder.encode("password123"));
-                adminUser.setRole(Role.ADMIN);
+                adminUser.setRole(Role.COORDINATOR);
                 adminUser.setDepartment(cse);
                 adminUser.setCurrentBatch("4.2");
                 userRepository.save(adminUser);

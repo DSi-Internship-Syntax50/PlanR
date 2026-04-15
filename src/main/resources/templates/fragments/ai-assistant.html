@@ -26,13 +26,13 @@
                 <div class="flex gap-2">
                     <div class="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center shrink-0"><i class="fas fa-robot text-[10px]"></i></div>
                     <div class="bg-white border border-gray-100 p-2.5 rounded-2xl rounded-tl-sm shadow-sm">
-                        <p class="text-xs text-gray-700 leading-relaxed">Hello! I'm your PlanR assistant. Ask me anything about your routine or classes!</p>
+                        <p class="text-xs text-gray-700 leading-relaxed">Hello! I'm <strong>PlanR AI</strong> 👋 I can help you with your <strong>class schedules, routines, rooms, events, seat plans,</strong> and other PlanR platform features. I'm not able to answer questions outside of PlanR.</p>
                     </div>
                 </div>
             </div>
             <!-- Input Area -->
             <div class="p-3 bg-white border-t border-gray-100 relative">
-                <input type="text" id="aiInput" placeholder="Ask about routines..." class="w-full bg-gray-100 border-none text-xs rounded-full py-2.5 pl-4 pr-10 focus:ring-2 focus:ring-blue-500 outline-none">
+                <input type="text" id="aiInput" placeholder="Ask about your schedule, rooms, events..." class="w-full bg-gray-100 border-none text-xs rounded-full py-2.5 pl-4 pr-10 focus:ring-2 focus:ring-blue-500 outline-none">
                 <button id="btnAiSubmit" class="absolute top-1/2 right-4 transform -translate-y-1/2 w-7 h-7 rounded-full bg-blue-600 text-white flex items-center justify-center hover:bg-blue-700 transition-colors shadow-sm focus:outline-none">
                     <i class="fas fa-paper-plane text-[10px]"></i>
                 </button>
@@ -105,7 +105,7 @@
                         appendMessage('ai', data.answer || "I'm sorry, I couldn't process that.");
                     } catch (error) {
                         document.getElementById(typingId).remove();
-                        appendMessage('ai', "System Error: Check your Groq API key in application.properties.");
+                        appendMessage('ai', "⚠️ Unable to reach PlanR AI right now. Please check your internet connection and try again.");
                     }
                 };
 

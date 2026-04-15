@@ -78,8 +78,9 @@ public class EventBookingService {
         newBooking.setTeacherName(requestDto.getTeacherName());
         newBooking.setAdditionalInfo(requestDto.getAdditionalInfo());
         
-        // Auto-approve if requestor is Admin, else PENDING
-        if (requestor.getRole() == com.example.PlanR.model.enums.Role.ADMIN) {
+        // Auto-approve if requestor is COORDINATOR or SUPERADMIN, else PENDING
+        if (requestor.getRole() == com.example.PlanR.model.enums.Role.COORDINATOR
+                || requestor.getRole() == com.example.PlanR.model.enums.Role.SUPERADMIN) {
             newBooking.setStatus(BookingStatus.APPROVED);
         } else {
             newBooking.setStatus(BookingStatus.PENDING); 

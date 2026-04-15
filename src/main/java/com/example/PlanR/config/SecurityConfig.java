@@ -21,9 +21,9 @@ public class SecurityConfig {
         http
             .authorizeHttpRequests(auth -> auth
                 // Combined publicly accessible routes
-                .requestMatchers("/login", "/register", "/css/**", "/js/**", "/images/**").permitAll()
+                .requestMatchers("/login", "/css/**", "/js/**", "/images/**").permitAll()
                 // Combined Admin constraints
-                .requestMatchers("/admin/**").hasAnyRole("SUPERADMIN", "ADMIN")
+                .requestMatchers("/admin/**").hasAnyRole("SUPERADMIN")
                 // Protect AI endpoints
                 .requestMatchers("/api/ai/**").authenticated()
                 // Protect all other routes

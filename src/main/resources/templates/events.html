@@ -340,10 +340,10 @@
                 cellBookings: [],
                 modalView: 'list', // 'list' or 'form'
                 get isTeacherOrAdmin() {
-                    return window.USER_ROLE === 'ROLE_TEACHER' || window.USER_ROLE === 'ROLE_ADMIN';
+                    return window.USER_ROLE === 'ROLE_TEACHER' || window.USER_ROLE === 'ROLE_COORDINATOR' || window.USER_ROLE === 'ROLE_SUPERADMIN';
                 },
                 get isAdmin() {
-                    return window.USER_ROLE === 'ROLE_ADMIN';
+                    return window.USER_ROLE === 'ROLE_COORDINATOR' || window.USER_ROLE === 'ROLE_SUPERADMIN';
                 },
                 
                 formData: {
