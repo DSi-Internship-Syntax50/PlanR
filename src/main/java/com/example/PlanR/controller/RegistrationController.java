@@ -31,8 +31,7 @@ public class RegistrationController {
     private final DepartmentRepository departmentRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public RegistrationController(UserRepository userRepository, DepartmentRepository departmentRepository,
-            PasswordEncoder passwordEncoder) {
+    public RegistrationController(UserRepository userRepository, DepartmentRepository departmentRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.departmentRepository = departmentRepository;
         this.passwordEncoder = passwordEncoder;
@@ -92,8 +91,10 @@ public class RegistrationController {
             userRepository.save(user);
             logger.info("User {} created successfully by admin with role {}", email, user.getRole());
 
+
             // Redirect back to the form with a success parameter
             return "redirect:/admin/users/create?success=true";
+
         } catch (Exception e) {
             logger.error("Critical error during user creation for {}: {}", email, e.getMessage(), e);
             model.addAttribute("registrationError", "A system error occurred. Please try again.");

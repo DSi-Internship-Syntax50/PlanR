@@ -15,6 +15,7 @@ import com.example.PlanR.model.EventBooking;
 import com.example.PlanR.model.Room;
 import com.example.PlanR.model.User;
 import com.example.PlanR.model.enums.BookingStatus;
+import com.example.PlanR.model.enums.Role;
 import com.example.PlanR.repository.EventBookingRepository;
 import com.example.PlanR.repository.RoomRepository;
 import com.example.PlanR.repository.UserRepository;
@@ -78,8 +79,10 @@ public class EventBookingService {
         newBooking.setTeacherName(requestDto.getTeacherName());
         newBooking.setAdditionalInfo(requestDto.getAdditionalInfo());
         
-        // Auto-approve if requestor is Admin, else PENDING
-        if (requestor.getRole() == com.example.PlanR.model.enums.Role.SUPERADMIN) {
+        // Auto-approve if requestor has elevated privileges, else PENDING
+        if (requestor.getRole() == Role.SUPERADMIN 
+                || requestor.getRole() == Role.ADMIN 
+                || requestor.getRole() == Role.COORDINATOR) {
             newBooking.setStatus(BookingStatus.APPROVED);
         } else {
             newBooking.setStatus(BookingStatus.PENDING); 

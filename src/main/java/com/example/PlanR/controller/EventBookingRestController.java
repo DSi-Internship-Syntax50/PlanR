@@ -27,7 +27,7 @@ public class EventBookingRestController {
         if (month == null) {
             month = LocalDate.now();
         }
-        boolean isAdmin = userDetails != null && userDetails.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+        boolean isAdmin = userDetails != null && userDetails.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_COORDINATOR") || a.getAuthority().equals("ROLE_SUPERADMIN"));
         String username = userDetails != null ? userDetails.getUsername() : "";
         return ResponseEntity.ok(eventBookingService.getBookingsForMonth(month, username, isAdmin));
     }
@@ -48,7 +48,7 @@ public class EventBookingRestController {
     @PostMapping("/bookings/{id}/approve")
     public ResponseEntity<?> approveBooking(@PathVariable Long id, @AuthenticationPrincipal UserDetails userDetails) {
         if (userDetails == null) return ResponseEntity.status(401).build();
-        boolean isAdmin = userDetails.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+        boolean isAdmin = userDetails.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_COORDINATOR") || a.getAuthority().equals("ROLE_SUPERADMIN"));
         if (!isAdmin) return ResponseEntity.status(403).build();
         
         try {

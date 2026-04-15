@@ -16,24 +16,26 @@
                     <i class="fas fa-robot text-lg"></i>
                     <div>
                         <h4 class="font-extrabold text-sm leading-tight">PlanR AI</h4>
-                        <p class="text-[10px] font-medium opacity-80">Local LLM Assistant</p>
+                        <p class="text-[10px] font-medium opacity-80">Groq Powered (Llama 3)</p>
                     </div>
                 </div>
                 <button id="btnAiClose" class="text-white hover:text-red-200 transition p-1"><i class="fas fa-times"></i></button>
             </div>
             <!-- Chat Body -->
-            <div class="h-72 overflow-y-auto p-4 bg-gray-50/50 space-y-4">
+            <div id="aiChatBody" class="h-72 overflow-y-auto p-4 bg-gray-50/50 space-y-4">
                 <div class="flex gap-2">
                     <div class="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center shrink-0"><i class="fas fa-robot text-[10px]"></i></div>
                     <div class="bg-white border border-gray-100 p-2.5 rounded-2xl rounded-tl-sm shadow-sm">
-                        <p class="text-xs text-gray-700 leading-relaxed">Hello! I noticed a double booking conflict for Room 305 today. Need help finding a free slot to reschedule?</p>
+                        <p class="text-xs text-gray-700 leading-relaxed">Hello! I'm <strong>PlanR AI</strong> 👋 I can help you with your <strong>class schedules, routines, rooms, events, seat plans,</strong> and other PlanR platform features. I'm not able to answer questions outside of PlanR.</p>
                     </div>
                 </div>
             </div>
             <!-- Input Area -->
             <div class="p-3 bg-white border-t border-gray-100 relative">
-                <input type="text" placeholder="Ask about routines..." class="w-full bg-gray-100 border-none text-xs rounded-full py-2.5 pl-4 pr-10 focus:ring-2 focus:ring-blue-500 outline-none">
-                <button class="absolute top-1/2 right-4 transform -translate-y-1/2 w-7 h-7 rounded-full bg-blue-600 text-white flex items-center justify-center hover:bg-blue-700 transition-colors shadow-sm"><i class="fas fa-paper-plane text-[10px]"></i></button>
+                <input type="text" id="aiInput" placeholder="Ask about your schedule, rooms, events..." class="w-full bg-gray-100 border-none text-xs rounded-full py-2.5 pl-4 pr-10 focus:ring-2 focus:ring-blue-500 outline-none">
+                <button id="btnAiSubmit" class="absolute top-1/2 right-4 transform -translate-y-1/2 w-7 h-7 rounded-full bg-blue-600 text-white flex items-center justify-center hover:bg-blue-700 transition-colors shadow-sm focus:outline-none">
+                    <i class="fas fa-paper-plane text-[10px]"></i>
+                </button>
             </div>
         </div>
 
@@ -43,6 +45,9 @@
                 const btnAiToggle = document.getElementById('btnAiToggle');
                 const aiDrawer = document.getElementById('aiDrawer');
                 const btnAiClose = document.getElementById('btnAiClose');
+                const aiInput = document.getElementById('aiInput');
+                const btnAiSubmit = document.getElementById('btnAiSubmit');
+                const aiChatBody = document.getElementById('aiChatBody');
 
                 const toggleAiDrawer = () => {
                     if(aiDrawer.classList.contains('hidden')) {
@@ -56,10 +61,63 @@
                     }
                 };
 
+                const appendMessage = (role, text) => {
+                    const isAi = role === 'ai';
+                    const msgHtml = `
+                        <div class="flex gap-2 ${isAi ? '' : 'flex-row-reverse'} animate-fadeIn">
+                            <div class="w-6 h-6 rounded-full ${isAi ? 'bg-blue-100 text-blue-600' : 'bg-indigo-600 text-white'} flex items-center justify-center shrink-0 border border-white">
+                                <i class="fas ${isAi ? 'fa-robot' : 'fa-user'} text-[10px]"></i>
+                            </div>
+                            <div class="${isAi ? 'bg-white border-gray-100 rounded-tl-sm' : 'bg-blue-600 text-white rounded-tr-sm'} border p-2.5 rounded-2xl shadow-sm max-w-[80%]">
+                                <p class="text-xs leading-relaxed">${text}</p>
+                            </div>
+                        </div>
+                    `;
+                    aiChatBody.insertAdjacentHTML('beforeend', msgHtml);
+                    aiChatBody.scrollTop = aiChatBody.scrollHeight;
+                };
+
+                const sendMessage = async () => {
+                    const query = aiInput.value.trim();
+                    if (!query) return;
+
+                    aiInput.value = '';
+                    appendMessage('user', query);
+
+                    // Show typing indicator
+                    const typingId = 'typing-' + Date.now();
+                    const typingHtml = `<div id="${typingId}" class="flex gap-2 animate-pulse">
+                        <div class="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center shrink-0"><i class="fas fa-robot text-[10px]"></i></div>
+                        <div class="bg-white border border-gray-100 p-2 rounded-2xl rounded-tl-sm shadow-sm"><p class="text-[10px] text-gray-400">PlanR is thinking...</p></div>
+                    </div>`;
+                    aiChatBody.insertAdjacentHTML('beforeend', typingHtml);
+                    aiChatBody.scrollTop = aiChatBody.scrollHeight;
+
+                    try {
+                        const response = await fetch('/api/ai/ask', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ query })
+                        });
+
+                        const data = await response.json();
+                        document.getElementById(typingId).remove();
+                        appendMessage('ai', data.answer || "I'm sorry, I couldn't process that.");
+                    } catch (error) {
+                        document.getElementById(typingId).remove();
+                        appendMessage('ai', "⚠️ Unable to reach PlanR AI right now. Please check your internet connection and try again.");
+                    }
+                };
+
                 if(btnAiToggle && aiDrawer) {
                     btnAiToggle.addEventListener('click', toggleAiDrawer);
                     if(btnAiClose) btnAiClose.addEventListener('click', toggleAiDrawer);
                 }
+
+                btnAiSubmit.addEventListener('click', sendMessage);
+                aiInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') sendMessage();
+                });
             });
         </script>
     </th:block>
