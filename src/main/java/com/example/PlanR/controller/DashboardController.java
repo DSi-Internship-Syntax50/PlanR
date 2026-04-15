@@ -28,7 +28,6 @@ public class DashboardController {
     @Autowired
     private RoomRepository roomRepository;
 
-    @Autowired
     private MasterRoutineRepository masterRoutineRepository;
 
     @Autowired
@@ -76,7 +75,11 @@ public class DashboardController {
 
     @GetMapping("/operations")
     public String showSeatPlanTool(Model model) {
-        return "seatplan";
+        List<Room> rooms = roomRepository.findAll();
+        List<com.example.PlanR.model.Department> departments = departmentRepository.findAll();
+        model.addAttribute("rooms", rooms);
+        model.addAttribute("departments", departments);
+        return "seatplan"; // Loads seatplan.html
     }
 
     @GetMapping("/events")
