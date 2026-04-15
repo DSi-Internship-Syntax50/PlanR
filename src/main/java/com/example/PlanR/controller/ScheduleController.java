@@ -5,6 +5,7 @@ import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping; // Added missing import
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -13,12 +14,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.example.PlanR.dto.RequestDto;
 import com.example.PlanR.dto.RoutineDTO;
 import com.example.PlanR.model.Course;
 import com.example.PlanR.model.MasterRoutine;
 import com.example.PlanR.model.ScheduleRequest;
 import com.example.PlanR.model.enums.DayOfWeek;
+import com.example.PlanR.model.enums.RequestType; // Added missing import
 import com.example.PlanR.repository.CourseRepository;
 import com.example.PlanR.repository.MasterRoutineRepository;
 import com.example.PlanR.service.RecommendationService;
@@ -37,11 +38,11 @@ public class ScheduleController {
     @Autowired
     private CourseRepository courseRepository;
 
-    // Added this repository so the controller can fetch the routines
     @Autowired
     private MasterRoutineRepository routineRepository;
 
-    public static class RequestDto {
+    // Use the top-level RequestDto or rename this inner class to avoid confusion
+    public static class ScheduleRequestDto {
         public Long routineId;
         public RequestType requestType;
         public Long requestedRoomId;
@@ -67,8 +68,8 @@ public class ScheduleController {
         routineRepository.deleteById(id);
         return ResponseEntity.noContent().build();
     }
-    @Autowired
-    private MasterRoutineRepository routineRepository;
+
+    // Removed the second (duplicate) declaration of routineRepository that was here
 
     // -----------------------------------------------------------
 
@@ -134,7 +135,7 @@ public class ScheduleController {
     }
 
     @PostMapping("/requests")
-    public ResponseEntity<ScheduleRequest> submitRequest(@RequestBody RequestDto request) {
+    public ResponseEntity<ScheduleRequest> submitRequest(@RequestBody ScheduleRequestDto request) {
         ScheduleRequest created = actionService.requestAction(
                 request.routineId,
                 request.requesterId,
