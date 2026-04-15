@@ -7,12 +7,18 @@ import org.springframework.beans.factory.annotation.Autowired;
 import com.example.PlanR.repository.RoomRepository;
 import com.example.PlanR.model.Room;
 import java.util.List;
+import com.example.PlanR.repository.UserRepository;
+import com.example.PlanR.model.User;
+import com.example.PlanR.model.enums.Role;
 
 @Controller
 public class DashboardController {
 
     @Autowired
     private RoomRepository roomRepository;
+
+    @Autowired
+    private UserRepository userRepository;
 
     @GetMapping({"/", "/dashboard"})
     public String showCoordinatorCanvas(Model model) {
@@ -33,7 +39,16 @@ public class DashboardController {
 
     @GetMapping("/faculty")
     public String showFacultyHub(Model model) {
+        List<User> faculties = userRepository.findByRole(Role.TEACHER);
+        model.addAttribute("faculties", faculties);
         return "faculty"; 
+    }
+
+    @GetMapping("/students")
+    public String showStudentsHub(Model model) {
+        List<User> students = userRepository.findByRole(Role.STUDENT);
+        model.addAttribute("students", students);
+        return "students"; 
     }
 
     @GetMapping("/allocation")
