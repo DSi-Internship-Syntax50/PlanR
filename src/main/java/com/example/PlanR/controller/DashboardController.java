@@ -1,3 +1,4 @@
+
 package com.example.PlanR.controller;
 
 import org.springframework.stereotype.Controller;
@@ -8,6 +9,10 @@ import com.example.PlanR.repository.RoomRepository;
 import com.example.PlanR.repository.MasterRoutineRepository;
 import com.example.PlanR.repository.DepartmentRepository;
 import com.example.PlanR.model.Room;
+import com.example.PlanR.repository.UserRepository;
+import com.example.PlanR.model.User;
+import com.example.PlanR.model.enums.Role;
+
 import com.example.PlanR.model.MasterRoutine;
 import com.example.PlanR.model.Department;
 import com.example.PlanR.model.enums.DayOfWeek;
@@ -21,7 +26,6 @@ public class DashboardController {
 
     @Autowired
     private RoomRepository roomRepository;
-    
     @Autowired
     private MasterRoutineRepository masterRoutineRepository;
 
