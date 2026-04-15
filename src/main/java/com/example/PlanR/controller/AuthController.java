@@ -1,4 +1,5 @@
 package com.example.PlanR.controller;
+
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -32,7 +33,8 @@ public class AuthController {
     private final PasswordEncoder passwordEncoder;
     private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
 
-    public AuthController(DepartmentRepository departmentRepository, UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public AuthController(DepartmentRepository departmentRepository, UserRepository userRepository,
+            PasswordEncoder passwordEncoder) {
         this.departmentRepository = departmentRepository;
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
@@ -53,24 +55,24 @@ public class AuthController {
         if (auth != null && auth.isAuthenticated() && !(auth instanceof AnonymousAuthenticationToken)) {
             return "redirect:/dashboard";
         }
-        
+
         model.addAttribute("registrationForm", new UserRegistrationDto());
         model.addAttribute("departments", departmentRepository.findAll().stream()
                 .filter(dept -> !"SYS".equals(dept.getShortCode()))
                 .collect(Collectors.toList()));
-        
+
         List<Role> assignableRoles = Arrays.stream(Role.values())
                 .filter(role -> role != Role.SUPERADMIN)
                 .collect(Collectors.toList());
         model.addAttribute("roles", assignableRoles);
-        
+
         return "register";
     }
 
     @PostMapping("/register")
     public String registerUser(@Valid @ModelAttribute("registrationForm") UserRegistrationDto registrationDto,
-                               BindingResult result, Model model) {
-        
+            BindingResult result, Model model) {
+
         String email = registrationDto.getEmail().trim().toLowerCase();
         if (userRepository.findByEmail(email).isPresent()) {
             result.rejectValue("email", null, "There is already an account registered with that email");
@@ -95,7 +97,8 @@ public class AuthController {
             user.setRole(registrationDto.getRole());
 
             Department department = departmentRepository.findById(registrationDto.getDepartmentId())
-                    .orElseThrow(() -> new IllegalArgumentException("Invalid department Id:" + registrationDto.getDepartmentId()));
+                    .orElseThrow(() -> new IllegalArgumentException(
+                            "Invalid department Id:" + registrationDto.getDepartmentId()));
             user.setDepartment(department);
 
             userRepository.save(user);
