@@ -1,11 +1,8 @@
 package com.example.PlanR.controller;
-import com.example.PlanR.model.Department;
-import com.example.PlanR.model.User;
-import com.example.PlanR.dto.UserRegistrationDto;
-import com.example.PlanR.model.enums.Role;
-import com.example.PlanR.repository.DepartmentRepository;
-import com.example.PlanR.repository.UserRepository;
-import jakarta.validation.Valid;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
@@ -19,9 +16,14 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
+import com.example.PlanR.dto.UserRegistrationDto;
+import com.example.PlanR.model.Department;
+import com.example.PlanR.model.User;
+import com.example.PlanR.model.enums.Role;
+import com.example.PlanR.repository.DepartmentRepository;
+import com.example.PlanR.repository.UserRepository;
+
+import jakarta.validation.Valid;
 
 @Controller
 public class AuthController {
