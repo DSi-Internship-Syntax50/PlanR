@@ -9,5 +9,5 @@ public class HelloController {
     @GetMapping("/hello")
     public String sayHello() {
         return "Hello World! My database and server are officially working!";
-    } 
+    }
 }
