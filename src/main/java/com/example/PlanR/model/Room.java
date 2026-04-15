@@ -1,9 +1,20 @@
 package com.example.PlanR.model;
 
+import java.util.List;
+
 import com.example.PlanR.model.enums.RoomType;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import jakarta.persistence.*;
-import java.util.List;
+
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "rooms")
@@ -32,6 +43,9 @@ public class Room {
 
     @Column(name = "block_name")
     private String block;
+    
+    @Column(name = "dept_name")
+    private String dept;
 
     @OneToMany(mappedBy = "room", cascade = CascadeType.ALL)
     @JsonIgnore
@@ -75,6 +89,16 @@ public class Room {
 
     public void setCapacity(Integer capacity) {
         this.capacity = capacity;
+    }
+
+    public void setDept(String dept)
+    {
+        this.dept = dept;
+    }
+
+    public String getDept()
+    {
+        return dept;
     }
 
     public Boolean getHasComputers() {

@@ -29,6 +29,7 @@ public class RoomController {
         room.setHasHardwareKits(dto.getHasHardwareKits() != null ? dto.getHasHardwareKits() : false);
         room.setFloorNumber(dto.getFloorNumber());
         room.setBlock(dto.getBlock());
+        room.setDept(dto.getDept());
 
         Room savedRoom = roomRepository.save(room);
         return ResponseEntity.ok(savedRoom);
