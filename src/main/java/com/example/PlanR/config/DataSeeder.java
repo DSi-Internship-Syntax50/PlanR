@@ -131,9 +131,9 @@ public class DataSeeder {
                 adminUser.setPassword(passwordEncoder.encode("password123"));
                 adminUser.setRole(Role.COORDINATOR);
                 adminUser.setDepartment(cseDept);
-                adminUser.setStudentId("0000");
+                adminUser.setStudentId("20210204000");
                 adminUser.setIsCr(false);
-                adminUser.setCurrentBatch("4.2");
+                adminUser.setCurrentBatch("3/2");
                 userRepository.save(adminUser);
 
                 Course math = new Course();
@@ -156,6 +156,18 @@ public class DataSeeder {
                 routineRepository.save(routine);
 
                 System.out.println("ADMIN & MOCK DATA INITIALIZED: admin@planr.com / password123");
+            }
+
+            // 4.5 Seed Student for testing view-only mode
+            if (userRepository.findByEmail("student@planr.com").isEmpty()) {
+                User student = new User("Jane Doe", "student@planr.com");
+                student.setPassword(passwordEncoder.encode("password123"));
+                student.setRole(Role.STUDENT);
+                student.setDepartment(cseDept); 
+                student.setStudentId("20210204001");
+                student.setCurrentBatch("2/1");
+                userRepository.save(student);
+                System.out.println("STUDENT INITIALIZED: student@planr.com / password123");
             }
 
             // ==========================================

@@ -4,18 +4,19 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
+
 import com.example.PlanR.repository.RoomRepository;
 import com.example.PlanR.repository.MasterRoutineRepository;
 import com.example.PlanR.repository.DepartmentRepository;
-import com.example.PlanR.model.Room;
+import com.example.PlanR.repository.UserRepository;
 
 import java.util.List;
-import com.example.PlanR.repository.UserRepository;
+import com.example.PlanR.model.Room;
 import com.example.PlanR.model.User;
-import com.example.PlanR.model.enums.Role;
-
 import com.example.PlanR.model.MasterRoutine;
 import com.example.PlanR.model.Department;
+import com.example.PlanR.model.enums.Role;
 import com.example.PlanR.model.enums.DayOfWeek;
 import com.example.PlanR.model.enums.RoomType;
 
@@ -28,6 +29,7 @@ public class DashboardController {
     @Autowired
     private RoomRepository roomRepository;
 
+    @Autowired
     private MasterRoutineRepository masterRoutineRepository;
 
     @Autowired
@@ -53,6 +55,7 @@ public class DashboardController {
     }
 
     @GetMapping("/faculty")
+    @PreAuthorize("hasRole('SUPERADMIN')")
     public String showFacultyHub(Model model) {
         List<User> faculties = userRepository.findByRole(Role.TEACHER);
         model.addAttribute("faculties", faculties);
@@ -200,6 +203,7 @@ public class DashboardController {
     }
 
     @GetMapping("/settings")
+    @PreAuthorize("hasRole('SUPERADMIN')")
     public String showSettings(Model model) {
         return "settings";
     }
