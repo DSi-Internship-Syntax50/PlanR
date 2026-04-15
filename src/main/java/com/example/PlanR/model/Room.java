@@ -46,10 +46,12 @@ public class Room {
     @Column(name = "block_name")
     private String block;
 
+    @Column(name = "dept_name")
+    private String dept;
+
     @ManyToOne
     @JoinColumn(name = "department_id")
-    @JsonIgnore
-    private Department dept;
+    private Department department;
 
     @OneToMany(mappedBy = "room", cascade = CascadeType.ALL)
     @JsonIgnore
@@ -94,12 +96,20 @@ public class Room {
         this.capacity = capacity;
     }
 
-    public void setDept(Department dept) {
+    public void setDept(String dept) {
         this.dept = dept;
     }
 
-    public Department getDept() {
+    public String getDept() {
         return dept;
+    }
+
+    public Department getDepartment() {
+        return department;
+    }
+
+    public void setDepartment(Department department) {
+        this.department = department;
     }
 
     public Boolean getHasComputers() {

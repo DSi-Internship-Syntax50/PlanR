@@ -4,9 +4,9 @@
 <head>
     <meta charset="UTF-8">
     <title>Routine Builder - PlanR</title>
-    <meta name="_csrf" th:content="${_csrf.token}"/>
-    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
-    
+    <meta name="_csrf" th:content="${_csrf.token}" />
+    <meta name="_csrf_header" th:content="${_csrf.headerName}" />
+
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" th:href="@{/css/style.css}">
@@ -20,28 +20,48 @@
 
         <div th:replace="~{fragments/header :: header}"></div>
 
-        <main class="flex-1 p-8">
-            <div class="flex justify-between items-start mb-8">
+        <main class="flex-1 p-8 overflow-hidden">
+            <div class="flex flex-col 2xl:flex-row justify-between items-start 2xl:items-center gap-6 mb-8">
+                
                 <div class="max-w-2xl">
                     <h1 class="text-4xl font-extrabold text-[#0a192f] tracking-tight">Master Routine Builder</h1>
                     <p class="text-gray-500 font-medium mt-3 text-sm leading-relaxed">Dynamically assign academic
                         courses to batches. Room assignments will be handled separately by the Facilities team.</p>
                 </div>
 
-                <div class="flex gap-4 items-center bg-white p-2 rounded-xl shadow-sm border border-gray-100">
+                <div class="flex flex-wrap gap-4 items-center bg-white p-2 rounded-xl shadow-sm border border-gray-100">
+
                     <div class="flex items-center gap-2 pl-2">
+                        <i class="fas fa-building text-blue-500"></i>
+                        <label class="font-bold text-sm text-gray-700">Dept:</label>
+                        <select id="departmentSelect"
+                            class="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm font-bold focus:ring-2 focus:ring-blue-500 outline-none cursor-pointer"
+                            onchange="handleSelectionChange()">
+                            <option th:each="d : ${departments}" th:value="${d.id}" th:text="${d.shortCode}"></option>
+                        </select>
+                    </div>
+
+                    <div class="hidden sm:block w-px h-6 bg-gray-200 mx-1"></div>
+
+                    <div class="flex items-center gap-2">
                         <i class="fas fa-users text-blue-500"></i>
                         <label class="font-bold text-sm text-gray-700">Batch:</label>
                         <select id="batchSelect"
                             class="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm font-bold focus:ring-2 focus:ring-blue-500 outline-none cursor-pointer"
-                            onchange="loadRoutine()">
-                            <option value="L3T1">Level 3, Term 1</option>
-                            <option value="L3T2">Level 3, Term 2</option>
-                            <option value="L4T1">Level 4, Term 1</option>
+                            onchange="handleSelectionChange()">
+                            <option value="L1T1">Year 1, Semester 1</option>
+                            <option value="L1T2">Year 1, Semester 2</option>
+                            <option value="L2T1">Year 2, Semester 1</option>
+                            <option value="L2T2">Year 2, Semester 2</option>
+                            <option value="L3T1" selected>Year 3, Semester 1</option>
+                            <option value="L3T2">Year 3, Semester 2</option>
+                            <option value="L4T1">Year 4, Semester 1</option>
+                            <option value="L4T2">Year 4, Semester 2</option>
                         </select>
                     </div>
-                    <div class="w-px h-8 bg-gray-200 mx-2"></div>
-                    
+
+                    <div class="hidden sm:block w-px h-8 bg-gray-200 mx-2"></div>
+
                     <button onclick="autoGenerate()"
                         class="px-5 py-2.5 bg-green-600 text-white font-semibold rounded-lg text-sm shadow-md hover:bg-green-700 transition-colors flex items-center gap-2">
                         <i class="fas fa-magic"></i> Auto Generate
@@ -54,9 +74,10 @@
                 </div>
             </div>
 
-            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                <table class="w-full text-sm text-left table-fixed">
-                    <thead class="bg-white text-gray-400 font-extrabold uppercase text-[10px] tracking-wider border-b border-gray-200">
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-x-auto">
+                <table class="w-full text-sm text-left table-fixed min-w-[1200px]">
+                    <thead
+                        class="bg-white text-gray-400 font-extrabold uppercase text-[10px] tracking-wider border-b border-gray-200">
                         <tr id="routineHeaders">
                         </tr>
                     </thead>
@@ -131,7 +152,7 @@
         const maxSlots = 12;
 
         function buildHeaders() {
-            let html = `<th class="w-24 p-4 border-r border-gray-100 text-center"><i class="far fa-clock text-gray-300 text-lg"></i></th>`;
+            let html = `<th class="w-20 p-4 border-r border-gray-100 text-center"><i class="far fa-clock text-gray-300 text-lg"></i></th>`;
             let dropdownHtml = '';
             for (let i = 1; i <= maxSlots; i++) {
                 html += `<th class="p-4 border-r border-gray-100 text-center">Slot ${i}</th>`;
@@ -143,31 +164,35 @@
 
         document.addEventListener("DOMContentLoaded", () => {
             buildHeaders();
-            loadCourses();
-            loadRoutine();
+            handleSelectionChange();
         });
 
-        document.getElementById('batchSelect').addEventListener('change', () => {
-            loadCourses();
-            loadRoutine();
-        });
+        function handleSelectionChange() {
+            const deptSelect = document.getElementById('departmentSelect');
+            if (deptSelect && deptSelect.value) {
+                loadCourses();
+                loadRoutine();
+            }
+        }
 
         async function loadCourses() {
+            const deptId = document.getElementById('departmentSelect').value;
+            const batch = document.getElementById('batchSelect').value;
+
             try {
-                const res = await fetch('/api/schedule/courses');
+                const res = await fetch(`/api/schedule/courses?departmentId=${deptId}&batch=${batch}`);
                 const courses = await res.json();
-                const currentBatch = document.getElementById('batchSelect').value;
-                const filteredCourses = courses.filter(c => c.batch === currentBatch);
 
                 const select = document.getElementById('courseId');
-                select.innerHTML = filteredCourses.map(c =>
+                select.innerHTML = courses.map(c =>
                     `<option value="${c.id}">${c.courseCode} - ${c.title} (${c.slotCount} slot${c.slotCount > 1 ? 's' : ''})</option>`
                 ).join('');
-                if (filteredCourses.length === 0) select.innerHTML = `<option value="" disabled selected>No courses for this batch</option>`;
+                if (courses.length === 0) select.innerHTML = `<option value="" disabled selected>No courses for this batch & dept</option>`;
             } catch (e) { console.error(e); }
         }
 
         async function loadRoutine() {
+            const deptId = document.getElementById('departmentSelect').value;
             const batch = document.getElementById('batchSelect').value;
             const gridBody = document.getElementById('routineGrid');
             gridBody.innerHTML = '';
@@ -186,14 +211,14 @@
             });
 
             try {
-                const res = await fetch(`/api/schedule/routine/${batch}`);
+                const res = await fetch(`/api/schedule/routine?departmentId=${deptId}&batch=${batch}`);
                 const routines = await res.json();
 
                 routines.forEach(rt => {
                     const cell = document.getElementById(`cell-${rt.dayOfWeek}-${rt.startSlotIndex}`);
                     if (cell) {
                         cell.colSpan = rt.course.slotCount;
-                        cell.onclick = null; // Remove the add button from occupied cells
+                        cell.onclick = null;
 
                         for (let i = 1; i < rt.course.slotCount; i++) {
                             let hideCell = document.getElementById(`cell-${rt.dayOfWeek}-${rt.startSlotIndex + i}`);
@@ -204,16 +229,18 @@
                         const borderColor = rt.course.isLab ? 'border-purple-500' : 'border-blue-500';
                         const titleColor = rt.course.isLab ? 'text-purple-900' : 'text-blue-900';
                         const roomBadge = rt.room
-                            ? `<span class="text-[9px] font-bold text-green-700 px-2 py-0.5 bg-green-100 rounded">Room ${rt.room.roomNumber}</span>`
-                            : `<span class="text-[9px] font-bold text-orange-600 px-2 py-0.5 bg-orange-100 rounded">Pending Room</span>`;
+                            ? `<span class="text-[9px] font-bold text-green-700 px-2 py-0.5 bg-green-100 rounded border border-green-200">Rm ${rt.room.roomNumber}</span>`
+                            : `<span class="text-[9px] font-bold text-orange-600 px-2 py-0.5 bg-orange-100 rounded border border-orange-200">Pending Room</span>`;
 
                         cell.innerHTML = `
-                            <div class="${bgColor} border-l-[3px] ${borderColor} rounded p-3 h-full shadow-sm flex flex-col justify-between relative group/cell">
+                            <div class="${bgColor} border-l-[3px] ${borderColor} rounded p-3 h-full shadow-sm flex flex-col justify-between relative group/cell transition hover:shadow-md">
                                 <button onclick="deleteRoutine(${rt.id}, event)" class="absolute top-1 right-1 opacity-0 group-hover/cell:opacity-100 text-red-500 hover:bg-red-100 rounded transition p-1"><i class="fas fa-trash text-xs"></i></button>
-                                <div><div class="font-extrabold ${titleColor} text-sm">${rt.course.courseCode}</div>
-                                <div class="text-[11px] font-semibold text-gray-600 leading-tight">${rt.course.title}</div></div>
+                                <div>
+                                    <div class="font-extrabold ${titleColor} text-sm">${rt.course.courseCode}</div>
+                                    <div class="text-[11px] font-semibold text-gray-600 leading-tight mt-0.5">${rt.course.title}</div>
+                                </div>
                                 <div class="mt-2 pt-2 border-t border-black/5 flex justify-between items-end">
-                                    <div class="text-[9px] font-extrabold text-gray-700 bg-white px-1.5 py-0.5 rounded shadow-sm border border-gray-200">Tr. ID: ${rt.teacher.id}</div>
+                                    <div class="text-[9px] font-extrabold text-gray-700 bg-white px-1.5 py-0.5 rounded shadow-sm border border-gray-200">Tr: ${rt.teacher.id}</div>
                                     ${roomBadge}
                                 </div>
                             </div>
@@ -236,7 +263,7 @@
             const csrfHeader = document.querySelector("meta[name='_csrf_header']").getAttribute("content");
 
             try {
-                const response = await fetch(`/api/schedule/allocate-class?courseId=${courseId}&teacherId=${teacherId}&dayOfWeek=${dayOfWeek}&startSlotIndex=${startSlot}`, { 
+                const response = await fetch(`/api/schedule/allocate-class?courseId=${courseId}&teacherId=${teacherId}&dayOfWeek=${dayOfWeek}&startSlotIndex=${startSlot}`, {
                     method: 'POST',
                     headers: { [csrfHeader]: csrfToken }
                 });
@@ -248,7 +275,7 @@
         }
 
         async function deleteRoutine(id, e) {
-            e.stopPropagation(); // prevent modal opening
+            e.stopPropagation();
             if (!confirm("Are you sure you want to free this slot?")) return;
 
             const csrfToken = document.querySelector("meta[name='_csrf']").getAttribute("content");
@@ -264,35 +291,35 @@
             } catch (err) { alert(err.message); }
         }
 
-        // NEW AUTO GENERATE FUNCTION
         async function autoGenerate() {
+            const deptId = document.getElementById('departmentSelect').value;
             const batch = document.getElementById('batchSelect').value;
-            
-            const theoryCount = prompt(`How many THEORY courses for ${batch}?`, "4");
-            if (!theoryCount) return;
-            
-            const theoryClassesPerWeek = prompt(`How many classes PER WEEK for each theory course?`, "2");
-            if (!theoryClassesPerWeek) return;
 
-            const labCount = prompt(`How many LAB courses (3 consecutive slots) for ${batch}?`, "2");
-            if (!labCount) return;
+            if (!deptId) return alert("Please select a department first.");
+
+            if (!confirm(`Generate schedule for ${batch} using the current database courses and rooms?`)) {
+                return;
+            }
 
             const csrfToken = document.querySelector("meta[name='_csrf']").getAttribute("content");
             const csrfHeader = document.querySelector("meta[name='_csrf_header']").getAttribute("content");
 
             try {
-                const url = `/api/schedule/auto-generate?batch=${batch}&theoryCount=${theoryCount}&labCount=${labCount}&theoryClassesPerWeek=${theoryClassesPerWeek}`;
-                
+                const url = `/api/schedule/auto-generate?departmentId=${deptId}&batch=${batch}`;
+
                 const response = await fetch(url, {
                     method: 'POST',
                     headers: { [csrfHeader]: csrfToken }
                 });
-                
-                if (!response.ok) throw new Error("Failed to generate routine");
-                
-                alert("Routine generated successfully!");
-                loadRoutine(); 
-            } catch (err) { alert(err.message); }
+
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.message || "Failed to generate routine");
+
+                alert(data.message);
+                loadRoutine();
+            } catch (err) {
+                alert("Generation Error: " + err.message);
+            }
         }
     </script>
 </body>
