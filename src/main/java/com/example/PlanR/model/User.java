@@ -1,6 +1,7 @@
 package com.example.PlanR.model;
 
 import com.example.PlanR.model.enums.Role;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import java.util.List;
 
@@ -14,13 +15,16 @@ public class User {
 
     @ManyToOne
     @JoinColumn(name = "department_id")
+    @JsonIgnore
     private Department department;
 
     private String name;
 
     private String email;
 
+    @JsonIgnore
     private String password;
+    
     @Enumerated(EnumType.STRING)
     private Role role;
 
@@ -37,11 +41,16 @@ public class User {
     private Boolean isCr;
 
     @OneToMany(mappedBy = "teacher", cascade = CascadeType.ALL)
+    @JsonIgnore
     private List<MasterRoutine> taughtRoutines;
 
     @OneToMany(mappedBy = "requestedBy", cascade = CascadeType.ALL)
+    @JsonIgnore
     private List<EventBooking> requestedEvents;
 
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    @JsonIgnore
+    private List<Notification> notifications;
 
     // Constructors
     public User() {}
@@ -148,4 +157,11 @@ public class User {
         this.requestedEvents = requestedEvents;
     }
 
+    public List<Notification> getNotifications() {
+        return notifications;
+    }
+
+    public void setNotifications(List<Notification> notifications) {
+        this.notifications = notifications;
+    }
 }

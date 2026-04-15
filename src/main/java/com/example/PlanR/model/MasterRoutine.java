@@ -2,6 +2,7 @@ package com.example.PlanR.model;
 
 import com.example.PlanR.model.enums.DayOfWeek;
 import com.example.PlanR.model.enums.Section;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import java.time.LocalTime;
 import java.util.List;
@@ -43,11 +44,12 @@ public class MasterRoutine {
     private Integer startSlotIndex;
 
     @OneToMany(mappedBy = "routine", cascade = CascadeType.ALL)
+    @JsonIgnore
     private List<ClassOverride> overrides;
 
-    public MasterRoutine() {}
+    public MasterRoutine() {
+    }
 
-   
     public Long getId() {
         return id;
     }

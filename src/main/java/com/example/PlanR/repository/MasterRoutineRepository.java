@@ -30,6 +30,24 @@ public interface MasterRoutineRepository extends JpaRepository<MasterRoutine, Lo
 
     List<MasterRoutine> findByTeacherIdAndDayOfWeekOrderByStartSlotIndexAsc(Long teacherId, DayOfWeek dayOfWeek);
 
+    // --- New Batch-Centric Queries for Option B ---
+    @Query("""
+                SELECT m FROM MasterRoutine m
+                WHERE m.course.batch = :batch
+                  AND m.dayOfWeek = :dayOfWeek
+                  AND :newStartSlot < (m.startSlotIndex + m.course.slotCount)
+                  AND (:newStartSlot + :newSlotCount) > m.startSlotIndex
+            """)
+    List<MasterRoutine> findBatchConflicts(
+            @Param("batch") String batch,
+            @Param("dayOfWeek") DayOfWeek dayOfWeek,
+            @Param("newStartSlot") int newStartSlot,
+            @Param("newSlotCount") int newSlotCount);
+
+    List<MasterRoutine> findByCourseBatchAndDayOfWeekOrderByStartSlotIndexAsc(String batch, DayOfWeek dayOfWeek);
+
+    List<MasterRoutine> findAllByCourseBatchOrderByDayOfWeekAscStartSlotIndexAsc(String batch);
+
     List<MasterRoutine> findByRoomId(Long roomId);
 
     List<MasterRoutine> findByRoomIsNull();

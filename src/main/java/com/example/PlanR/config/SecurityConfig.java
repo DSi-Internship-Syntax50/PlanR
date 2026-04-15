@@ -20,10 +20,12 @@ public class SecurityConfig {
             throws Exception {
         http
             .authorizeHttpRequests(auth -> auth
-                // Combined publicly accessible routes
+                // Publicly accessible routes
                 .requestMatchers("/login", "/css/**", "/js/**", "/images/**").permitAll()
-                // Combined Admin constraints
-                .requestMatchers("/admin/**").hasAnyRole("SUPERADMIN")
+                // STRICTLY locks down user creation to Superadmin
+                .requestMatchers("/admin/**").hasRole("SUPERADMIN") 
+                // Routine builder access
+                .requestMatchers("/routine-builder", "/api/schedule/**").hasAnyRole("SUPERADMIN", "COORDINATOR")
                 // Protect AI endpoints
                 .requestMatchers("/api/ai/**").authenticated()
                 // Protect all other routes
@@ -52,7 +54,7 @@ public class SecurityConfig {
                 .permitAll()
             )
             .userDetailsService(userDetailsService)
-            // Custom exception handling from dev branch
+            // Custom exception handling
             .exceptionHandling(ex -> ex
                 .accessDeniedHandler((request, response, accessDeniedException) -> {
                     response.sendRedirect("/dashboard");
