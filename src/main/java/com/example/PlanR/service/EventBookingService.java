@@ -37,8 +37,8 @@ public class EventBookingService {
         LocalDate endDate = targetDate.withDayOfMonth(targetDate.lengthOfMonth());
         return bookingRepository.findBySpecificDateBetween(startDate, endDate)
                 .stream()
-                .filter(b -> isAdmin 
-                        || b.getStatus() == BookingStatus.APPROVED 
+                .filter(b -> isAdmin
+                        || b.getStatus() == BookingStatus.APPROVED
                         || (b.getRequestedBy() != null && b.getRequestedBy().getEmail().equals(username)))
                 .map(EventBookingResponseDto::new)
                 .collect(Collectors.toList());
@@ -60,8 +60,7 @@ public class EventBookingService {
                 room.getId(),
                 requestDto.getSpecificDate(),
                 requestDto.getStartTime(),
-                requestDto.getEndTime()
-        );
+                requestDto.getEndTime());
 
         if (!overlaps.isEmpty()) {
             throw new RuntimeException("Slot is already booked by another event.");
@@ -78,20 +77,19 @@ public class EventBookingService {
         newBooking.setDepartmentName(requestDto.getDepartmentName());
         newBooking.setTeacherName(requestDto.getTeacherName());
         newBooking.setAdditionalInfo(requestDto.getAdditionalInfo());
-        
+
         // Auto-approve if requestor has elevated privileges, else PENDING
-        if (requestor.getRole() == Role.SUPERADMIN 
-                || requestor.getRole() == Role.ADMIN 
+        if (requestor.getRole() == Role.SUPERADMIN
                 || requestor.getRole() == Role.COORDINATOR) {
             newBooking.setStatus(BookingStatus.APPROVED);
         } else {
-            newBooking.setStatus(BookingStatus.PENDING); 
+            newBooking.setStatus(BookingStatus.PENDING);
         }
 
         bookingRepository.save(newBooking);
         return new EventBookingResponseDto(newBooking);
     }
-    
+
     @Transactional
     public void approveBooking(Long bookingId) {
         EventBooking booking = bookingRepository.findById(bookingId)

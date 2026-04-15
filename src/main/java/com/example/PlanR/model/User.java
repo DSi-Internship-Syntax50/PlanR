@@ -24,7 +24,7 @@ public class User {
 
     @JsonIgnore
     private String password;
-    
+
     @Enumerated(EnumType.STRING)
     private Role role;
 
@@ -48,12 +48,9 @@ public class User {
     @JsonIgnore
     private List<EventBooking> requestedEvents;
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
-    @JsonIgnore
-    private List<Notification> notifications;
-
     // Constructors
-    public User() {}
+    public User() {
+    }
 
     public User(String name, String email) {
         this.name = name;
@@ -157,11 +154,4 @@ public class User {
         this.requestedEvents = requestedEvents;
     }
 
-    public List<Notification> getNotifications() {
-        return notifications;
-    }
-
-    public void setNotifications(List<Notification> notifications) {
-        this.notifications = notifications;
-    }
 }
