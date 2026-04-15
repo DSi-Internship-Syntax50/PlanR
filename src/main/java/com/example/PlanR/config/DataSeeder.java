@@ -43,6 +43,22 @@ public class DataSeeder {
                 System.out.println("MIGRATION: Updated " + migrated + " user(s) from ADMIN to COORDINATOR role.");
             }
 
+            // 2. Seed Departments if empty
+            if (departmentRepository.count() == 0) {
+                departmentRepository.save(new Department("CSE", "Computer Science and Engineering"));
+                departmentRepository.save(new Department("EEE", "Electrical and Electronic Engineering"));
+                departmentRepository.save(new Department("BBA", "Business Administration"));
+                departmentRepository.save(new Department("CE", "Civil Engineering"));
+                departmentRepository.save(new Department("ARCHI", "Architecture"));
+            }
+
+                Department cse = departmentRepository.findByShortCode("CSE").orElse(null);
+                Department eee = departmentRepository.findByShortCode("EEE").orElse(null);
+                Department bba = departmentRepository.findByShortCode("BBA").orElse(null);
+                Department ce = departmentRepository.findByShortCode("CE").orElse(null);
+                Department archi = departmentRepository.findByShortCode("ARCHI").orElse(null);
+
+
             // 1. Seed Rooms if empty
             if (roomRepository.count() == 0) {
                 Room auditorium = new Room();
@@ -63,8 +79,8 @@ public class DataSeeder {
                 stadium.setCapacity(500);
                 stadium.setBlock(" ");
 
-                roomRepository.saveAll(Arrays.asList(auditorium, seminarHall, stadium));
 
+                roomRepository.saveAll(Arrays.asList(auditorium, seminarHall, stadium));
                 // Add Room 201 to 215 like the old UI
                 for (int fl = 1; fl < 5; fl++) {
                     for (int i = 1; i <= 7; i++) {
@@ -76,13 +92,13 @@ public class DataSeeder {
                             r.setBlock(st);
                             r.setRoomNumber("0" + i);
                             r.setType(RoomType.THEORY);
-                            
-                            switch (i%5) {
-                                case 0 -> r.setDept("CSE");
-                                case 1 -> r.setDept("EEE");
-                                case 2 -> r.setDept("BBA");
-                                case 3 -> r.setDept("CE");
-                                default -> r.setDept("Archi");
+
+                            switch (i % 5) {
+                                case 0 -> r.setDept(cse);
+                                case 1 -> r.setDept(eee);
+                                case 2 -> r.setDept(bba);
+                                case 3 -> r.setDept(ce);
+                                default -> r.setDept(archi);
                             }
                             roomRepository.save(r);
 
@@ -92,16 +108,6 @@ public class DataSeeder {
                 System.out.println("Seeded original hardcoded rooms.");
             }
 
-            // 2. Seed Departments if empty
-            if (departmentRepository.count() == 0) {
-                departmentRepository.save(new Department("SYS", "System Administration"));
-                departmentRepository.save(new Department("CSE", "Computer Science and Engineering"));
-                departmentRepository.save(new Department("EEE", "Electrical and Electronic Engineering"));
-                departmentRepository.save(new Department("BBA", "Business Administration"));
-                departmentRepository.save(new Department("CE", "Civil Engineering"));
-            }
-
-            Department cse = departmentRepository.findByShortCode("CSE").orElse(null);
             Department sys = departmentRepository.findByShortCode("SYS").orElse(null);
 
             // 3. Seed Superadmin
