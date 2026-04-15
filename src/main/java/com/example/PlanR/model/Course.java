@@ -8,6 +8,10 @@ import java.util.List;
 @Table(name = "courses")
 public class Course {
 
+    private Integer year;
+
+    private Integer semester;
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -32,6 +36,12 @@ public class Course {
 
     @Column(name = "slot_count")
     private Integer slotCount;
+
+    @Column(name = "required_slots")
+    private Integer requiredSlots;
+
+    @Column(name = "weekly_classes")
+    private Integer weeklyClasses;
 
     @ManyToOne
     @JoinColumn(name = "teacher_id")
@@ -125,4 +135,16 @@ public class Course {
     public void setTeacher(User teacher) {
         this.teacher = teacher;
     }
+
+    public Integer getYear() { return year; }
+    public void setYear(Integer year) { this.year = year; }
+
+    public Integer getSemester() { return semester; }
+    public void setSemester(Integer semester) { this.semester = semester; }
+
+    public Integer getRequiredSlots() { return requiredSlots; }
+    public void setRequiredSlots(Integer requiredSlots) { this.requiredSlots = requiredSlots; }
+
+    public Integer getWeeklyClasses() { return weeklyClasses; }
+    public void setWeeklyClasses(Integer weeklyClasses) { this.weeklyClasses = weeklyClasses; }
 }

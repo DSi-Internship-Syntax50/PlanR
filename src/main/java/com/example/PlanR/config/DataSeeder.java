@@ -1,5 +1,14 @@
 package com.example.PlanR.config;
 
+import java.time.LocalTime;
+import java.util.Arrays;
+
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.security.crypto.password.PasswordEncoder;
+
 import com.example.PlanR.model.Course;
 import com.example.PlanR.model.Department;
 import com.example.PlanR.model.MasterRoutine;
@@ -13,17 +22,6 @@ import com.example.PlanR.repository.DepartmentRepository;
 import com.example.PlanR.repository.MasterRoutineRepository;
 import com.example.PlanR.repository.RoomRepository;
 import com.example.PlanR.repository.UserRepository;
-
-import org.springframework.boot.CommandLineRunner;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.security.crypto.password.PasswordEncoder;
-
-import java.time.LocalTime;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Random;
 
 @Configuration
 public class DataSeeder {
@@ -78,6 +76,14 @@ public class DataSeeder {
                             r.setBlock(st);
                             r.setRoomNumber("0" + i);
                             r.setType(RoomType.THEORY);
+                            
+                            switch (i%5) {
+                                case 0 -> r.setDept("CSE");
+                                case 1 -> r.setDept("EEE");
+                                case 2 -> r.setDept("BBA");
+                                case 3 -> r.setDept("CE");
+                                default -> r.setDept("Archi");
+                            }
                             roomRepository.save(r);
 
                         }

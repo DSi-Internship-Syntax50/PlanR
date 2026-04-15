@@ -25,7 +25,7 @@ public class SecurityConfig {
                 // STRICTLY locks down user creation to Superadmin
                 .requestMatchers("/admin/**").hasRole("SUPERADMIN") 
                 // Routine builder access
-                .requestMatchers("/routine-builder", "/api/schedule/**").hasAnyRole("SUPERADMIN", "COORDINATOR")
+                .requestMatchers("/routine-builder", "/generate-routine", "/api/schedule/**").hasAnyRole("SUPERADMIN", "COORDINATOR")
                 // Protect AI endpoints
                 .requestMatchers("/api/ai/**").authenticated()
                 // Protect all other routes
