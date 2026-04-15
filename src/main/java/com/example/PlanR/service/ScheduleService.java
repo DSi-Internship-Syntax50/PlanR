@@ -46,6 +46,15 @@ public class ScheduleService {
         List<Room> allRooms = roomRepository.findAll();
         List<MasterRoutine> allRoutines = new ArrayList<>(routineRepository.findAll());
 
+        // 2.5 Clear old routines for this batch and department to prevent conflicts
+        List<MasterRoutine> oldRoutines = allRoutines.stream()
+                .filter(rt -> rt.getCourse() != null && batch.equals(rt.getCourse().getBatch())
+                        && rt.getCourse().getDepartment() != null
+                        && rt.getCourse().getDepartment().getId().equals(departmentId))
+                .collect(Collectors.toList());
+        routineRepository.deleteAll(oldRoutines);
+        allRoutines.removeAll(oldRoutines);
+
         // 3. Setup the Memory Grid
         boolean[][] batchOccupiedGrid = new boolean[7][13];
         for (MasterRoutine rt : allRoutines) {
@@ -118,7 +127,7 @@ public class ScheduleService {
                         // 1. Check Room Type
                         if (Boolean.TRUE.equals(course.getIsLab()) && room.getType() != RoomType.LAB)
                             continue;
-                        if (!Boolean.TRUE.equals(course.getIsLab()) && room.getType() != RoomType.THEORY)
+                        if (!Boolean.TRUE.equals(course.getIsLab()) && room.getType() != RoomType.THEORY && room.getType() != RoomType.SEMINAR)
                             continue;
 
                         // 2. Check Department boundary (Strict matching)
@@ -148,6 +157,7 @@ public class ScheduleService {
 
                         MasterRoutine routine = new MasterRoutine();
                         routine.setCourse(course);
+                        routine.setTeacher(course.getTeacher()); // Ensure teacher is assigned
                         routine.setDayOfWeek(day);
                         routine.setStartSlotIndex(slot);
                         routine.setRoom(selectedRoom); // ASSIGN THE REAL ROOM!
