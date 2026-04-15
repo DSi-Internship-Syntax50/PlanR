@@ -2,6 +2,10 @@ package com.example.PlanR.service;
 
 import com.example.PlanR.exception.SlotConflictException;
 import com.example.PlanR.model.Course;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
 import com.example.PlanR.model.MasterRoutine;
 import com.example.PlanR.model.Room;
 import com.example.PlanR.model.ScheduleRequest;
@@ -14,8 +18,7 @@ import com.example.PlanR.repository.MasterRoutineRepository;
 import com.example.PlanR.repository.RoomRepository;
 import com.example.PlanR.repository.ScheduleRequestRepository;
 import com.example.PlanR.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;

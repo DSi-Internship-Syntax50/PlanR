@@ -1,19 +1,28 @@
 package com.example.PlanR.controller;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.example.PlanR.dto.RequestDto;
+import com.example.PlanR.dto.RoutineDTO;
 import com.example.PlanR.model.Course;
 import com.example.PlanR.model.MasterRoutine;
 import com.example.PlanR.model.ScheduleRequest;
 import com.example.PlanR.model.enums.DayOfWeek;
-import com.example.PlanR.model.enums.RequestType;
 import com.example.PlanR.repository.CourseRepository;
 import com.example.PlanR.repository.MasterRoutineRepository;
 import com.example.PlanR.service.RecommendationService;
 import com.example.PlanR.service.ScheduleActionService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/schedule")
@@ -58,6 +67,8 @@ public class ScheduleController {
         routineRepository.deleteById(id);
         return ResponseEntity.noContent().build();
     }
+    @Autowired
+    private MasterRoutineRepository routineRepository;
 
     // -----------------------------------------------------------
 
@@ -87,6 +98,24 @@ public class ScheduleController {
         MasterRoutine routine = actionService.allocateClass(courseId, teacherId, roomId, dayOfWeek, startSlotIndex);
         return ResponseEntity.ok(routine);
     }
+
+    // --- Room Routines Endpoint ---
+
+    @GetMapping("/routines/room/{roomId}")
+    public ResponseEntity<List<RoutineDTO>> getRoutinesByRoom(@PathVariable Long roomId) {
+        List<RoutineDTO> routines = routineRepository.findByRoomId(roomId)
+                .stream().map(RoutineDTO::new).collect(Collectors.toList());
+        return ResponseEntity.ok(routines);
+    }
+
+    @GetMapping("/routines/unassigned")
+    public ResponseEntity<List<RoutineDTO>> getUnassignedRoutines() {
+        List<RoutineDTO> routines = routineRepository.findByRoomIsNull()
+                .stream().map(RoutineDTO::new).collect(Collectors.toList());
+        return ResponseEntity.ok(routines);
+    }
+
+    // --- Direct Execution (Admin / Coordinator) ---
 
     @PostMapping("/allocate")
     public ResponseEntity<MasterRoutine> allocateRoom(@RequestParam Long routineId, @RequestParam Long roomId) {

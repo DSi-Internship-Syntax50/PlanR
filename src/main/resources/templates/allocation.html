@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="en">
+
 <head>
     <meta charset="UTF-8">
     <title>Room Allocation System - PlanR</title>
@@ -9,13 +10,53 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Custom CSS -->
     <link rel="stylesheet" th:href="@{/css/style.css}">
+    <style>
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* To make grid render evenly */
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: 80px repeat(5, 1fr);
+        }
+
+        #allocationModal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 50;
+            justify-content: center;
+            align-items: center;
+        }
+    </style>
 </head>
+
 <body class="bg-[#f3f6f8] font-['Inter',sans-serif]">
 
     <div th:replace="~{fragments/sidebar :: sidebar}"></div>
 
     <div class="ml-64 flex flex-col min-h-screen">
-        
+
         <div th:replace="~{fragments/header :: header}"></div>
 
         <main class="flex-1 p-8">
@@ -23,66 +64,69 @@
             <div class="flex justify-between items-start mb-8">
                 <div class="max-w-2xl">
                     <h1 class="text-4xl font-extrabold text-[#0a192f] tracking-tight">Room Allocation System</h1>
-                    <p class="text-gray-500 font-medium mt-3 text-sm leading-relaxed">Manage lecture halls, lab facilities, and spatial requirements. Enforce strict conflict avoidance and mapping rules.</p>
+                    <p class="text-gray-500 font-medium mt-3 text-sm leading-relaxed">Manage lecture halls, lab
+                        facilities, and spatial requirements. Enforce strict conflict avoidance and mapping rules.</p>
                 </div>
                 <div class="flex gap-3">
-                    <button class="px-5 py-2.5 bg-white border border-gray-200 text-gray-700 font-semibold rounded-lg text-sm shadow-sm hover:bg-gray-50 transition-colors flex items-center justify-center gap-2">
+                    <button
+                        class="px-5 py-2.5 bg-white border border-gray-200 text-gray-700 font-semibold rounded-lg text-sm shadow-sm hover:bg-gray-50 transition-colors flex items-center justify-center gap-2">
                         <i class="fas fa-filter"></i> Filters
                     </button>
-                    <button class="px-5 py-2.5 bg-[#0a192f] text-white font-semibold rounded-lg text-sm shadow-md hover:bg-gray-800 transition-colors flex items-center justify-center gap-2">
-                        <i class="fas fa-plus"></i> Add New Room
-                    </button>
+                    <div sec:authorize="hasAnyRole('SUPERADMIN', 'COORDINATOR')">
+                        <button onclick="openAddRoomModal()"
+                            class="px-5 py-2.5 bg-[#0a192f] text-white font-semibold rounded-lg text-sm shadow-md hover:bg-gray-800 transition-colors flex items-center justify-center gap-2">
+                            <i class="fas fa-plus"></i> Add New Room
+                        </button>
+                    </div>
                 </div>
             </div>
 
             <div class="grid grid-cols-12 gap-6">
                 <!-- Left Sidebar: Room Directory -->
-                <div class="col-span-4 bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col min-h-[600px]">
+                <div
+                    class="col-span-4 bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col min-h-[600px]">
                     <div class="p-5 border-b border-gray-100 bg-gray-50/50">
-                        <h3 class="font-bold text-gray-900 mb-4"><i class="fas fa-door-open text-blue-600 mr-2"></i> Facilities Directory</h3>
+                        <h3 class="font-bold text-gray-900 mb-4"><i class="fas fa-door-open text-blue-600 mr-2"></i>
+                            Facilities Directory</h3>
                         <div class="relative">
-                            <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm"></i>
-                            <input type="text" placeholder="Search rooms..." class="w-full bg-white border border-gray-200 text-sm rounded-lg py-2.5 pl-9 pr-4 focus:ring-2 focus:ring-blue-500 outline-none transition-all">
-                        </div>
-                        <div class="flex gap-2 mt-4 overflow-x-auto pb-2">
-                            <span class="bg-blue-100 text-blue-700 px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer border border-blue-200 whitespace-nowrap">All</span>
-                            <span class="bg-white text-gray-600 px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-gray-50 cursor-pointer border border-gray-200 whitespace-nowrap">Lecture Halls</span>
-                            <span class="bg-white text-gray-600 px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-gray-50 cursor-pointer border border-gray-200 whitespace-nowrap">Laboratories</span>
+                            <i
+                                class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm"></i>
+                            <input type="text" placeholder="Search rooms..."
+                                class="w-full bg-white border border-gray-200 text-sm rounded-lg py-2.5 pl-9 pr-4 focus:ring-2 focus:ring-blue-500 outline-none transition-all">
                         </div>
                     </div>
-                    <div class="flex-1 overflow-y-auto p-4 space-y-3">
-                        <!-- Room Cards -->
-                        <div class="p-4 rounded-xl border border-blue-200 bg-blue-50/50 cursor-pointer transition-all hover:bg-blue-100 shadow-sm relative">
-                            <div class="absolute top-0 right-0 bg-blue-600 text-white text-[9px] font-bold px-2 py-1 rounded-bl-xl rounded-tr-xl">SELECTED</div>
+                    <div class="flex-1 overflow-y-auto p-4 space-y-3" id="roomList">
+                        <!-- Dynamic Room Cards -->
+                        <div th:each="room : ${rooms}" th:data-room-id="${room.id}"
+                            th:data-room-name="${room.roomNumber}" th:data-room-floor="${room.floorNumber}"
+                            th:data-room-block="${room.block}"
+                            class="room-card p-4 rounded-xl border border-gray-100 bg-white hover:bg-blue-50/80 cursor-pointer transition-all shadow-sm relative">
+                            <div
+                                class="selected-badge hidden absolute top-0 right-0 bg-blue-600 text-white text-[9px] font-bold px-2 py-1 rounded-bl-xl rounded-tr-xl">
+                                SELECTED</div>
                             <div class="flex justify-between items-start mb-2 mt-1">
-                                <h4 class="font-bold text-blue-900">Room 401</h4>
-                                <span class="bg-blue-200 text-blue-800 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider">Lecture</span>
+                                <div class="flex justify-between items-start mb-2 mt-1">
+                                    <h4 class="font-bold text-gray-900 room-title"
+                                        th:text="|${room.floorNumber}${room.block}${room.roomNumber}|">
+                                        Room 401
+                                    </h4>
+                                    <span
+                                        class="bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider"
+                                        th:text="${room.type}">
+                                        Type
+                                    </span>
+                                </div>
+                                <span
+                                    class="bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider"
+                                    th:text="${room.type}">Type</span>
                             </div>
                             <div class="text-xs text-gray-500 flex items-center justify-between">
-                                <span class="flex items-center gap-1 font-semibold text-gray-700"><i class="fas fa-users text-gray-400"></i> Cap: 120</span>
-                                <span class="bg-gray-100 text-gray-600 px-2 py-1 rounded border border-gray-200 text-[10px] font-bold"><i class="fas fa-projector text-blue-500"></i> Projector</span>
-                            </div>
-                        </div>
-
-                        <div class="p-4 rounded-xl border border-gray-100 bg-white hover:bg-gray-50 cursor-pointer transition-all shadow-sm">
-                            <div class="flex justify-between items-start mb-2">
-                                <h4 class="font-bold text-gray-900">Lab 2A</h4>
-                                <span class="bg-purple-100 text-purple-700 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider">Laboratory</span>
-                            </div>
-                            <div class="text-xs text-gray-500 flex items-center justify-between">
-                                <span class="flex items-center gap-1 font-semibold text-gray-700"><i class="fas fa-users text-gray-400"></i> Cap: 45</span>
-                                <span class="bg-gray-100 text-gray-600 px-2 py-1 rounded border border-gray-200 text-[10px] font-bold"><i class="fas fa-desktop text-purple-500"></i> Workstations</span>
-                            </div>
-                        </div>
-
-                        <div class="p-4 rounded-xl border border-gray-100 bg-white hover:bg-gray-50 cursor-pointer transition-all shadow-sm">
-                            <div class="flex justify-between items-start mb-2">
-                                <h4 class="font-bold text-gray-900">Seminar Hall C</h4>
-                                <span class="bg-green-100 text-green-700 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider">Event</span>
-                            </div>
-                            <div class="text-xs text-gray-500 flex items-center justify-between">
-                                <span class="flex items-center gap-1 font-semibold text-gray-700"><i class="fas fa-users text-gray-400"></i> Cap: 250</span>
-                                <span class="bg-gray-100 text-gray-600 px-2 py-1 rounded border border-gray-200 text-[10px] font-bold"><i class="fas fa-microphone text-green-500"></i> PA System</span>
+                                <span class="flex items-center gap-1 font-semibold text-gray-700"><i
+                                        class="fas fa-users text-gray-400"></i> Cap: <span
+                                        th:text="${room.capacity}">120</span></span>
+                                <span
+                                    class="bg-gray-100 text-gray-600 px-2 py-1 rounded border border-gray-200 text-[10px] font-bold"
+                                    th:if="${room.block != null}">Block <span th:text="${room.block}"></span></span>
                             </div>
                         </div>
                     </div>
@@ -93,129 +137,414 @@
                     <div class="flex justify-between items-center mb-6 pb-6 border-b border-gray-100">
                         <div>
                             <h2 class="text-2xl font-extrabold text-gray-900 flex items-center gap-3">
-                                Room 401 Timeline 
-                                <span class="bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-bold uppercase tracking-wider flex items-center gap-1"><i class="fas fa-check-circle"></i> Online</span>
+                                <span id="selectedRoomTitle">Select a Room</span>
+                                <span id="roomStatusBadge"
+                                    class="hidden bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-bold uppercase tracking-wider items-center gap-1"><i
+                                        class="fas fa-check-circle"></i> Viewing</span>
                             </h2>
-                            <p class="text-sm text-gray-500 font-medium mt-1">Viewing dynamic visual allocation based on course needs.</p>
-                        </div>
-                        <div class="flex items-center bg-gray-50 rounded-lg border border-gray-200 p-1">
-                            <button class="px-3 py-1.5 hover:bg-white rounded-md text-gray-500 transition shadow-sm"><i class="fas fa-chevron-left"></i></button>
-                            <span class="font-bold text-gray-700 px-3 text-sm">Week 12</span>
-                            <button class="px-3 py-1.5 hover:bg-white rounded-md text-gray-500 transition shadow-sm"><i class="fas fa-chevron-right"></i></button>
+                            <p class="text-sm text-gray-500 font-medium mt-1">Timeline view of allocated courses for
+                                this facility.</p>
                         </div>
                     </div>
 
-                    <!-- Enhanced Calendar Grid (Mimicking typical scheduler logic) -->
-                    <div class="flex-1 border border-gray-200 rounded-xl overflow-hidden bg-gray-50/50 shadow-inner">
-                        <div class="grid grid-cols-6 border-b border-gray-200 bg-white text-xs font-bold text-gray-400 uppercase tracking-wide text-center">
-                            <div class="py-3 border-r border-gray-200 flex items-center justify-center bg-gray-50/50"><i class="fas fa-clock text-gray-300"></i></div>
-                            <div class="py-3 border-r border-gray-200 text-gray-900 border-b-2 border-b-blue-500">Mon</div>
+                    <!-- Enhanced Calendar Grid -->
+                    <div
+                        class="flex-1 flex flex-col border border-gray-200 rounded-xl overflow-hidden bg-gray-50/50 shadow-inner relative">
+                        <!-- Loading Overlay -->
+                        <div id="calendarLoading"
+                            class="absolute inset-0 bg-white/70 flex justify-center items-center z-10 hidden">
+                            <div class="loader"></div>
+                        </div>
+
+                        <!-- Header -->
+                        <div
+                            class="calendar-grid border-b border-gray-200 bg-white text-xs font-bold text-gray-400 uppercase tracking-wide text-center">
+                            <div class="py-3 border-r border-gray-200 flex items-center justify-center bg-gray-50/50"><i
+                                    class="fas fa-clock text-gray-300"></i></div>
+                            <div class="py-3 border-r border-gray-200">Mon</div>
                             <div class="py-3 border-r border-gray-200">Tue</div>
                             <div class="py-3 border-r border-gray-200">Wed</div>
                             <div class="py-3 border-r border-gray-200">Thu</div>
                             <div class="py-3">Fri</div>
                         </div>
-                        
-                        <!-- Time Row 08:00 AM -->
-                        <div class="grid grid-cols-6 border-b border-gray-100 min-h-[110px]">
-                            <div class="border-r border-gray-200 p-3 text-xs font-bold text-gray-500 flex items-center justify-center bg-gray-50/50">8:00 AM</div>
-                            <!-- Monday -->
-                            <div class="border-r border-gray-100 p-2">
-                                <div class="bg-blue-50 border-l-4 border-blue-600 rounded-md p-2 h-full cursor-pointer hover:bg-blue-100 transition shadow-sm flex flex-col justify-between">
-                                    <div>
-                                        <p class="text-[10px] font-bold text-blue-700 uppercase tracking-wider mb-0.5">CSE 4101</p>
-                                        <p class="text-xs font-bold text-gray-900 leading-tight">Compiler Design</p>
-                                    </div>
-                                    <div class="flex items-center gap-2 mt-2 pt-2 border-t border-blue-100">
-                                        <div class="w-5 h-5 rounded-full bg-blue-200 text-blue-800 flex items-center justify-center text-[8px] font-bold">DR</div>
-                                        <p class="text-[9px] text-gray-600 font-medium">120/120</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="border-r border-gray-100 p-2 group hover:bg-white transition cursor-pointer">
-                                <div class="w-full h-full border-2 border-dashed border-transparent group-hover:border-blue-200 rounded flex items-center justify-center opacity-0 group-hover:opacity-100">
-                                    <i class="fas fa-plus text-blue-300 text-xs"></i>
-                                </div>
-                            </div>
-                            <div class="border-r border-gray-100 p-2">
-                                <div class="bg-blue-50 border-l-4 border-blue-600 rounded-md p-2 h-full cursor-pointer hover:bg-blue-100 transition shadow-sm flex flex-col justify-between">
-                                    <div>
-                                        <p class="text-[10px] font-bold text-blue-700 uppercase tracking-wider mb-0.5">CSE 4101</p>
-                                        <p class="text-xs font-bold text-gray-900 leading-tight">Compiler Design</p>
-                                    </div>
-                                    <div class="flex items-center gap-2 mt-2 pt-2 border-t border-blue-100">
-                                        <div class="w-5 h-5 rounded-full bg-blue-200 text-blue-800 flex items-center justify-center text-[8px] font-bold">DR</div>
-                                        <p class="text-[9px] text-gray-600 font-medium">120/120</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="border-r border-gray-100 p-2 group hover:bg-white transition cursor-pointer"></div>
-                            <div class="p-2 group hover:bg-white transition cursor-pointer"></div>
-                        </div>
 
-                        <!-- Time Row 09:30 AM -->
-                        <div class="grid grid-cols-6 border-b border-gray-100 min-h-[110px]">
-                            <div class="border-r border-gray-200 p-3 text-xs font-bold text-gray-500 flex items-center justify-center bg-gray-50/50">9:30 AM</div>
-                            <!-- Conflict demonstration -->
-                            <div class="border-r border-gray-100 p-2 relative bg-red-50/30">
-                                <div class="absolute inset-2 bg-white border-2 border-red-500 box-border rounded p-2 flex flex-col justify-center items-center text-center shadow-sm z-10 animate-pulse cursor-pointer">
-                                    <i class="fas fa-exclamation-circle text-red-500 text-lg mb-1"></i>
-                                    <p class="text-[10px] font-bold text-red-700 leading-tight uppercase tracking-wide">DOUBLE BOOKED</p>
-                                    <p class="text-[9px] text-gray-500 mt-1 font-medium bg-gray-100 px-1 rounded">EEE 2101 & PHY 110</p>
-                                </div>
+                        <!-- Dynamic Rows Container -->
+                        <div id="calendarBody" class="flex-1 overflow-y-auto">
+                            <!-- JS Will Populate Rows Here -->
+                            <div class="flex flex-col items-center justify-center h-full text-gray-400 mt-20">
+                                <i class="fas fa-calendar-alt text-4xl mb-3 text-gray-300"></i>
+                                <p>Select a room to view its schedule timeline</p>
                             </div>
-                            <!-- Tuesday -->
-                            <div class="border-r border-gray-100 p-2">
-                                <div class="bg-purple-50 border-l-4 border-purple-500 rounded-md p-2 h-full cursor-pointer hover:bg-purple-100 transition shadow-sm flex flex-col justify-between">
-                                    <div>
-                                        <p class="text-[10px] font-bold text-purple-700 uppercase tracking-wider mb-0.5">EEE 3105</p>
-                                        <p class="text-xs font-bold text-gray-900 leading-tight">Microprocessors</p>
-                                    </div>
-                                    <div class="flex items-center gap-2 mt-2 pt-2 border-t border-purple-100">
-                                        <div class="w-5 h-5 rounded-full bg-purple-200 text-purple-800 flex items-center justify-center text-[8px] font-bold">AK</div>
-                                        <p class="text-[9px] text-gray-600 font-medium">85/120</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="border-r border-gray-100 p-2 group hover:bg-white transition cursor-pointer">
-                                <div class="w-full h-full border-2 border-dashed border-transparent group-hover:border-blue-200 rounded flex items-center justify-center opacity-0 group-hover:opacity-100">
-                                    <i class="fas fa-plus text-blue-300 text-xs"></i>
-                                </div>
-                            </div>
-                            <div class="border-r border-gray-100 p-2">
-                                <div class="bg-purple-50 border-l-4 border-purple-500 rounded-md p-2 h-full cursor-pointer hover:bg-purple-100 transition shadow-sm flex flex-col justify-between">
-                                    <div>
-                                        <p class="text-[10px] font-bold text-purple-700 uppercase tracking-wider mb-0.5">EEE 3105</p>
-                                        <p class="text-xs font-bold text-gray-900 leading-tight">Microprocessors</p>
-                                    </div>
-                                    <div class="flex items-center gap-2 mt-2 pt-2 border-t border-purple-100">
-                                        <div class="w-5 h-5 rounded-full bg-purple-200 text-purple-800 flex items-center justify-center text-[8px] font-bold">AK</div>
-                                        <p class="text-[9px] text-gray-600 font-medium">85/120</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="p-2 group hover:bg-white transition cursor-pointer"></div>
-                        </div>
-
-                        <!-- Empty Slot Demonstration -->
-                         <div class="grid grid-cols-6 min-h-[110px]">
-                            <div class="border-r border-gray-200 p-3 text-xs font-bold text-gray-500 flex items-center justify-center bg-gray-50/50">11:00 AM</div>
-                            <div class="border-r border-gray-100 p-2 group hover:bg-blue-50/50 transition duration-300">
-                                <div class="h-full border-2 border-dashed border-transparent group-hover:border-blue-300 rounded flex flex-col justify-center items-center text-blue-500 opacity-0 group-hover:opacity-100 transition cursor-pointer bg-white">
-                                    <i class="fas fa-plus-circle mb-1 text-lg"></i>
-                                    <span class="text-[10px] font-bold uppercase tracking-wider text-blue-600">Assign Course</span>
-                                </div>
-                            </div>
-                            <!-- ... more empty cells ... -->
-                            <div class="border-r border-gray-100 p-2 group hover:bg-white transition cursor-pointer"></div>
-                            <div class="border-r border-gray-100 p-2 group hover:bg-white transition cursor-pointer"></div>
-                            <div class="border-r border-gray-100 p-2 group hover:bg-white transition cursor-pointer"></div>
-                            <div class="p-2 group hover:bg-white transition cursor-pointer"></div>
                         </div>
                     </div>
                 </div>
             </div>
         </main>
     </div>
+
+    <!-- Allocation Modal -->
+    <div id="allocationModal" class="hidden flex ...">
+        <div class="bg-white rounded-xl shadow-2xl p-6 w-[500px] max-w-[90vw] animate-[fadeIn_0.2s_ease-out]">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-bold text-gray-900">Allocate Course</h3>
+                <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600"><i
+                        class="fas fa-times"></i></button>
+            </div>
+            <p class="text-sm text-gray-500 mb-4">Select an unassigned course to allocate to <span id="modalRoomName"
+                    class="font-bold text-blue-600"></span> on <span id="modalDayTime" class="font-bold"></span>.</p>
+
+            <div class="max-h-[300px] overflow-y-auto mb-4 border rounded-lg bg-gray-50 p-2" id="unassignedList">
+                <div class="text-center text-sm text-gray-500 py-4" id="unassignedLoading">Loading...</div>
+            </div>
+
+            <div class="flex justify-end gap-2">
+                <button onclick="closeModal()"
+                    class="px-4 py-2 border rounded-lg text-sm font-semibold hover:bg-gray-50">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Room Modal -->
+    <div id="addRoomModal" sec:authorize="hasAnyRole('SUPERADMIN', 'COORDINATOR')"
+        class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center">
+        <div class="bg-white rounded-xl shadow-2xl p-6 w-[500px] max-w-[90vw]">
+            <div class="flex justify-between items-center mb-4 border-b pb-3">
+                <h3 class="text-lg font-bold text-gray-900">Create New Room</h3>
+                <button onclick="closeAddRoomModal()" class="text-gray-400 hover:text-gray-600"><i
+                        class="fas fa-times"></i></button>
+            </div>
+            <form id="addRoomForm" class="space-y-4">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Room Number *</label>
+                        <input type="text" id="r_roomNumber" required
+                            class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Room Type *</label>
+                        <select id="r_type"
+                            class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-blue-500 focus:border-blue-500">
+                            <option value="THEORY">Theory (Lecture)</option>
+                            <option value="LAB">Lab</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Capacity</label>
+                        <input type="number" id="r_capacity"
+                            class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Floor</label>
+                        <input type="number" id="r_floorNumber"
+                            class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Block / Bulding</label>
+                    <input type="text" id="r_block"
+                        class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div class="flex gap-4">
+                    <label class="flex items-center gap-2 text-sm text-gray-700">
+                        <input type="checkbox" id="r_hasComputers" class="rounded text-blue-600 focus:ring-blue-500">
+                        Has Computers
+                    </label>
+                    <label class="flex items-center gap-2 text-sm text-gray-700">
+                        <input type="checkbox" id="r_hasHardwareKits" class="rounded text-blue-600 focus:ring-blue-500">
+                        Has Hardware Kits
+                    </label>
+                </div>
+                <div class="flex justify-end gap-2 pt-3 border-t mt-5">
+                    <button type="button" onclick="closeAddRoomModal()"
+                        class="px-4 py-2 border rounded-lg text-sm font-semibold hover:bg-gray-50">Cancel</button>
+                    <button type="submit"
+                        class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700">Save
+                        Room</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Script Block -->
+    <script>
+        const slotTimes = {
+            1: "08:00 AM",
+            2: "09:30 AM",
+            3: "11:00 AM",
+            4: "12:30 PM",
+            5: "02:00 PM",
+            6: "03:30 PM"
+        };
+        const daysOrder = ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"];
+        const dayLabel = {
+            "MONDAY": "Mon", "TUESDAY": "Tue", "WEDNESDAY": "Wed", "THURSDAY": "Thu", "FRIDAY": "Fri"
+        };
+
+        let currentRoomId = null;
+        let currentRoomName = null;
+        let currentRoomFloor = null;
+        let currentRoomBlock = null;
+
+        // On document ready
+        document.addEventListener("DOMContentLoaded", () => {
+            const cards = document.querySelectorAll(".room-card");
+            cards.forEach(card => {
+                card.addEventListener("click", () => {
+                    // Update UI selection
+                    cards.forEach(c => {
+                        c.classList.remove('border-blue-500', 'bg-blue-50/50');
+                        c.classList.add('border-gray-100', 'bg-white');
+                        c.querySelector('.selected-badge').classList.add('hidden');
+                        c.querySelector('.room-title').classList.remove('text-blue-900');
+                        c.querySelector('.room-title').classList.add('text-gray-900');
+                    });
+
+                    card.classList.remove('border-gray-100', 'bg-white');
+                    card.classList.add('border-blue-500', 'bg-blue-50/50');
+                    card.querySelector('.selected-badge').classList.remove('hidden');
+                    card.querySelector('.room-title').classList.remove('text-gray-900');
+                    card.querySelector('.room-title').classList.add('text-blue-900');
+
+                    currentRoomId = card.getAttribute("data-room-id");
+                    currentRoomName = card.getAttribute("data-room-name");
+                    currentRoomFloor = card.getAttribute("data-room-floor");
+                    currentRoomBlock = card.getAttribute("data-room-block");
+
+                    document.getElementById("selectedRoomTitle").innerText = `${currentRoomFloor}${currentRoomBlock}${currentRoomName} Timeline`;
+                    document.getElementById("roomStatusBadge").classList.remove("hidden");
+                    document.getElementById("roomStatusBadge").classList.add("flex");
+
+                    loadRoomSchedule(currentRoomId);
+                });
+            });
+        });
+
+        async function loadRoomSchedule(roomId) {
+            const loading = document.getElementById("calendarLoading");
+            const bodyDiv = document.getElementById("calendarBody");
+
+            loading.classList.remove("hidden");
+
+            try {
+                const res = await fetch('/api/schedule/routines/room/' + roomId);
+                const routines = await res.json();
+                renderTimeline(routines);
+            } catch (err) {
+                console.error("Failed to fetch schedules", err);
+                bodyDiv.innerHTML = `<div class="p-5 text-center text-red-500">Error loading timeline.</div>`;
+            } finally {
+                loading.classList.add("hidden");
+            }
+        }
+
+        function renderTimeline(routines) {
+            const bodyDiv = document.getElementById("calendarBody");
+            bodyDiv.innerHTML = "";
+
+            // Create basic matrix Map
+            const matrix = {};
+            for (let s = 1; s <= 6; s++) {
+                matrix[s] = {};
+                for (let d of daysOrder) {
+                    matrix[s][d] = null; // null means empty slot
+                }
+            }
+
+            // Fill matrix with routines
+            routines.forEach(r => {
+                if (r.startSlotIndex && r.dayOfWeek) {
+                    matrix[r.startSlotIndex][r.dayOfWeek] = r;
+                    // If slotCount > 1, mark the subsequent slots as 'OCCUPIED_SPAN'
+                    if (r.slotCount > 1) {
+                        for (let i = 1; i < r.slotCount; i++) {
+                            if (matrix[r.startSlotIndex + i]) {
+                                matrix[r.startSlotIndex + i][r.dayOfWeek] = "SPAN";
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Generate HTML Rows
+            for (let s = 1; s <= 6; s++) {
+                let rowHtml = `<div class="calendar-grid border-b border-gray-100 min-h-[110px]">`;
+                // Time cell
+                rowHtml += `<div class="border-r border-gray-200 p-3 text-xs font-bold text-gray-500 flex items-center justify-center bg-gray-50/50">${slotTimes[s]}</div>`;
+
+                for (let d of daysOrder) {
+                    let cellData = matrix[s][d];
+
+                    if (cellData === "SPAN") {
+                        // Skip rendering or render a placeholder connection if we wanted to
+                        rowHtml += `<div class="border-r border-gray-100 p-2 bg-blue-50/20"></div>`;
+                    } else if (cellData && cellData.id) {
+                        // Render Course block
+                        rowHtml += `
+                            <div class="border-r border-gray-100 p-2 relative group row-span-${cellData.slotCount}">
+                                <div class="bg-blue-50 border-l-4 border-blue-600 rounded-md p-2 h-full shadow-sm flex flex-col justify-between">
+                                    <div>
+                                        <p class="text-[10px] font-bold text-blue-700 uppercase tracking-wider mb-0.5">${cellData.courseCode || 'N/A'}</p>
+                                        <p class="text-xs font-bold text-gray-900 leading-tight">${cellData.courseTitle || 'No Title'}</p>
+                                    </div>
+                                    <div class="flex items-center gap-2 mt-2 pt-2 border-t border-blue-100">
+                                        <div class="w-5 h-5 rounded-full bg-blue-200 text-blue-800 flex items-center justify-center text-[8px] font-bold" title="${cellData.teacherInitials}">${cellData.teacherInitials.substring(0, 2)}</div>
+                                        <p class="text-[9px] text-gray-600 font-medium">Cap: ${cellData.studentCapacity || 'N/A'}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        // Render Empty block with Allocate feature
+                        rowHtml += `
+                            <div class="border-r border-gray-100 p-2 group hover:bg-blue-50/50 transition duration-300">
+                                <div onclick="openAllocationModal('${d}', ${s})" class="h-full w-full border-2 border-dashed border-transparent group-hover:border-blue-300 rounded flex flex-col justify-center items-center text-blue-500 opacity-0 group-hover:opacity-100 transition cursor-pointer bg-white">
+                                    <i class="fas fa-plus-circle mb-1 text-lg"></i>
+                                    <span class="text-[10px] font-bold uppercase tracking-wider text-blue-600">Assign</span>
+                                </div>
+                            </div>
+                        `;
+                    }
+                }
+                rowHtml += `</div>`;
+                bodyDiv.insertAdjacentHTML('beforeend', rowHtml);
+            }
+        }
+
+        /* --- Allocation Modal Logic --- */
+
+        let currentModalDay = null;
+        let currentModalSlot = null;
+
+        function openAllocationModal(day, slotIndex) {
+            currentModalDay = day;
+            currentModalSlot = slotIndex;
+            document.getElementById("modalRoomName").innerText = currentRoomName;
+            document.getElementById("modalDayTime").innerText = dayLabel[day] + " at " + slotTimes[slotIndex];
+
+            document.getElementById("allocationModal").style.display = "flex";
+            loadUnassignedRoutines();
+        }
+
+        function closeModal() {
+            document.getElementById("allocationModal").style.display = "none";
+        }
+
+        async function loadUnassignedRoutines() {
+            const listDiv = document.getElementById("unassignedList");
+            listDiv.innerHTML = `<div class="text-center text-sm text-gray-500 py-4">Loading...</div>`;
+
+            try {
+                const res = await fetch('/api/schedule/routines/unassigned');
+                const routines = await res.json();
+
+                if (routines.length === 0) {
+                    listDiv.innerHTML = `<div class="text-center text-sm text-gray-500 py-4">No unassigned courses found.</div>`;
+                    return;
+                }
+
+                let html = routines.map(r => `
+                    <div class="p-3 mb-2 bg-white border border-gray-200 rounded-lg shadow-sm flex justify-between items-center hover:border-blue-300">
+                        <div>
+                            <div class="font-bold text-sm text-gray-800">${r.courseCode} <span class="font-normal text-xs text-gray-500">(${r.courseTitle})</span></div>
+                            <div class="text-xs text-gray-500">Teacher: ${r.teacherInitials} | Cap: ${r.studentCapacity}</div>
+                        </div>
+                        <button onclick="allocateRoutine(${r.id})" class="px-3 py-1 bg-blue-600 text-white text-xs font-bold rounded hover:bg-blue-700 transition">Select</button>
+                    </div>
+                `).join('');
+                listDiv.innerHTML = html;
+            } catch (err) {
+                listDiv.innerHTML = `<div class="text-center text-sm text-red-500 py-4">Error loading unassigned courses.</div>`;
+            }
+        }
+
+        async function allocateRoutine(routineId) {
+            if (!currentRoomId) return;
+
+            try {
+                // To fully allocate, we might need a specific endpoint to allocate an existing routine to a room.
+                // ScheduleController has @PostMapping("/allocate") taking routineId and roomId.
+                // Wait! does @PostMapping("/allocate") change day and time?
+                // `allocateRoom` in ScheduleActionService ONLY changes the room. It doesn't update day/time.
+                // But the user clicked on an empty slot in the timeline. We should probably use `reschedule` which updates room, day, time.
+
+                const formData = new URLSearchParams();
+                formData.append('routineId', routineId);
+                formData.append('newDay', currentModalDay);
+                formData.append('newStartSlot', currentModalSlot);
+                formData.append('newRoomId', currentRoomId);
+
+                const res = await fetch('/api/schedule/reschedule', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: formData.toString()
+                });
+
+                if (res.ok) {
+                    closeModal();
+                    loadRoomSchedule(currentRoomId);
+                } else {
+                    alert("Failed to allocate room.");
+                }
+            } catch (error) {
+                alert("Error during allocation.");
+            }
+        }
+
+        /* --- Room Creation Context --- */
+        function openAddRoomModal() {
+            document.getElementById("addRoomModal").classList.remove("hidden");
+        }
+
+        function closeAddRoomModal() {
+            document.getElementById("addRoomModal").classList.add("hidden");
+            document.getElementById("addRoomForm").reset();
+        }
+
+        const rmForm = document.getElementById("addRoomForm");
+        if (rmForm) {
+            rmForm.addEventListener("submit", async (e) => {
+                e.preventDefault();
+                const payload = {
+                    roomNumber: document.getElementById("r_roomNumber").value,
+                    type: document.getElementById("r_type").value,
+                    capacity: document.getElementById("r_capacity").value ? parseInt(document.getElementById("r_capacity").value) : null,
+                    floorNumber: document.getElementById("r_floorNumber").value ? parseInt(document.getElementById("r_floorNumber").value) : null,
+                    block: document.getElementById("r_block").value,
+                    hasComputers: document.getElementById("r_hasComputers").checked,
+                    hasHardwareKits: document.getElementById("r_hasHardwareKits").checked
+                };
+
+                // CRSF token inclusion might be necessary if we have form security strictly enabled
+                // But typically for API we can just pass json.
+                // Spring security default expects CSRF unless disabled.
+                // We will try raw POST and handle standard reloads
+
+                try {
+                    const res = await fetch('/api/rooms', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (res.ok) {
+                        alert("Room created successfully!");
+                        window.location.reload(); // Quickest way to sync thymeleaf populated data
+                    } else if (res.status === 403) {
+                        alert("You are not authorized to create a room.");
+                    } else {
+                        alert("Failed to create room.");
+                    }
+                } catch (e) {
+                    alert("Network error.");
+                }
+            });
+        }
+
+    </script>
 </body>
+
 </html>

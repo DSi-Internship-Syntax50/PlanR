@@ -35,4 +35,8 @@ public interface MasterRoutineRepository extends JpaRepository<MasterRoutine, Lo
     List<MasterRoutine> findByCourseBatchAndDayOfWeekOrderByStartSlotIndexAsc(String batch, DayOfWeek dayOfWeek);
 
     List<MasterRoutine> findAllByCourseBatchOrderByDayOfWeekAscStartSlotIndexAsc(String batch);
+
+    List<MasterRoutine> findByRoomId(Long roomId);
+
+    List<MasterRoutine> findByRoomIsNull();
 }
