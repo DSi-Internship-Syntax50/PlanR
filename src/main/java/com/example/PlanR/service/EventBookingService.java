@@ -1,23 +1,23 @@
 package com.example.PlanR.service;
 
+import java.time.LocalDate;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.example.PlanR.dto.EventBookingRequestDto;
 import com.example.PlanR.dto.EventBookingResponseDto;
 import com.example.PlanR.model.EventBooking;
 import com.example.PlanR.model.Room;
 import com.example.PlanR.model.User;
 import com.example.PlanR.model.enums.BookingStatus;
-import com.example.PlanR.model.enums.EventType;
 import com.example.PlanR.repository.EventBookingRepository;
 import com.example.PlanR.repository.RoomRepository;
 import com.example.PlanR.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Isolation;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.time.LocalDate;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class EventBookingService {
@@ -79,7 +79,7 @@ public class EventBookingService {
         newBooking.setAdditionalInfo(requestDto.getAdditionalInfo());
         
         // Auto-approve if requestor is Admin, else PENDING
-        if (requestor.getRole() == com.example.PlanR.model.enums.Role.ADMIN) {
+        if (requestor.getRole() == com.example.PlanR.model.enums.Role.SUPERADMIN) {
             newBooking.setStatus(BookingStatus.APPROVED);
         } else {
             newBooking.setStatus(BookingStatus.PENDING); 
