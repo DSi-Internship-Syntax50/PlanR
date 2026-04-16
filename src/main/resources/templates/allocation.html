@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="en">
 
 <head>
@@ -306,14 +306,8 @@
         </div>
     </div>
 
-    <script th:src="@{/js/app.js}">
-  
-        // Security Context
-        const csrfToken = document.querySelector('meta[name="_csrf"]')?.getAttribute('content');
-        const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content');
 
-        const userRole = "[[${user != null ? user.role : 'GUEST'}]]";
-        const canEdit = (userRole === 'SUPERADMIN' || userRole === 'COORDINATOR');
+    <script>
 
         // --- PURE SLOT CONFIGURATION ---
         const MAX_SLOTS = 12; // Adjusted to match routine builder strictly by slots
