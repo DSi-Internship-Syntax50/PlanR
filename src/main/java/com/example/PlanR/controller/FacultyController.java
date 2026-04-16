@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 
 import com.example.PlanR.model.User;
 import com.example.PlanR.model.enums.Role;
-import com.example.PlanR.repository.UserRepository;
+import com.example.PlanR.service.UserService;
 
 /**
  * Handles faculty and student listing pages.
@@ -18,23 +18,23 @@ import com.example.PlanR.repository.UserRepository;
 @Controller
 public class FacultyController {
 
-    private final UserRepository userRepository;
+    private final UserService userService;
 
-    public FacultyController(UserRepository userRepository) {
-        this.userRepository = userRepository;
+    public FacultyController(UserService userService) {
+        this.userService = userService;
     }
 
     @GetMapping("/faculty")
     @PreAuthorize("hasRole('SUPERADMIN')")
     public String showFacultyHub(Model model) {
-        List<User> faculties = userRepository.findByRole(Role.TEACHER);
+        List<User> faculties = userService.findUsersByRole(Role.TEACHER);
         model.addAttribute("faculties", faculties);
         return "faculty";
     }
 
     @GetMapping("/students")
     public String showStudentsHub(Model model) {
-        List<User> students = userRepository.findByRole(Role.STUDENT);
+        List<User> students = userService.findUsersByRole(Role.STUDENT);
         model.addAttribute("students", students);
         return "students";
     }

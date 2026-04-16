@@ -4,7 +4,7 @@ import com.example.PlanR.exception.EntityNotFoundException;
 import com.example.PlanR.exception.SlotConflictException;
 import com.example.PlanR.exception.ValidationException;
 import com.example.PlanR.model.User;
-import com.example.PlanR.repository.UserRepository;
+import com.example.PlanR.service.UserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
@@ -25,10 +25,10 @@ import java.util.Optional;
 @ControllerAdvice
 public class GlobalControllerAdvice {
 
-    private final UserRepository userRepository;
+    private final UserService userService;
 
-    public GlobalControllerAdvice(UserRepository userRepository) {
-        this.userRepository = userRepository;
+    public GlobalControllerAdvice(UserService userService) {
+        this.userService = userService;
     }
 
     @ModelAttribute("user")
@@ -36,7 +36,7 @@ public class GlobalControllerAdvice {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth != null && auth.isAuthenticated() && !(auth instanceof AnonymousAuthenticationToken)) {
             String email = auth.getName();
-            Optional<User> optionalUser = userRepository.findByEmail(email);
+            Optional<User> optionalUser = userService.findUserByEmail(email);
             return optionalUser.orElse(null);
         }
         return null;

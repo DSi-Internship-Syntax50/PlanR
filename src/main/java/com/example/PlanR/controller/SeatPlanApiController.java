@@ -3,7 +3,7 @@ package com.example.PlanR.controller;
 import com.example.PlanR.dto.SeatPlanRequestDto;
 import com.example.PlanR.dto.SeatPlanResponseDto;
 import com.example.PlanR.service.SeatPlanService;
-import org.springframework.beans.factory.annotation.Autowired;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -11,8 +11,11 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/seatplan")
 public class SeatPlanApiController {
 
-    @Autowired
-    private SeatPlanService seatPlanService;
+    private final SeatPlanService seatPlanService;
+
+    public SeatPlanApiController(SeatPlanService seatPlanService) {
+        this.seatPlanService = seatPlanService;
+    }
 
     @PostMapping("/generate")
     public ResponseEntity<SeatPlanResponseDto> generate(@RequestBody SeatPlanRequestDto request) {

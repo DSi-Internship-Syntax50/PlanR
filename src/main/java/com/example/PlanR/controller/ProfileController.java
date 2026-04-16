@@ -14,7 +14,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import com.example.PlanR.dto.ProfileUpdateDto;
 import com.example.PlanR.exception.EntityNotFoundException;
 import com.example.PlanR.model.User;
-import com.example.PlanR.repository.UserRepository;
+import com.example.PlanR.service.UserService;
 import com.example.PlanR.service.UserProfileService;
 
 /**
@@ -25,11 +25,11 @@ import com.example.PlanR.service.UserProfileService;
 public class ProfileController {
 
     private final UserProfileService profileService;
-    private final UserRepository userRepository;
+    private final UserService userService;
 
-    public ProfileController(UserProfileService profileService, UserRepository userRepository) {
+    public ProfileController(UserProfileService profileService, UserService userService) {
         this.profileService = profileService;
-        this.userRepository = userRepository;
+        this.userService = userService;
     }
 
     @GetMapping("/my-profile")
@@ -52,7 +52,7 @@ public class ProfileController {
             return "redirect:/dashboard";
         }
 
-        List<User> users = userRepository.findAll();
+        List<User> users = userService.findAllUsers();
         model.addAttribute("users", users);
         return "admin/user-list";
     }

@@ -17,7 +17,7 @@ import com.example.PlanR.model.MasterRoutine;
 import com.example.PlanR.model.ScheduleRequest;
 import com.example.PlanR.model.enums.DayOfWeek;
 import com.example.PlanR.model.enums.RequestType;
-import com.example.PlanR.repository.CourseRepository;
+import com.example.PlanR.service.CourseService;
 import com.example.PlanR.service.RecommendationService;
 import com.example.PlanR.service.RoutineQueryService;
 import com.example.PlanR.service.ScheduleActionService;
@@ -33,16 +33,16 @@ public class ScheduleController {
     private final RecommendationService recommendationService;
     private final ScheduleActionService actionService;
     private final RoutineQueryService routineQueryService;
-    private final CourseRepository courseRepository;
+    private final CourseService courseService;
 
     public ScheduleController(RecommendationService recommendationService,
                               ScheduleActionService actionService,
                               RoutineQueryService routineQueryService,
-                              CourseRepository courseRepository) {
+                              CourseService courseService) {
         this.recommendationService = recommendationService;
         this.actionService = actionService;
         this.routineQueryService = routineQueryService;
-        this.courseRepository = courseRepository;
+        this.courseService = courseService;
     }
 
     // Use the top-level RequestDto or rename this inner class to avoid confusion
@@ -61,7 +61,7 @@ public class ScheduleController {
             @RequestParam DayOfWeek dayOfWeek,
             @RequestParam Integer startSlotIndex) {
 
-        Course course = courseRepository.findById(courseId)
+        Course course = courseService.findCourseById(courseId)
                 .orElseThrow(() -> new RuntimeException("Course not found"));
 
         List<RecommendationService.RoomRecommendation> suggestions = recommendationService.recommendRooms(course,

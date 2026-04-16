@@ -1,8 +1,7 @@
 package com.example.PlanR.controller;
 
 import com.example.PlanR.dto.RoomDto;
-import com.example.PlanR.repository.RoomRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.example.PlanR.service.RoomService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -15,12 +14,15 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/v1/rooms")
 public class RoomRestController {
 
-    @Autowired
-    private RoomRepository roomRepository;
+    private final RoomService roomService;
+
+    public RoomRestController(RoomService roomService) {
+        this.roomService = roomService;
+    }
 
     @GetMapping
     public ResponseEntity<List<RoomDto>> getAllRooms() {
-        List<RoomDto> rooms = roomRepository.findAll()
+        List<RoomDto> rooms = roomService.findAllRooms()
             .stream()
             .map(RoomDto::new)
             .collect(Collectors.toList());
