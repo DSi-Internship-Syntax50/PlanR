@@ -215,9 +215,9 @@ public class DataSeeder {
                 Course c2 = new Course();
                 c2.setCourseCode("CSE 3102");
                 c2.setTitle("Database Systems Lab");
-                c2.setBatch("L3T1");
+                c2.setBatch("L3T2");
                 c2.setYear(3);
-                c2.setSemester(1);
+                c2.setSemester(2);
                 c2.setRequiredSlots(3); // Takes 3 consecutive slots
                 c2.setWeeklyClasses(1); // Meets once a week
                 c2.setIsLab(true);
@@ -229,9 +229,9 @@ public class DataSeeder {
                 Course c3 = new Course();
                 c3.setCourseCode("CSE 3103");
                 c3.setTitle("Computer Networks");
-                c3.setBatch("L3T1");
+                c3.setBatch("L3T2");
                 c3.setYear(3);
-                c3.setSemester(1);
+                c3.setSemester(2);
                 c3.setRequiredSlots(1);
                 c3.setWeeklyClasses(2); // Meets 2 times a week
                 c3.setIsLab(false);
@@ -263,6 +263,11 @@ public class DataSeeder {
             if (routineRepository.count() < 15) {
                 System.out.println("📊 Seeding additional realistic data for Analytics...");
 
+                User teacher = new User("Jon Doe", "teacher1@planr.com");
+                teacher.setPassword(passwordEncoder.encode("password1234"));
+                teacher.setRole(Role.TEACHER);
+                teacher.setDepartment(cseDept);
+                userRepository.save(teacher);
                 List<Department> departments = departmentRepository.findAll();
                 List<Room> allRooms = roomRepository.findAll();
                 Random random = new Random(42); // deterministic random
@@ -281,17 +286,18 @@ public class DataSeeder {
                         continue; // Skip SYS
 
                     // Add some dummy courses for this department
-                    for (int i = 1; i <= Math.max(3, random.nextInt(6)); i++) {
+                    for (int i = 1; i <= 10; i++) {
                         Course dummyCourse = new Course();
                         dummyCourse.setCourseCode(dept.getShortCode() + " " + (1000 + random.nextInt(4000)));
                         dummyCourse.setTitle("Dummy Course " + i + " " + dept.getShortCode());
                         dummyCourse.setDepartment(dept);
-                        dummyCourse.setBatch("Batch " + random.nextInt(5));
-                        dummyCourse.setRequiredSlots(random.nextInt(3) + 1); // 1, 2, or 3 slots
-                        dummyCourse.setWeeklyClasses(random.nextInt(3) + 6);
+                        dummyCourse.setRequiredSlots(i % 3 + 1); // 1, 2, or 3 slots
+                        dummyCourse.setWeeklyClasses(random.nextInt(3) + 3);
                         dummyCourse.setIsLab(random.nextBoolean());
                         dummyCourse.setSemester((i % 2) + 1);
                         dummyCourse.setYear((i % 4) + 1);
+                        dummyCourse.setBatch("L" + dummyCourse.getYear() + "T" + dummyCourse.getSemester());
+                        dummyCourse.setTeacher(teacher);
                         courseRepository.save(dummyCourse);
 
                         // Assign 1 to 3 routines for this course across the week
