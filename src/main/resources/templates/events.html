@@ -2,47 +2,27 @@
 <html xmlns:th="http://www.thymeleaf.org" lang="en">
 
 <head>
-  <meta charset="UTF-8" />
-  <meta name="_csrf" th:content="${_csrf.token}" />
-  <meta name="_csrf_header" th:content="${_csrf.headerName}" />
-  <title>Event Bookings spreadsheet - PlanR</title>
-  <!-- Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Alpine.js -->
-  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-  <!-- FontAwesome 6 -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-  <!-- Custom CSS -->
-  <link rel="stylesheet" th:href="@{/css/style.css}" />
-  <style>
-    .spreadsheet-container::-webkit-scrollbar {
-      height: 12px;
-      width: 12px;
-    }
-
-    .spreadsheet-container::-webkit-scrollbar-track {
-      background: #f1f5f9;
-      border-radius: 8px;
-    }
-
-    .spreadsheet-container::-webkit-scrollbar-thumb {
-      background: #cbd5e1;
-      border-radius: 8px;
-    }
-
-    .spreadsheet-container::-webkit-scrollbar-thumb:hover {
-      background: #94a3b8;
-    }
-
-    .cell-content {
-      min-width: 100px;
-      display: inline-block;
-    }
-
-    [x-cloak] {
-      display: none !important;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+    <title>Event Bookings spreadsheet - PlanR</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Alpine.js -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <!-- FontAwesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <style>
+        .spreadsheet-container::-webkit-scrollbar { height: 12px; width: 12px; }
+        .spreadsheet-container::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 8px;}
+        .spreadsheet-container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 8px;}
+        .spreadsheet-container::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        .cell-content { min-width: 100px; display: inline-block;}
+        [x-cloak] { display: none !important; }
+    </style>
+    
 </head>
 
 <body class="bg-[#f3f6f8] font-['Inter',sans-serif]">

@@ -69,8 +69,8 @@ public class AnalyticsMockSeeder implements DataSeederBase {
         Random random = new Random(42); // deterministic random
 
         DayOfWeek[] days = {
-                DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY,
-                DayOfWeek.THURSDAY, DayOfWeek.FRIDAY, DayOfWeek.SATURDAY
+                DayOfWeek.SUNDAY, DayOfWeek.MONDAY, DayOfWeek.TUESDAY,
+                DayOfWeek.WEDNESDAY, DayOfWeek.THURSDAY
         };
 
         for (Department dept : departments) {
@@ -96,6 +96,16 @@ public class AnalyticsMockSeeder implements DataSeederBase {
                 for (int j = 0; j < numRoutines; j++) {
                     MasterRoutine r = new MasterRoutine();
                     r.setCourse(dummyCourse);
+                    
+                    // Bias towards Tuesday/Wednesday to create a visible curve
+                    int dayIndex;
+                    double rand = random.nextDouble();
+                    if (rand < 0.1) dayIndex = 0; // Sunday
+                    else if (rand < 0.3) dayIndex = 1; // Monday
+                    else if (rand < 0.6) dayIndex = 2; // Tuesday
+                    else if (rand < 0.9) dayIndex = 3; // Wednesday
+                    else dayIndex = 4; // Thursday
+                    
                     r.setDayOfWeek(days[random.nextInt(days.length)]);
 
                     if (random.nextInt(100) > 10 && !allRooms.isEmpty()) {
