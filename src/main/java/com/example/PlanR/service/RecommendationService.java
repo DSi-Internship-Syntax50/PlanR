@@ -16,7 +16,8 @@ import com.example.PlanR.repository.RoomRepository;
 
 /**
  * Service for recommending optimal rooms based on constraints.
- * Refactored to use constructor injection.
+ * Merged: constructor injection + SlotCalculator (ours)
+ *       + optimized findRoomsByCapacityAndType query (other branch).
  */
 @Service
 public class RecommendationService {
@@ -42,30 +43,19 @@ public class RecommendationService {
     public List<RoomRecommendation> recommendRooms(Course course, DayOfWeek dayOfWeek, int startSlotIndex) {
         int endSlotIndex = startSlotIndex + course.getSlotCount() - 1;
 
-        // Strict filters
-        List<Room> allRooms = roomRepository.findAll();
+        // Use optimized query from other branch
+        com.example.PlanR.model.enums.RoomType roomType = (course.getIsLab() != null && course.getIsLab())
+                ? com.example.PlanR.model.enums.RoomType.LAB
+                : com.example.PlanR.model.enums.RoomType.THEORY;
+
+        List<Room> validRoomsFiltered = roomRepository.findRoomsByCapacityAndType(course.getStudentCapacity(), roomType);
         List<Room> validRooms = new ArrayList<>();
 
-        for (Room room : allRooms) {
-            // Check capacity
-            boolean capacityOk = room.getCapacity() != null && course.getStudentCapacity() != null
-                    && room.getCapacity() >= course.getStudentCapacity();
-
-            // Check room type
-            boolean roomTypeOk;
-            if (course.getIsLab() != null && course.getIsLab()) {
-                roomTypeOk = room.getType() == com.example.PlanR.model.enums.RoomType.LAB;
-            } else {
-                roomTypeOk = room.getType() == com.example.PlanR.model.enums.RoomType.THEORY;
-            }
-
-            if (capacityOk && roomTypeOk) {
-                // Check overlaps
-                List<MasterRoutine> overlaps = routineRepository.findOverlappingRoutines(room.getId(), dayOfWeek,
-                        startSlotIndex, endSlotIndex);
-                if (overlaps.isEmpty()) {
-                    validRooms.add(room);
-                }
+        for (Room room : validRoomsFiltered) {
+            List<MasterRoutine> overlaps = routineRepository.findOverlappingRoutines(room.getId(), dayOfWeek,
+                    startSlotIndex, endSlotIndex);
+            if (overlaps.isEmpty()) {
+                validRooms.add(room);
             }
         }
 
@@ -107,7 +97,6 @@ public class RecommendationService {
             recommendations.add(new RoomRecommendation(room, score));
         }
 
-        // Sort by lowest penalty
         recommendations.sort(Comparator.comparingInt(r -> r.penaltyScore));
 
         return recommendations;
@@ -115,7 +104,7 @@ public class RecommendationService {
 
     private int calculatePenalty(Room from, Room to) {
         if (from.getId().equals(to.getId())) {
-            return 0; // Same room
+            return 0;
         }
 
         Integer fromFloor = from.getFloorNumber();
@@ -123,17 +112,16 @@ public class RecommendationService {
         String fromBlock = from.getBlock();
         String toBlock = to.getBlock();
 
-        // Assume missing mappings are high penalty safely
         if (fromFloor == null || toFloor == null || fromBlock == null || toBlock == null) {
             return 10;
         }
 
         if (!fromFloor.equals(toFloor)) {
-            return 10; // Floor change
+            return 10;
         } else if (!fromBlock.equals(toBlock)) {
-            return 5; // Block change
+            return 5;
         } else {
-            return 1; // Room change
+            return 1;
         }
     }
 }

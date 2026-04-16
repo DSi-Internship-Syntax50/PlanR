@@ -5,6 +5,7 @@ import java.util.Map;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.example.PlanR.dto.CourseDTO;
 import com.example.PlanR.exception.SlotConflictException;
+import com.example.PlanR.model.MasterRoutine;
 import com.example.PlanR.model.enums.DayOfWeek;
 import com.example.PlanR.repository.MasterRoutineRepository;
 import com.example.PlanR.service.RoutineQueryService;
@@ -92,5 +94,18 @@ public class ScheduleApiController {
     public ResponseEntity<?> deleteRoutine(@PathVariable Long id) {
         routineRepository.deleteById(id);
         return ResponseEntity.ok(Map.of("message", "Slot freed successfully"));
+    }
+
+    // 6. UNASSIGN ROOM (from other branch)
+    @PostMapping("/unassign/{routineId}")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'COORDINATOR')")
+    public ResponseEntity<?> unassignRoom(@PathVariable Long routineId) {
+        MasterRoutine routine = routineRepository.findById(routineId).orElse(null);
+        if (routine != null) {
+            routine.setRoom(null);
+            routineRepository.save(routine);
+            return ResponseEntity.ok().build();
+        }
+        return ResponseEntity.badRequest().body("Routine not found");
     }
 }

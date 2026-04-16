@@ -2,6 +2,7 @@ package com.example.PlanR.controller;
 
 import com.example.PlanR.dto.EventBookingRequestDto;
 import com.example.PlanR.dto.EventBookingResponseDto;
+import com.example.PlanR.dto.RoomOccupancySlot;
 import com.example.PlanR.service.EventBookingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -57,5 +58,12 @@ public class EventBookingRestController {
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
+    }
+
+    @GetMapping("/bookings/room-occupancy")
+    public ResponseEntity<List<RoomOccupancySlot>> getRoomOccupancy(
+            @RequestParam Long roomId,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+        return ResponseEntity.ok(eventBookingService.getRoomOccupancy(roomId, date));
     }
 }

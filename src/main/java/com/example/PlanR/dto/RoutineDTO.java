@@ -5,7 +5,7 @@ import com.example.PlanR.model.enums.DayOfWeek;
 
 /**
  * DTO for routine data used across multiple API endpoints.
- * Refactored to use SlotCalculator for consistent slot count computation.
+ * Uses SlotCalculator for consistent slot count computation.
  */
 public class RoutineDTO {
     public Long id;

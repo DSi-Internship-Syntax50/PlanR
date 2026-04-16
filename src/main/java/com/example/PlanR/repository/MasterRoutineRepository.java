@@ -50,5 +50,7 @@ public interface MasterRoutineRepository extends JpaRepository<MasterRoutine, Lo
 
     List<MasterRoutine> findByRoomId(Long roomId);
 
+    List<MasterRoutine> findByRoomIdAndDayOfWeek(Long roomId, DayOfWeek dayOfWeek);
+
     List<MasterRoutine> findByRoomIsNull();
 }

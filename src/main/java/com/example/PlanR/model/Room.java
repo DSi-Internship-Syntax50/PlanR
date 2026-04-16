@@ -30,7 +30,7 @@ public class Room {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "room_number")
+    @Column(name = "room_number", nullable = false, unique = true)
     private String roomNumber;
 
     @Enumerated(EnumType.STRING)

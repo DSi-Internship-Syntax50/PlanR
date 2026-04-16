@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
 
 /**
  * Service for auto-generating class schedules.
- * Refactored to use OccupancyGrid and RoomMatcher for cleaner separation of concerns.
+ * Uses OccupancyGrid and RoomMatcher for cleaner separation of concerns.
  */
 @Service
 public class ScheduleService {

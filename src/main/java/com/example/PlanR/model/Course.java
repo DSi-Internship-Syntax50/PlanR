@@ -25,7 +25,7 @@ public class Course {
     @JsonIgnore
     private Department department;
 
-    @Column(name = "course_code")
+    @Column(name = "course_code", nullable = false, unique = true)
     private String courseCode;
 
     private String title;
@@ -128,7 +128,9 @@ public class Course {
     }
 
     public Integer getSlotCount() {
-        return slotCount;
+        if (slotCount != null) return slotCount;
+        if (requiredSlots != null) return requiredSlots;
+        return (Boolean.TRUE.equals(isLab) ? 3 : 1);
     }
 
     public void setSlotCount(Integer slotCount) {

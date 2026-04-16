@@ -8,7 +8,7 @@ import java.time.LocalTime;
 import java.util.List;
 
 @Entity
-@Table(name = "master_routine")
+@Table(name = "master_routine", indexes = {@Index(name = "idx_routine_teacher_day", columnList = "teacher_id, day_of_week")})
 public class MasterRoutine {
 
     @Id

@@ -7,7 +7,7 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 
 @Entity
-@Table(name = "events_and_bookings")
+@Table(name = "events_and_bookings", indexes = {@Index(name = "idx_booking_room_date", columnList = "room_id, specific_date")})
 public class EventBooking {
 
     @Id
