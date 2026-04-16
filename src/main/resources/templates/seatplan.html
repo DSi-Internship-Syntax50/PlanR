@@ -1,5 +1,34 @@
-<!doctype html>
+﻿<!doctype html>
 <html xmlns:th="http://www.thymeleaf.org" lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Exam Seat Plan Generator - PlanR</title>
+    <!-- Tailwind CSS -->
+    <link rel="stylesheet" th:href="@{/css/tailwind-output.css}">
+    <!-- FontAwesome 6 -->
+    <link
+      rel="stylesheet"
+      href="/css/fontawesome/all.min.css"
+    />
+    <!-- Custom CSS -->
+    <link rel="stylesheet" th:href="@{/css/style.css}" />
+
+    <style>
+      /* Soft, elegant seat styling */
+      .seat {
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+      }
+      .seat:hover {
+        transform: translateY(-4px) scale(1.05);
+        z-index: 10;
+      }
+
+      .seat-empty {
+        background: #f9fafb;
+        color: #9ca3af;
+        border: 1px dashed #e5e7eb;
+      }
 
 <head>
   <meta charset="UTF-8" />

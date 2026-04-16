@@ -40,6 +40,18 @@ public class SecurityConfig {
                 // Protect all other routes
                 .anyRequest().authenticated()
             )
+            .headers(headers -> headers
+                .contentSecurityPolicy(csp -> csp
+                    .policyDirectives(
+                        "default-src 'self'; " +
+                        "script-src 'self' 'unsafe-inline' 'unsafe-eval'; " +
+                        "style-src 'self' 'unsafe-inline'; " +
+                        "font-src 'self'; " +
+                        "img-src 'self' data:;"
+                    )
+                )
+                .frameOptions(frame -> frame.deny()) // Prevents your site from being embedded in an iframe (Clickjacking protection)
+            )
             .csrf(csrf -> csrf
                 .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
                 .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler())
