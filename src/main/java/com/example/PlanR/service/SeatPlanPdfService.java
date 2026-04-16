@@ -3,11 +3,11 @@ package com.example.PlanR.service;
 import com.example.PlanR.model.SeatAllocation;
 import com.example.PlanR.model.SeatPlan;
 import com.example.PlanR.repository.SeatPlanRepository;
-import org.springframework.transaction.annotation.Transactional;
 import com.lowagie.text.*;
 import com.lowagie.text.pdf.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.ByteArrayOutputStream;
 import java.time.format.DateTimeFormatter;
