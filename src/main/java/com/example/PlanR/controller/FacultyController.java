@@ -25,7 +25,7 @@ public class FacultyController {
     }
 
     @GetMapping("/faculty")
-    @PreAuthorize("hasRole('SUPERADMIN')")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'TEACHER', 'STUDENT')")
     public String showFacultyHub(Model model) {
         List<User> faculties = userService.findUsersByRole(Role.TEACHER);
         model.addAttribute("faculties", faculties);

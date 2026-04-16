@@ -27,7 +27,7 @@
           >
           <a
             href="/faculty"
-            sec:authorize="hasRole('SUPERADMIN')"
+            sec:authorize="hasAnyRole('SUPERADMIN', 'TEACHER', 'STUDENT')"
             class="hover:text-[#0a192f] hover:bg-gray-100/80 px-4 py-2 rounded-lg transition-all"
             >FACULTY</a
           >
