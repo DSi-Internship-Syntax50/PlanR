@@ -238,6 +238,7 @@
                                         <div class="flex items-center gap-1.5"><div class="w-2.5 h-2.5 bg-green-500 border border-green-600 rounded-sm shadow-sm"></div> OPEN</div>
                                         <div class="flex items-center gap-1.5"><div class="w-2.5 h-2.5 bg-yellow-400 border border-yellow-500 rounded-sm shadow-sm"></div> PENDING</div>
                                         <div class="flex items-center gap-1.5"><div class="w-2.5 h-2.5 bg-red-500 border border-red-600 rounded-sm shadow-sm"></div> BOOKED</div>
+                                        <div class="flex items-center gap-1.5"><div class="w-2.5 h-2.5 bg-slate-500 border border-slate-600 rounded-sm shadow-sm"></div> CLASS</div>
                                     </div>
                                 </div>
 
@@ -267,20 +268,22 @@
                                         
                                         <!-- Right Side: Visual Slots timeline -->
                                         <div class="flex-1 p-2 md:p-3 flex items-center overflow-x-auto gap-1 custom-scrollbar min-h-[4rem]">
-                                            <template x-for="slot in getTimeSlots(r.id, formDate)" :key="slot.start">
+                                            <template x-for="slot in getTimeSlotsFromOccupancy(r.id, formDate)" :key="slot.start">
                                                 <button type="button" 
                                                         @click="if(!slot.isBooked && isTeacherOrAdmin) { openRoomwiseBookFormSpecific(r.id, slot.start, slot.end); }"
                                                         :class="[
                                                             'flex-1 min-w-[3.2rem] md:min-w-[0] h-10 md:h-8 rounded-md flex flex-col items-center justify-center font-bold border transition-all duration-300 relative overflow-hidden',
                                                             slot.isBooked 
-                                                                ? (slot.bookingStatus === 'PENDING' ? 'bg-gradient-to-br from-yellow-300 to-yellow-400 border-yellow-500 shadow-inner cursor-not-allowed opacity-90 hover:opacity-100' : 'bg-gradient-to-br from-red-500 to-red-600 border-red-700 shadow-inner cursor-not-allowed') 
+                                                                ? (slot.isClass ? 'bg-gradient-to-br from-slate-400 to-slate-500 border-slate-600 shadow-inner cursor-not-allowed'
+                                                                   : slot.bookingStatus === 'PENDING' ? 'bg-gradient-to-br from-yellow-300 to-yellow-400 border-yellow-500 shadow-inner cursor-not-allowed opacity-90 hover:opacity-100' : 'bg-gradient-to-br from-red-500 to-red-600 border-red-700 shadow-inner cursor-not-allowed') 
                                                                 : 'bg-[#f1f5f9] border-transparent hover:bg-green-400 hover:border-green-500 hover:shadow-[0_0_15px_rgba(74,222,128,0.4)] cursor-pointer text-transparent hover:scale-[1.02]'
                                                         ]"
                                                         :title="slot.title">
                                                     <!-- Invisible text for screenreaders only -->
                                                     <span class="sr-only" x-text="slot.label"></span>
-                                                    <i x-show="slot.isBooked && slot.bookingStatus === 'PENDING'" class="fas fa-hourglass-half text-[10px] text-yellow-900/60" data-tooltip="Pending"></i>
-                                                    <i x-show="slot.isBooked && slot.bookingStatus !== 'PENDING'" class="fas fa-times text-[10px] text-white/50"></i>
+                                                    <i x-show="slot.isBooked && slot.isClass" class="fas fa-chalkboard-teacher text-[10px] text-white/70"></i>
+                                                    <i x-show="slot.isBooked && !slot.isClass && slot.bookingStatus === 'PENDING'" class="fas fa-hourglass-half text-[10px] text-yellow-900/60"></i>
+                                                    <i x-show="slot.isBooked && !slot.isClass && slot.bookingStatus !== 'PENDING'" class="fas fa-times text-[10px] text-white/50"></i>
                                                 </button>
                                             </template>
                                         </div>
@@ -403,6 +406,9 @@
                 get isAdmin() {
                     return window.USER_ROLE === 'ROLE_COORDINATOR' || window.USER_ROLE === 'ROLE_SUPERADMIN';
                 },
+
+                roomOccupancyCache: {},
+                roomOccupancyLoading: false,
                 
                 formData: {
                     roomId: '',
@@ -429,6 +435,13 @@
                     await this.fetchRooms();
                     await this.fetchBookings();
                     
+                    // Watch for roomwise view opening → trigger occupancy fetch
+                    this.$watch('modalView', (val) => {
+                        if (val === 'roomwise' && this.formDate) {
+                            this.fetchAllRoomOccupancy(this.formDate);
+                        }
+                    });
+
                     setInterval(() => this.fetchBookings(), 30000); 
                 },
 
@@ -539,6 +552,40 @@
 
                 prevPage() {
                     if (this.currentPage > 1) this.currentPage--;
+                },
+
+                async fetchAllRoomOccupancy(dateStr) {
+                    this.roomOccupancyLoading = true;
+                    const roomsToLoad = this.paginatedRooms;
+                    await Promise.all(roomsToLoad.map(async r => {
+                        const key = `${r.id}_${dateStr}`;
+                        if (this.roomOccupancyCache[key]) return;
+                        try {
+                            const res = await fetch(`/api/v1/bookings/room-occupancy?roomId=${r.id}&date=${dateStr}`);
+                            if (res.ok) {
+                                const slots = await res.json();
+                                this.roomOccupancyCache = { ...this.roomOccupancyCache, [key]: slots };
+                            }
+                        } catch(e) { /* ignore */ }
+                    }));
+                    this.roomOccupancyLoading = false;
+                },
+
+                getTimeSlotsFromOccupancy(roomId, dateStr) {
+                    const key = `${roomId}_${dateStr}`;
+                    const occupancy = this.roomOccupancyCache[key];
+                    if (!occupancy) {
+                        return this.getTimeSlots(roomId, dateStr); // fallback while loading
+                    }
+                    return occupancy.map(s => ({
+                        label: s.slotLabel,
+                        start: String(s.hour).padStart(2, '0') + ':00',
+                        end: String(s.hour + 1).padStart(2, '0') + ':00',
+                        isBooked: s.occupancyType !== 'FREE',
+                        isClass: s.occupancyType === 'CLASS',
+                        bookingStatus: s.bookingStatus,
+                        title: s.label || 'Free to book (click)'
+                    }));
                 },
 
                 getTimeSlots(roomId, dateStr) {
