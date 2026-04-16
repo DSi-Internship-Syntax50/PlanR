@@ -37,31 +37,19 @@ public class RecommendationService {
         int endSlotIndex = startSlotIndex + course.getSlotCount() - 1;
 
         // Strict filters
-        List<Room> allRooms = roomRepository.findAll();
+        com.example.PlanR.model.enums.RoomType roomType = (course.getIsLab() != null && course.getIsLab())
+                ? com.example.PlanR.model.enums.RoomType.LAB
+                : com.example.PlanR.model.enums.RoomType.THEORY;
+
+        List<Room> validRoomsFiltered = roomRepository.findRoomsByCapacityAndType(course.getStudentCapacity(), roomType);
         List<Room> validRooms = new ArrayList<>();
 
-        for (Room room : allRooms) {
-            // Check capacity
-            boolean capacityOk = room.getCapacity() != null && course.getStudentCapacity() != null
-                    && room.getCapacity() >= course.getStudentCapacity();
-
-            // Check room type (Simplified matching based on our robust schemas: isLab
-            // implies Lab type)
-            boolean roomTypeOk;
-            if (course.getIsLab() != null && course.getIsLab()) {
-                roomTypeOk = room.getType() == com.example.PlanR.model.enums.RoomType.LAB; // Assuming LAB exists in
-                                                                                           // enum
-            } else {
-                roomTypeOk = room.getType() == com.example.PlanR.model.enums.RoomType.THEORY;
-            }
-
-            if (capacityOk && roomTypeOk) {
-                // Check overlaps
-                List<MasterRoutine> overlaps = routineRepository.findOverlappingRoutines(room.getId(), dayOfWeek,
-                        startSlotIndex, endSlotIndex);
-                if (overlaps.isEmpty()) {
-                    validRooms.add(room);
-                }
+        for (Room room : validRoomsFiltered) {
+            // Check overlaps
+            List<MasterRoutine> overlaps = routineRepository.findOverlappingRoutines(room.getId(), dayOfWeek,
+                    startSlotIndex, endSlotIndex);
+            if (overlaps.isEmpty()) {
+                validRooms.add(room);
             }
         }
 

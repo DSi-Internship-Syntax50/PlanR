@@ -16,7 +16,7 @@ public class Department {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "short_code")
+    @Column(name = "short_code", nullable = false, unique = true)
     private String shortCode;
 
     private String name;

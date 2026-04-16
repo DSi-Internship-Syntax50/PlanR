@@ -25,7 +25,7 @@ public class Course {
     @JsonIgnore
     private Department department;
 
-    @Column(name = "course_code")
+    @Column(name = "course_code", nullable = false, unique = true)
     private String courseCode;
 
     private String title;

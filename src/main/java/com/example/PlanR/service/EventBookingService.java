@@ -116,16 +116,13 @@ public class EventBookingService {
     public List<EventBookingResponseDto> getBookingsForMonth(LocalDate targetDate, String username, boolean isAdmin) {
         LocalDate startDate = targetDate.withDayOfMonth(1);
         LocalDate endDate = targetDate.withDayOfMonth(targetDate.lengthOfMonth());
-        return bookingRepository.findBySpecificDateBetween(startDate, endDate)
+        return bookingRepository.findVisibleBookingsForMonth(startDate, endDate, username, isAdmin)
                 .stream()
-                .filter(b -> isAdmin
-                        || b.getStatus() == BookingStatus.APPROVED
-                        || (b.getRequestedBy() != null && b.getRequestedBy().getEmail().equals(username)))
                 .map(EventBookingResponseDto::new)
                 .collect(Collectors.toList());
     }
 
-    @Transactional(isolation = Isolation.SERIALIZABLE)
+    @Transactional
     public EventBookingResponseDto bookSlot(EventBookingRequestDto requestDto, String username) {
         Room room = roomRepository.findById(requestDto.getRoomId())
                 .orElseThrow(() -> new RuntimeException("Room not found"));

@@ -28,4 +28,10 @@ public interface EventBookingRepository extends JpaRepository<EventBooking, Long
             @Param("date") LocalDate date, 
             @Param("startTime") LocalTime startTime, 
             @Param("endTime") LocalTime endTime);
+    @Query("SELECT b FROM EventBooking b WHERE b.specificDate BETWEEN :startDate AND :endDate " +
+           "AND (:isAdmin = true OR b.status = 'APPROVED' OR b.requestedBy.email = :username)")
+    List<EventBooking> findVisibleBookingsForMonth(@Param("startDate") java.time.LocalDate startDate, 
+                                                   @Param("endDate") java.time.LocalDate endDate, 
+                                                   @Param("username") String username, 
+                                                   @Param("isAdmin") boolean isAdmin);
 }
