@@ -76,19 +76,44 @@ public class EventBookingService {
                 .map(co -> co.getRoutine().getId())
                 .collect(Collectors.toSet());
 
-        // 4. Mark CLASS slots (slot index → hour: slotN = 7+N)
+        // 4. Mark CLASS slots
+        // Slot mapping: slot 1→8:00, slot 2→9:30, slot 3→11:00, slot 4→12:30, slot 5→14:00, slot 6→15:30
+        // Each slot spans 1.5 hours. Duration is in slots, so total hours = duration * 1.5
         for (MasterRoutine rt : routines) {
             if (cancelledRoutineIds.contains(rt.getId())) continue; // skip cancelled
-            if (rt.getStartSlotIndex() == null) continue;
 
-            int startHour = 7 + rt.getStartSlotIndex(); // slot 1 → 8AM
-            int duration = (rt.getCourse() != null && rt.getCourse().getRequiredSlots() != null)
-                    ? rt.getCourse().getRequiredSlots()
-                    : (rt.getCourse() != null && Boolean.TRUE.equals(rt.getCourse().getIsLab()) ? 3 : 1);
+            int startHour;
+            int endHour;
+
+            if (rt.getStartSlotIndex() != null) {
+                // Slot index based mapping (from routine builder)
+                double startHourFloat = 8.0 + (rt.getStartSlotIndex() - 1) * 1.5;
+                startHour = (int) startHourFloat;
+
+                int durationSlots = 1;
+                if (rt.getCourse() != null) {
+                    if (rt.getCourse().getRequiredSlots() != null) {
+                        durationSlots = rt.getCourse().getRequiredSlots();
+                    } else if (rt.getCourse().getSlotCount() != null) {
+                        durationSlots = rt.getCourse().getSlotCount();
+                    } else if (Boolean.TRUE.equals(rt.getCourse().getIsLab())) {
+                        durationSlots = 3;
+                    }
+                }
+                double totalHours = durationSlots * 1.5;
+                endHour = (int) Math.ceil(startHourFloat + totalHours);
+            } else if (rt.getStartTime() != null && rt.getEndTime() != null) {
+                // Fallback to time-based for manual/legacy entries
+                startHour = rt.getStartTime().getHour();
+                endHour = rt.getEndTime().getHour();
+                if (rt.getEndTime().getMinute() > 0) endHour++;
+            } else {
+                continue; // Cannot determine occupancy, skip
+            }
+
             String courseCode = (rt.getCourse() != null) ? rt.getCourse().getCourseCode() : "Class";
 
-            for (int i = 0; i < duration; i++) {
-                int h = startHour + i;
+            for (int h = startHour; h < endHour; h++) {
                 if (h >= 8 && h < 20) {
                     grid.get(h - 8).markAsClass(courseCode);
                 }
