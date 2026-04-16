@@ -70,7 +70,7 @@ public class RoomSeeder implements DataSeederBase {
                     r.setFloorNumber(fl);
                     String st = String.valueOf(ch);
                     r.setBlock(st);
-                    r.setRoomNumber(st + fl + "0" + i);
+                    r.setRoomNumber(fl + st + "0" + i);
 
                     // Make some rooms Labs so the generator has places to put Lab courses
                     if (i % 3 == 0) {

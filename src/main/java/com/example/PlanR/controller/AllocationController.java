@@ -8,8 +8,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 
 import com.example.PlanR.model.Department;
 import com.example.PlanR.model.Room;
-import com.example.PlanR.repository.DepartmentRepository;
-import com.example.PlanR.repository.RoomRepository;
+import com.example.PlanR.service.DepartmentService;
+import com.example.PlanR.service.RoomService;
 
 /**
  * Handles room allocation and seat plan pages.
@@ -18,18 +18,18 @@ import com.example.PlanR.repository.RoomRepository;
 @Controller
 public class AllocationController {
 
-    private final RoomRepository roomRepository;
-    private final DepartmentRepository departmentRepository;
+    private final RoomService roomService;
+    private final DepartmentService departmentService;
 
-    public AllocationController(RoomRepository roomRepository, DepartmentRepository departmentRepository) {
-        this.roomRepository = roomRepository;
-        this.departmentRepository = departmentRepository;
+    public AllocationController(RoomService roomService, DepartmentService departmentService) {
+        this.roomService = roomService;
+        this.departmentService = departmentService;
     }
 
     @GetMapping("/allocation")
     public String showAllocationHub(Model model) {
-        List<Room> rooms = roomRepository.findAll();
-        List<Department> departments = departmentRepository.findAll();
+        List<Room> rooms = roomService.findAllRooms();
+        List<Department> departments = departmentService.findAllDepartments();
         model.addAttribute("rooms", rooms);
         model.addAttribute("departments", departments);
         return "allocation";
@@ -37,8 +37,8 @@ public class AllocationController {
 
     @GetMapping("/operations")
     public String showSeatPlanTool(Model model) {
-        List<Room> rooms = roomRepository.findAll();
-        List<Department> departments = departmentRepository.findAll();
+        List<Room> rooms = roomService.findAllRooms();
+        List<Department> departments = departmentService.findAllDepartments();
         model.addAttribute("rooms", rooms);
         model.addAttribute("departments", departments);
         return "seatplan";

@@ -1,7 +1,7 @@
 package com.example.PlanR.controller;
 
 import com.example.PlanR.model.User;
-import com.example.PlanR.repository.UserRepository;
+import com.example.PlanR.service.UserService;
 import com.example.PlanR.service.AiService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -15,11 +15,11 @@ import java.util.Map;
 public class AiController {
 
     private final AiService aiService;
-    private final UserRepository userRepository;
+    private final UserService userService;
 
-    public AiController(AiService aiService, UserRepository userRepository) {
+    public AiController(AiService aiService, UserService userService) {
         this.aiService = aiService;
-        this.userRepository = userRepository;
+        this.userService = userService;
     }
 
     @PostMapping("/ask")
@@ -28,7 +28,7 @@ public class AiController {
             return ResponseEntity.status(401).build();
         }
 
-        User user = userRepository.findByEmail(userDetails.getUsername())
+        User user = userService.findUserByEmail(userDetails.getUsername())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         String query = request.get("query");

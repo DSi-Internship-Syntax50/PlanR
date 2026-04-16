@@ -7,8 +7,8 @@ import org.springframework.web.bind.annotation.*;
 import com.example.PlanR.model.Department;
 import com.example.PlanR.model.Room;
 import com.example.PlanR.dto.RoomCreateDto;
-import com.example.PlanR.repository.DepartmentRepository;
-import com.example.PlanR.repository.RoomRepository;
+import com.example.PlanR.service.DepartmentService;
+import com.example.PlanR.service.RoomService;
 
 import jakarta.validation.Valid;
 
@@ -21,12 +21,12 @@ import jakarta.validation.Valid;
 @RequestMapping("/api/rooms")
 public class RoomController {
 
-    private final RoomRepository roomRepository;
-    private final DepartmentRepository departmentRepository;
+    private final RoomService roomService;
+    private final DepartmentService departmentService;
 
-    public RoomController(RoomRepository roomRepository, DepartmentRepository departmentRepository) {
-        this.roomRepository = roomRepository;
-        this.departmentRepository = departmentRepository;
+    public RoomController(RoomService roomService, DepartmentService departmentService) {
+        this.roomService = roomService;
+        this.departmentService = departmentService;
     }
 
     // --- CREATE ---
@@ -41,7 +41,7 @@ public class RoomController {
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('SUPERADMIN', 'COORDINATOR')")
     public ResponseEntity<Room> updateRoom(@PathVariable Long id, @Valid @RequestBody RoomCreateDto dto) {
-        Room room = roomRepository.findById(id).orElse(null);
+        Room room = roomService.findRoomById(id).orElse(null);
         if (room == null) {
             return ResponseEntity.notFound().build();
         }
@@ -52,10 +52,10 @@ public class RoomController {
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAnyRole('SUPERADMIN', 'COORDINATOR')")
     public ResponseEntity<?> deleteRoom(@PathVariable Long id) {
-        if (!roomRepository.existsById(id)) {
+        if (!roomService.existsById(id)) {
             return ResponseEntity.notFound().build();
         }
-        roomRepository.deleteById(id);
+        roomService.deleteRoomById(id);
         return ResponseEntity.ok().build();
     }
 
@@ -70,7 +70,7 @@ public class RoomController {
         room.setBlock(dto.getBlock());
 
         if (dto.getDeptId() != null) {
-            Department dept = departmentRepository.findById(dto.getDeptId()).orElse(null);
+            Department dept = departmentService.findDepartmentById(dto.getDeptId()).orElse(null);
             if (dept != null) {
                 room.setDept(dept.getShortCode());
                 room.setDepartment(dept);
@@ -80,7 +80,7 @@ public class RoomController {
             room.setDepartment(null);
         }
 
-        Room savedRoom = roomRepository.save(room);
+        Room savedRoom = roomService.saveRoom(room);
         return ResponseEntity.ok(savedRoom);
     }
 }

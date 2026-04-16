@@ -18,7 +18,7 @@ import com.example.PlanR.dto.CourseDTO;
 import com.example.PlanR.exception.SlotConflictException;
 import com.example.PlanR.model.MasterRoutine;
 import com.example.PlanR.model.enums.DayOfWeek;
-import com.example.PlanR.repository.MasterRoutineRepository;
+import com.example.PlanR.service.MasterRoutineService;
 import com.example.PlanR.service.RoutineQueryService;
 import com.example.PlanR.service.ScheduleActionService;
 import com.example.PlanR.service.ScheduleService;
@@ -34,16 +34,16 @@ public class ScheduleApiController {
     private final ScheduleService scheduleService;
     private final ScheduleActionService scheduleActionService;
     private final RoutineQueryService routineQueryService;
-    private final MasterRoutineRepository routineRepository;
+    private final MasterRoutineService routineService;
 
     public ScheduleApiController(ScheduleService scheduleService,
                                  ScheduleActionService scheduleActionService,
                                  RoutineQueryService routineQueryService,
-                                 MasterRoutineRepository routineRepository) {
+                                 MasterRoutineService routineService) {
         this.scheduleService = scheduleService;
         this.scheduleActionService = scheduleActionService;
         this.routineQueryService = routineQueryService;
-        this.routineRepository = routineRepository;
+        this.routineService = routineService;
     }
 
     // 1. AUTO-GENERATE
@@ -92,7 +92,7 @@ public class ScheduleApiController {
     // 5. DELETE A ROUTINE SLOT
     @DeleteMapping("/routine/{id}")
     public ResponseEntity<?> deleteRoutine(@PathVariable Long id) {
-        routineRepository.deleteById(id);
+        routineService.deleteRoutineById(id);
         return ResponseEntity.ok(Map.of("message", "Slot freed successfully"));
     }
 
@@ -100,10 +100,10 @@ public class ScheduleApiController {
     @PostMapping("/unassign/{routineId}")
     @PreAuthorize("hasAnyRole('SUPERADMIN', 'COORDINATOR')")
     public ResponseEntity<?> unassignRoom(@PathVariable Long routineId) {
-        MasterRoutine routine = routineRepository.findById(routineId).orElse(null);
+        MasterRoutine routine = routineService.findRoutineById(routineId).orElse(null);
         if (routine != null) {
             routine.setRoom(null);
-            routineRepository.save(routine);
+            routineService.saveRoutine(routine);
             return ResponseEntity.ok().build();
         }
         return ResponseEntity.badRequest().body("Routine not found");
