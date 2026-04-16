@@ -44,9 +44,9 @@ public class SecurityConfig {
                 .contentSecurityPolicy(csp -> csp
                     .policyDirectives(
                         "default-src 'self'; " +
-                        "script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com; " +
-                        "style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com; " +
-                        "font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com; " +
+                        "script-src 'self' 'unsafe-inline' 'unsafe-eval'; " +
+                        "style-src 'self' 'unsafe-inline'; " +
+                        "font-src 'self'; " +
                         "img-src 'self' data:;"
                     )
                 )

@@ -5,6 +5,29 @@ const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.getAttri
 const userRole = document.body.getAttribute('data-user-role') || 'GUEST';
 const canEdit = (userRole === 'SUPERADMIN' || userRole === 'COORDINATOR');
 
+// --- PURE GLOBAL HELPERS ---
+function getCookie(name) {
+  let value = "; " + document.cookie;
+  let parts = value.split("; " + name + "=");
+  if (parts.length === 2) return parts.pop().split(";").shift();
+  return "";
+}
+
+async function apiFetch(url, options = {}) {
+  const csrfTokenCookie = getCookie("XSRF-TOKEN");
+  const headers = new Headers(options.headers || {});
+  
+  if (csrfTokenCookie) {
+    headers.append("X-XSRF-TOKEN", csrfTokenCookie);
+  } else if (csrfHeader && csrfToken) {
+    headers.append(csrfHeader, csrfToken);
+  }
+
+  const newOptions = { ...options, headers };
+  return fetch(url, newOptions);
+}
+
+
 // --- PURE SLOT CONFIGURATION ---
 const MAX_SLOTS = 12; // Adjusted to match routine builder strictly by slots
 const daysOrder = ["SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY"];

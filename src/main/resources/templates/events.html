@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html xmlns:th="http://www.thymeleaf.org" lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -6,16 +6,16 @@
     <meta name="_csrf_header" th:content="${_csrf.headerName}" />
     <title>Event Bookings spreadsheet - PlanR</title>
     <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" th:href="@{/css/tailwind-output.css}">
     <!-- Alpine.js -->
     <script
       defer
-      src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"
+      src="/js/alpine.min.js"
     ></script>
     <!-- FontAwesome 6 -->
     <link
       rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+      href="/css/fontawesome/all.min.css"
     />
     <!-- Custom CSS -->
     <link rel="stylesheet" th:href="@{/css/style.css}" />
