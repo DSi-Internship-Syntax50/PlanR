@@ -16,6 +16,12 @@ public interface EventBookingRepository extends JpaRepository<EventBooking, Long
     List<EventBooking> findBySpecificDateBetween(LocalDate startDate, LocalDate endDate);
 
     @Query("SELECT e FROM EventBooking e WHERE e.room.id = :roomId AND e.specificDate = :date " +
+           "AND e.status NOT IN ('REJECTED', 'DISPLACED')")
+    List<EventBooking> findByRoomIdAndSpecificDate(
+            @Param("roomId") Long roomId,
+            @Param("date") LocalDate date);
+
+    @Query("SELECT e FROM EventBooking e WHERE e.room.id = :roomId AND e.specificDate = :date " +
            "AND e.startTime < :endTime AND e.endTime > :startTime AND e.status != 'REJECTED' AND e.status != 'DISPLACED'")
     List<EventBooking> findOverlappingBookings(
             @Param("roomId") Long roomId, 
