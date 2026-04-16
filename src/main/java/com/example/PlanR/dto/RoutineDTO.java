@@ -42,7 +42,7 @@ public class RoutineDTO {
         }
         this.dayOfWeek = routine.getDayOfWeek();
         this.startSlotIndex = routine.getStartSlotIndex();
-        this.slotCount = routine.getCourse() != null && routine.getCourse().getSlotCount() != null ? routine.getCourse().getSlotCount() : 1;
+        this.slotCount = routine.getCourse() != null ? routine.getCourse().getSlotCount() : 1;
         
         if (routine.getRoom() != null) {
             this.roomId = routine.getRoom().getId();

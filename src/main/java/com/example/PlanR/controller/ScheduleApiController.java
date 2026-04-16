@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -77,15 +78,18 @@ public class ScheduleApiController {
                 courseDto.put("courseCode", rt.getCourse().getCourseCode());
                 courseDto.put("title", rt.getCourse().getTitle());
                 courseDto.put("isLab", rt.getCourse().getIsLab());
-
-                int slotCount = rt.getCourse().getRequiredSlots() != null ? rt.getCourse().getRequiredSlots(): (Boolean.TRUE.equals(rt.getCourse().getIsLab()) ? 3 : 1);
-                courseDto.put("slotCount", slotCount);
+                
+                // MERGED LOGIC: Bulletproof slot counting (Labs = 3 slots, Theory = 1 slot)
+                Integer slotCount = rt.getCourse().getSlotCount();
+                if (slotCount == null) slotCount = rt.getCourse().getRequiredSlots();
+                if (slotCount == null) slotCount = Boolean.TRUE.equals(rt.getCourse().getIsLab()) ? 3 : 1;
+                
+                courseDto.put("slotCount", slotCount); 
                 dto.put("course", courseDto);
 
                 if (rt.getTeacher() != null)
                     dto.put("teacher", Map.of("id", rt.getTeacher().getId()));
 
-                // FIXED: Now mapping the room's floor number and block to the JSON
                 if (rt.getRoom() != null) {
                     Map<String, Object> roomDto = new HashMap<>();
                     roomDto.put("id", rt.getRoom().getId());
@@ -117,9 +121,12 @@ public class ScheduleApiController {
             dto.put("id", c.getId());
             dto.put("courseCode", c.getCourseCode());
             dto.put("title", c.getTitle());
-
-            int slotCount = c.getRequiredSlots() != null ? c.getRequiredSlots()
-                    : (Boolean.TRUE.equals(c.getIsLab()) ? 3 : 1);
+            
+            // MERGED LOGIC: Bulletproof slot counting
+            Integer slotCount = c.getSlotCount();
+            if (slotCount == null) slotCount = c.getRequiredSlots();
+            if (slotCount == null) slotCount = Boolean.TRUE.equals(c.getIsLab()) ? 3 : 1;
+            
             dto.put("slotCount", slotCount);
             response.add(dto);
         }
@@ -133,9 +140,8 @@ public class ScheduleApiController {
             @RequestParam Long teacherId,
             @RequestParam DayOfWeek dayOfWeek,
             @RequestParam int startSlotIndex,
-            @RequestParam(required = false) Long roomId) { // Allow optional Room ID
+            @RequestParam(required = false) Long roomId) { 
         try {
-            // Using your existing Action Service to handle conflicts properly!
             scheduleActionService.allocateClass(courseId, teacherId, roomId, dayOfWeek, startSlotIndex);
             return ResponseEntity.ok(Map.of("message", "Class scheduled successfully!"));
 
@@ -151,5 +157,18 @@ public class ScheduleApiController {
     public ResponseEntity<?> deleteRoutine(@PathVariable Long id) {
         routineRepository.deleteById(id);
         return ResponseEntity.ok(Map.of("message", "Slot freed successfully"));
+    }
+
+    // 6. UNASSIGN ROOM (Kept Secure)
+    @PostMapping("/unassign/{routineId}")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'COORDINATOR')")
+    public ResponseEntity<?> unassignRoom(@PathVariable Long routineId) {
+        MasterRoutine routine = routineRepository.findById(routineId).orElse(null);
+        if (routine != null) {
+            routine.setRoom(null); // Remove the room allocation
+            routineRepository.save(routine);
+            return ResponseEntity.ok().build();
+        }
+        return ResponseEntity.badRequest().body("Routine not found");
     }
 }
