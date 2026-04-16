@@ -94,7 +94,7 @@
                     aiChatBody.scrollTop = aiChatBody.scrollHeight;
 
                     try {
-                        const response = await fetch('/api/ai/ask', {
+                        const response = await apiFetch('/api/ai/ask', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({ query })

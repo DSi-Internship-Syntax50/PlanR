@@ -9,6 +9,11 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import java.io.PrintWriter;
 
 @Configuration
 @EnableWebSecurity
@@ -35,7 +40,10 @@ public class SecurityConfig {
                 // Protect all other routes
                 .anyRequest().authenticated()
             )
-            .csrf(csrf -> csrf.ignoringRequestMatchers("/api/**"))
+            .csrf(csrf -> csrf
+                .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+                .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler())
+            )
             .formLogin(form -> form
                 // Custom login page
                 .loginPage("/login")
@@ -58,14 +66,31 @@ public class SecurityConfig {
                 .permitAll()
             )
             .userDetailsService(userDetailsService)
-            // Custom exception handling
             .exceptionHandling(ex -> ex
+                .defaultAuthenticationEntryPointFor(
+                    (request, response, authException) -> {
+                        response.setStatus(HttpStatus.UNAUTHORIZED.value());
+                        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+                        try (PrintWriter writer = response.getWriter()) {
+                            writer.write("{\"error\": \"Unauthorized access\"}");
+                        }
+                    }, 
+                    request -> request.getRequestURI().startsWith("/api/")
+                )
                 .accessDeniedHandler((request, response, accessDeniedException) -> {
-                    response.sendRedirect("/dashboard");
+                    if (request.getRequestURI().startsWith("/api/")) {
+                        response.setStatus(HttpStatus.FORBIDDEN.value());
+                        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+                        try (PrintWriter writer = response.getWriter()) {
+                            writer.write("{\"error\": \"Insufficient privileges\"}");
+                        }
+                    } else {
+                        response.sendRedirect("/dashboard");
+                    }
                 })
             );
 
-                return http.build();
+            return http.build();
         }
 
     @Bean

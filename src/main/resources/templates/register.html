@@ -1,324 +1,379 @@
-<!DOCTYPE html>
+<!doctype html>
 <html xmlns:th="http://www.thymeleaf.org">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Register - PlanR</title>
     <!-- Google Fonts: Inter -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
-        rel="stylesheet">
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
     <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
     <style>
-        :root {
-            --primary: #2563eb;
-            --primary-hover: #1d4ed8;
-            --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-            --glass-bg: rgba(255, 255, 255, 0.05);
-            --glass-border: rgba(255, 255, 255, 0.1);
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
+      :root {
+        --primary: #2563eb;
+        --primary-hover: #1d4ed8;
+        --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+        --glass-bg: rgba(255, 255, 255, 0.05);
+        --glass-border: rgba(255, 255, 255, 0.1);
+        --text-main: #f8fafc;
+        --text-muted: #94a3b8;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: "Inter", sans-serif;
+      }
+
+      body {
+        background: var(--bg-gradient);
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        color: var(--text-main);
+        padding: 40px 20px;
+      }
+
+      .bg-blob {
+        position: absolute;
+        width: 600px;
+        height: 600px;
+        background: radial-gradient(
+          circle,
+          rgba(37, 99, 235, 0.1) 0%,
+          transparent 70%
+        );
+        border-radius: 50%;
+        z-index: -1;
+        filter: blur(60px);
+        animation: move 25s infinite alternate;
+      }
+
+      .blob-1 {
+        top: -10%;
+        right: -10%;
+      }
+
+      .blob-2 {
+        bottom: -10%;
+        left: -10%;
+        animation-delay: -7s;
+      }
+
+      @keyframes move {
+        from {
+          transform: translate(0, 0) scale(1);
         }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Inter', sans-serif;
+        to {
+          transform: translate(-100px, 50px) scale(1.2);
+        }
+      }
+
+      .register-card {
+        background: var(--glass-bg);
+        backdrop-filter: blur(20px);
+        border: 1px solid var(--glass-border);
+        padding: 40px;
+        border-radius: 28px;
+        width: 100%;
+        max-width: 480px;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        animation: fadeIn 0.8s ease-out;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
         }
 
-        body {
-            background: var(--bg-gradient);
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            color: var(--text-main);
-            padding: 40px 20px;
+        to {
+          opacity: 1;
+          transform: translateY(0);
         }
+      }
 
-        .bg-blob {
-            position: absolute;
-            width: 600px;
-            height: 600px;
-            background: radial-gradient(circle, rgba(37, 99, 235, 0.1) 0%, transparent 70%);
-            border-radius: 50%;
-            z-index: -1;
-            filter: blur(60px);
-            animation: move 25s infinite alternate;
-        }
+      .brand {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-bottom: 32px;
+      }
 
-        .blob-1 {
-            top: -10%;
-            right: -10%;
-        }
+      .logo-icon {
+        width: 44px;
+        height: 44px;
+        background: linear-gradient(135deg, #2563eb, #7c3aed);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 16px;
+        box-shadow: 0 0 20px rgba(37, 99, 235, 0.3);
+      }
 
-        .blob-2 {
-            bottom: -10%;
-            left: -10%;
-            animation-delay: -7s;
-        }
+      .brand h1 {
+        font-size: 24px;
+        font-weight: 800;
+        letter-spacing: -1px;
+      }
 
-        @keyframes move {
-            from {
-                transform: translate(0, 0) scale(1);
-            }
+      .brand span {
+        color: var(--primary);
+      }
 
-            to {
-                transform: translate(-100px, 50px) scale(1.2);
-            }
-        }
+      .form-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
 
-        .register-card {
-            background: var(--glass-bg);
-            backdrop-filter: blur(20px);
-            border: 1px solid var(--glass-border);
-            padding: 40px;
-            border-radius: 28px;
-            width: 100%;
-            max-width: 480px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-            animation: fadeIn 0.8s ease-out;
-        }
+      .form-group {
+        margin-bottom: 0;
+      }
 
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
+      .form-group label {
+        display: block;
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--text-muted);
+        margin-bottom: 6px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
 
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
+      .input-wrapper {
+        position: relative;
+      }
 
-        .brand {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            margin-bottom: 32px;
-        }
+      .input-wrapper i {
+        position: absolute;
+        left: 14px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-muted);
+        font-size: 13px;
+      }
 
-        .logo-icon {
-            width: 44px;
-            height: 44px;
-            background: linear-gradient(135deg, #2563eb, #7c3aed);
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 16px;
-            box-shadow: 0 0 20px rgba(37, 99, 235, 0.3);
-        }
+      .form-group input,
+      .form-group select {
+        width: 100%;
+        background: rgba(0, 0, 0, 0.2);
+        border: 1px solid var(--glass-border);
+        border-radius: 12px;
+        padding: 10px 14px 10px 42px;
+        color: white;
+        font-size: 14px;
+        transition: all 0.3s;
+        appearance: none;
+      }
 
-        .brand h1 {
-            font-size: 24px;
-            font-weight: 800;
-            letter-spacing: -1px;
-        }
+      .form-group select {
+        cursor: pointer;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 12px center;
+        background-size: 16px;
+      }
 
-        .brand span {
-            color: var(--primary);
-        }
+      .form-group input:focus,
+      .form-group select:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+        background: rgba(0, 0, 0, 0.3);
+      }
 
-        .form-grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 16px;
-        }
+      .error-message {
+        color: #f87171;
+        font-size: 11px;
+        margin-top: 4px;
+        display: block;
+        font-weight: 500;
+      }
 
-        .form-group {
-            margin-bottom: 0;
-        }
+      .btn-submit {
+        width: 100%;
+        background: var(--primary);
+        color: white;
+        border: none;
+        padding: 14px;
+        border-radius: 12px;
+        font-size: 15px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.3s;
+        margin-top: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+      }
 
-        .form-group label {
-            display: block;
-            font-size: 11px;
-            font-weight: 700;
-            color: var(--text-muted);
-            margin-bottom: 6px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
+      .btn-submit:hover {
+        background: var(--primary-hover);
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px -5px rgba(37, 99, 235, 0.4);
+      }
 
-        .input-wrapper {
-            position: relative;
-        }
+      .footer-link {
+        text-align: center;
+        margin-top: 24px;
+        font-size: 14px;
+        color: var(--text-muted);
+      }
 
-        .input-wrapper i {
-            position: absolute;
-            left: 14px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--text-muted);
-            font-size: 13px;
-        }
+      .footer-link a {
+        color: var(--primary);
+        text-decoration: none;
+        font-weight: 600;
+      }
 
-        .form-group input,
-        .form-group select {
-            width: 100%;
-            background: rgba(0, 0, 0, 0.2);
-            border: 1px solid var(--glass-border);
-            border-radius: 12px;
-            padding: 10px 14px 10px 42px;
-            color: white;
-            font-size: 14px;
-            transition: all 0.3s;
-            appearance: none;
-        }
-
-        .form-group select {
-            cursor: pointer;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: right 12px center;
-            background-size: 16px;
-        }
-
-        .form-group input:focus,
-        .form-group select:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
-            background: rgba(0, 0, 0, 0.3);
-        }
-
-        .error-message {
-            color: #f87171;
-            font-size: 11px;
-            margin-top: 4px;
-            display: block;
-            font-weight: 500;
-        }
-
-        .btn-submit {
-            width: 100%;
-            background: var(--primary);
-            color: white;
-            border: none;
-            padding: 14px;
-            border-radius: 12px;
-            font-size: 15px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.3s;
-            margin-top: 24px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-
-        .btn-submit:hover {
-            background: var(--primary-hover);
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px -5px rgba(37, 99, 235, 0.4);
-        }
-
-        .footer-link {
-            text-align: center;
-            margin-top: 24px;
-            font-size: 14px;
-            color: var(--text-muted);
-        }
-
-        .footer-link a {
-            color: var(--primary);
-            text-decoration: none;
-            font-weight: 600;
-        }
-
-        .footer-link a:hover {
-            text-decoration: underline;
-        }
+      .footer-link a:hover {
+        text-decoration: underline;
+      }
     </style>
-</head>
+  </head>
 
-<body>
+  <body>
     <div class="bg-blob blob-1"></div>
     <div class="bg-blob blob-2"></div>
 
     <div class="register-card">
-        <div class="brand">
-            <div class="logo-icon">
-                <i class="fas fa-layer-group text-white text-lg"></i>
+      <div class="brand">
+        <div class="logo-icon">
+          <i class="fas fa-layer-group text-white text-lg"></i>
+        </div>
+        <h1>Create <span>Account</span></h1>
+      </div>
+
+      <form
+        th:action="@{/admin/users/create}"
+        th:object="${registrationForm}"
+        method="post"
+      >
+        <div class="form-grid">
+          <!-- Full Name -->
+          <div class="form-group">
+            <label for="name">Full Name</label>
+            <div class="input-wrapper">
+              <i class="fas fa-user"></i>
+              <input
+                type="text"
+                id="name"
+                th:field="*{name}"
+                placeholder="John Doe"
+                autofocus
+              />
             </div>
-            <h1>Create <span>Account</span></h1>
+            <span
+              th:if="${#fields.hasErrors('name')}"
+              th:errors="*{name}"
+              class="error-message"
+            ></span>
+          </div>
+
+          <!-- Email Address -->
+          <div class="form-group">
+            <label for="email">Corporate Email</label>
+            <div class="input-wrapper">
+              <i class="fas fa-envelope"></i>
+              <input
+                type="email"
+                id="email"
+                th:field="*{email}"
+                placeholder="john@university.edu"
+              />
+            </div>
+            <span
+              th:if="${#fields.hasErrors('email')}"
+              th:errors="*{email}"
+              class="error-message"
+            ></span>
+          </div>
+
+          <!-- Role Selection -->
+          <div class="form-group">
+            <label for="role">Target Role</label>
+            <div class="input-wrapper">
+              <i class="fas fa-id-badge"></i>
+              <select id="role" th:field="*{role}">
+                <option value="">-- Select Role --</option>
+                <option
+                  th:each="r : ${roles}"
+                  th:value="${r}"
+                  th:text="${r}"
+                ></option>
+              </select>
+            </div>
+            <span
+              th:if="${#fields.hasErrors('role')}"
+              th:errors="*{role}"
+              class="error-message"
+            ></span>
+          </div>
+
+          <!-- Department Selection -->
+          <div class="form-group">
+            <label for="departmentId">Domain / Department</label>
+            <div class="input-wrapper">
+              <i class="fas fa-building"></i>
+              <select id="departmentId" th:field="*{departmentId}">
+                <option value="">-- Select Department --</option>
+                <option
+                  th:each="dept : ${departments}"
+                  th:value="${dept.id}"
+                  th:text="${dept.shortCode + ' - ' + dept.name}"
+                ></option>
+              </select>
+            </div>
+            <span
+              th:if="${#fields.hasErrors('departmentId')}"
+              th:errors="*{departmentId}"
+              class="error-message"
+            ></span>
+          </div>
+
+          <!-- Password -->
+          <div class="form-group">
+            <label for="password">Security Identifier</label>
+            <div class="input-wrapper">
+              <i class="fas fa-lock"></i>
+              <input
+                type="password"
+                name="password"
+                id="password"
+                th:field="*{password}"
+                required
+                minlength="6"
+                placeholder="Min. 6 strong characters"
+              />
+            </div>
+            <span
+              th:if="${#fields.hasErrors('password')}"
+              th:errors="*{password}"
+              class="error-message"
+            ></span>
+          </div>
         </div>
 
-         <form th:action="@{/admin/users/create}" th:object="${registrationForm}" method="post">
-            <div class="form-grid">
-                <!-- Full Name -->
-                <div class="form-group">
-                    <label for="name">Full Name</label>
-                    <div class="input-wrapper">
-                        <i class="fas fa-user"></i>
-                        <input type="text" id="name" th:field="*{name}" placeholder="John Doe" autofocus />
-                    </div>
-                    <span th:if="${#fields.hasErrors('name')}" th:errors="*{name}" class="error-message"></span>
-                </div>
+        <button type="submit" class="btn-submit">
+          Initialize Account <i class="fas fa-user-plus"></i>
+        </button>
 
-                <!-- Email Address -->
-                <div class="form-group">
-                    <label for="email">Corporate Email</label>
-                    <div class="input-wrapper">
-                        <i class="fas fa-envelope"></i>
-                        <input type="email" id="email" th:field="*{email}" placeholder="john@university.edu" />
-                    </div>
-                    <span th:if="${#fields.hasErrors('email')}" th:errors="*{email}" class="error-message"></span>
-                </div>
-
-                <!-- Role Selection -->
-                <div class="form-group">
-                    <label for="role">Target Role</label>
-                    <div class="input-wrapper">
-                        <i class="fas fa-id-badge"></i>
-                        <select id="role" th:field="*{role}">
-                            <option value="">-- Select Role --</option>
-                            <option th:each="r : ${roles}" th:value="${r}" th:text="${r}"></option>
-                        </select>
-                    </div>
-                    <span th:if="${#fields.hasErrors('role')}" th:errors="*{role}" class="error-message"></span>
-                </div>
-
-                <!-- Department Selection -->
-                <div class="form-group">
-                    <label for="departmentId">Domain / Department</label>
-                    <div class="input-wrapper">
-                        <i class="fas fa-building"></i>
-                        <select id="departmentId" th:field="*{departmentId}">
-                            <option value="">-- Select Department --</option>
-                            <option th:each="dept : ${departments}" th:value="${dept.id}"
-                                th:text="${dept.shortCode + ' - ' + dept.name}"></option>
-                        </select>
-                    </div>
-                    <span th:if="${#fields.hasErrors('departmentId')}" th:errors="*{departmentId}"
-                        class="error-message"></span>
-                </div>
-
-                <!-- Password -->
-                <div class="form-group">
-                    <label for="password">Security Identifier</label>
-                    <div class="input-wrapper">
-                        <i class="fas fa-lock"></i>
-                        <input type="password" id="password" th:field="*{password}"
-                            placeholder="Min. 6 strong characters" />
-                    </div>
-                    <span th:if="${#fields.hasErrors('password')}" th:errors="*{password}" class="error-message"></span>
-                </div>
-            </div>
-
-            <button type="submit" class="btn-submit">
-                Initialize Account <i class="fas fa-user-plus"></i>
-            </button>
-
-            <div class="footer-link">
-                User Creation Done? <a th:href="@{/dashboard}">Back To Dashboard</a>
-            </div>
-        </form>
+        <div class="footer-link">
+          User Creation Done? <a th:href="@{/dashboard}">Back To Dashboard</a>
+        </div>
+      </form>
     </div>
-</body>
-
+  </body>
 </html>
