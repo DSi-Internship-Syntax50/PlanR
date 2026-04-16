@@ -81,7 +81,9 @@ public class AnalyticsMockSeeder implements DataSeederBase {
                 dummyCourse.setCourseCode(dept.getShortCode() + " " + (1000 + random.nextInt(4000)));
                 dummyCourse.setTitle("Dummy Course " + i + " " + dept.getShortCode());
                 dummyCourse.setDepartment(dept);
-                dummyCourse.setRequiredSlots(i % 3 + 1);
+                int sc = i % 3 + 1;
+                dummyCourse.setRequiredSlots(sc);
+                dummyCourse.setSlotCount(sc);
                 dummyCourse.setWeeklyClasses(random.nextInt(3) + 3);
                 dummyCourse.setIsLab(random.nextBoolean());
                 dummyCourse.setSemester((i % 2) + 1);

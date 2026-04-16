@@ -123,6 +123,7 @@ public class TestDataSeeder implements DataSeederBase {
         c1.setYear(3);
         c1.setSemester(1);
         c1.setRequiredSlots(1);
+        c1.setSlotCount(1);
         c1.setWeeklyClasses(3);
         c1.setIsLab(false);
         c1.setDepartment(cseDept);
@@ -137,6 +138,7 @@ public class TestDataSeeder implements DataSeederBase {
         c2.setYear(3);
         c2.setSemester(2);
         c2.setRequiredSlots(3);
+        c2.setSlotCount(3);
         c2.setWeeklyClasses(1);
         c2.setIsLab(true);
         c2.setDepartment(cseDept);
@@ -151,6 +153,7 @@ public class TestDataSeeder implements DataSeederBase {
         c3.setYear(3);
         c3.setSemester(2);
         c3.setRequiredSlots(1);
+        c3.setSlotCount(1);
         c3.setWeeklyClasses(2);
         c3.setIsLab(false);
         c3.setDepartment(cseDept);
@@ -165,6 +168,7 @@ public class TestDataSeeder implements DataSeederBase {
         c4.setYear(3);
         c4.setSemester(1);
         c4.setRequiredSlots(1);
+        c4.setSlotCount(1);
         c4.setWeeklyClasses(3);
         c4.setIsLab(false);
         c4.setDepartment(cseDept);

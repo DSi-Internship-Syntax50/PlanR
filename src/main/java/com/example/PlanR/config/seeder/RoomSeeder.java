@@ -14,6 +14,7 @@ import com.example.PlanR.repository.RoomRepository;
 
 /**
  * Seeder #3: Seeds rooms if the table is empty.
+ * Uses the room number format from the other branch: block + floor + "0" + roomIndex
  */
 @Component
 public class RoomSeeder implements DataSeederBase {
@@ -62,24 +63,44 @@ public class RoomSeeder implements DataSeederBase {
         roomRepository.saveAll(Arrays.asList(auditorium, seminarHall, stadium));
 
         // Seed grid rooms (4 floors × 7 rooms × 3 blocks)
-        Department[] deptCycle = { cseDept, eeeDept, bbaDept, ceDept, cseDept };
-        String[] deptCodeCycle = { "CSE", "EEE", "BBA", "CE", "CSE" };
-
         for (int fl = 1; fl < 5; fl++) {
             for (int i = 1; i <= 7; i++) {
                 for (char ch = 'A'; ch <= 'C'; ch++) {
                     Room r = new Room();
                     r.setFloorNumber(fl);
-                    r.setBlock(String.valueOf(ch));
-                    r.setRoomNumber("0" + i);
+                    String st = String.valueOf(ch);
+                    r.setBlock(st);
+                    r.setRoomNumber(st + fl + "0" + i);
 
                     // Make some rooms Labs so the generator has places to put Lab courses
-                    r.setType(i % 3 == 0 ? RoomType.LAB : RoomType.THEORY);
+                    if (i % 3 == 0) {
+                        r.setType(RoomType.LAB);
+                    } else {
+                        r.setType(RoomType.THEORY);
+                    }
 
-                    int deptIndex = i % 5;
-                    r.setDept(deptCodeCycle[deptIndex]);
-                    r.setDepartment(deptCycle[deptIndex]);
-
+                    switch (i % 5) {
+                        case 0 -> {
+                            r.setDept("CSE");
+                            r.setDepartment(cseDept);
+                        }
+                        case 1 -> {
+                            r.setDept("EEE");
+                            r.setDepartment(eeeDept);
+                        }
+                        case 2 -> {
+                            r.setDept("BBA");
+                            r.setDepartment(bbaDept);
+                        }
+                        case 3 -> {
+                            r.setDept("CE");
+                            r.setDepartment(ceDept);
+                        }
+                        default -> {
+                            r.setDept("Archi");
+                            r.setDepartment(ceDept);
+                        } // Fallback to CE
+                    }
                     roomRepository.save(r);
                 }
             }

@@ -6,7 +6,9 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
 /**
- * Seeder #1: Handles legacy data migrations (e.g., ADMIN → COORDINATOR role migration).
+ * Seeder #1: Handles legacy data migrations.
+ * - ADMIN → COORDINATOR role migration
+ * - Self-healing: Populates slot_count for existing courses where it's NULL
  */
 @Component
 public class MigrationSeeder implements DataSeederBase {
@@ -20,9 +22,17 @@ public class MigrationSeeder implements DataSeederBase {
 
     @Override
     public void seed() {
+        // Legacy role migration
         int migrated = jdbcTemplate.update("UPDATE users SET role = 'COORDINATOR' WHERE role = 'ADMIN'");
         if (migrated > 0) {
             log.info("MIGRATION: Updated {} user(s) from ADMIN to COORDINATOR role.", migrated);
+        }
+
+        // Self-healing: Ensure 'slot_count' is populated if missing (Migration for existing data)
+        int fixedSlots = jdbcTemplate.update(
+                "UPDATE courses SET slot_count = COALESCE(required_slots, CASE WHEN is_lab = true THEN 3 ELSE 1 END) WHERE slot_count IS NULL");
+        if (fixedSlots > 0) {
+            log.info("MIGRATION: Populated 'slot_count' for {} existing courses.", fixedSlots);
         }
     }
 
