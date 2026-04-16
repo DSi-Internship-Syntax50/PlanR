@@ -1,9 +1,10 @@
 package com.example.PlanR.controller;
 
+import com.example.PlanR.exception.EntityNotFoundException;
 import com.example.PlanR.exception.SlotConflictException;
+import com.example.PlanR.exception.ValidationException;
 import com.example.PlanR.model.User;
 import com.example.PlanR.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
@@ -17,11 +18,18 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
+/**
+ * Global controller advice for model attributes and exception handling.
+ * Refactored to use constructor injection and handle typed exceptions.
+ */
 @ControllerAdvice
 public class GlobalControllerAdvice {
 
-    @Autowired
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
+
+    public GlobalControllerAdvice(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
 
     @ModelAttribute("user")
     public User globalUser() {
@@ -34,14 +42,27 @@ public class GlobalControllerAdvice {
         return null;
     }
 
-    // --- New Exception Handler for REST API Conflicts ---
     @ExceptionHandler(SlotConflictException.class)
     public ResponseEntity<Map<String, Object>> handleSlotConflict(SlotConflictException ex) {
         Map<String, Object> response = new HashMap<>();
         response.put("error", "Batch Slot Conflict");
         response.put("message", ex.getMessage());
-
-        // Return 409 Conflict status so the frontend knows it was a scheduling issue
         return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
+    }
+
+    @ExceptionHandler(EntityNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleEntityNotFound(EntityNotFoundException ex) {
+        Map<String, Object> response = new HashMap<>();
+        response.put("error", "Not Found");
+        response.put("message", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+    }
+
+    @ExceptionHandler(ValidationException.class)
+    public ResponseEntity<Map<String, Object>> handleValidation(ValidationException ex) {
+        Map<String, Object> response = new HashMap<>();
+        response.put("error", "Validation Error");
+        response.put("message", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 }

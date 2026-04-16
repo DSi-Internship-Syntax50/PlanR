@@ -4,13 +4,14 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.example.PlanR.dto.EventBookingRequestDto;
 import com.example.PlanR.dto.EventBookingResponseDto;
+import com.example.PlanR.exception.EntityNotFoundException;
+import com.example.PlanR.exception.ValidationException;
 import com.example.PlanR.model.EventBooking;
 import com.example.PlanR.model.Room;
 import com.example.PlanR.model.User;
@@ -20,17 +21,24 @@ import com.example.PlanR.repository.EventBookingRepository;
 import com.example.PlanR.repository.RoomRepository;
 import com.example.PlanR.repository.UserRepository;
 
+/**
+ * Service for event booking operations.
+ * Refactored to use constructor injection and typed exceptions.
+ */
 @Service
 public class EventBookingService {
 
-    @Autowired
-    private EventBookingRepository bookingRepository;
+    private final EventBookingRepository bookingRepository;
+    private final RoomRepository roomRepository;
+    private final UserRepository userRepository;
 
-    @Autowired
-    private RoomRepository roomRepository;
-
-    @Autowired
-    private UserRepository userRepository;
+    public EventBookingService(EventBookingRepository bookingRepository,
+                               RoomRepository roomRepository,
+                               UserRepository userRepository) {
+        this.bookingRepository = bookingRepository;
+        this.roomRepository = roomRepository;
+        this.userRepository = userRepository;
+    }
 
     public List<EventBookingResponseDto> getBookingsForMonth(LocalDate targetDate, String username, boolean isAdmin) {
         LocalDate startDate = targetDate.withDayOfMonth(1);
@@ -47,13 +55,13 @@ public class EventBookingService {
     @Transactional(isolation = Isolation.SERIALIZABLE)
     public EventBookingResponseDto bookSlot(EventBookingRequestDto requestDto, String username) {
         Room room = roomRepository.findById(requestDto.getRoomId())
-                .orElseThrow(() -> new RuntimeException("Room not found"));
+                .orElseThrow(() -> new EntityNotFoundException("Room", requestDto.getRoomId()));
 
         User requestor = userRepository.findByEmail(username)
-                .orElseThrow(() -> new RuntimeException("User not found: " + username));
+                .orElseThrow(() -> new EntityNotFoundException("User", username));
 
         if (requestDto.getStartTime().isAfter(requestDto.getEndTime())) {
-            throw new IllegalArgumentException("Start time must be before end time");
+            throw new ValidationException("Start time must be before end time");
         }
 
         List<EventBooking> overlaps = bookingRepository.findOverlappingBookings(
@@ -63,7 +71,7 @@ public class EventBookingService {
                 requestDto.getEndTime());
 
         if (!overlaps.isEmpty()) {
-            throw new RuntimeException("Slot is already booked by another event.");
+            throw new ValidationException("Slot is already booked by another event.");
         }
 
         EventBooking newBooking = new EventBooking();
@@ -93,7 +101,7 @@ public class EventBookingService {
     @Transactional
     public void approveBooking(Long bookingId) {
         EventBooking booking = bookingRepository.findById(bookingId)
-                .orElseThrow(() -> new RuntimeException("Booking not found"));
+                .orElseThrow(() -> new EntityNotFoundException("Booking", bookingId));
         booking.setStatus(BookingStatus.APPROVED);
         bookingRepository.save(booking);
     }

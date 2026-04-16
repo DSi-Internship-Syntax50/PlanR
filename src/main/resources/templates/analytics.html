@@ -45,7 +45,7 @@
                         <div class="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-lg"><i class="fas fa-building"></i></div>
                         <p class="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Overall Room Utilization</p>
                     </div>
-                    <p class="text-3xl font-extrabold text-gray-900 mt-2" th:text="${overallUtilization} + '%'">87%</p>
+                    <p class="text-3xl font-extrabold text-gray-900 mt-2" th:text="${analytics.overallUtilization} + '%'">87%</p>
                     <p class="text-xs text-green-600 font-semibold mt-2"><i class="fas fa-arrow-up mr-1"></i> Real-time calculation</p>
                 </div>
                 <!-- Card 2 -->
@@ -54,7 +54,7 @@
                         <div class="w-10 h-10 rounded-full bg-red-50 text-red-600 flex items-center justify-center text-lg"><i class="fas fa-exclamation-triangle"></i></div>
                         <p class="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Active Scheduling Conflicts</p>
                     </div>
-                    <p class="text-3xl font-extrabold text-red-600 mt-2" th:text="${activeConflicts}">3</p>
+                    <p class="text-3xl font-extrabold text-red-600 mt-2" th:text="${analytics.activeConflicts}">3</p>
                     <p class="text-xs text-red-500 font-semibold mt-2"><i class="fas fa-exclamation-circle mr-1"></i> Requires attention</p>
                 </div>
                 <!-- Card 3 -->
@@ -63,7 +63,7 @@
                         <div class="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-lg"><i class="fas fa-chalkboard-teacher"></i></div>
                         <p class="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Total Weekly Classes</p>
                     </div>
-                    <p class="text-3xl font-extrabold text-gray-900 mt-2" th:text="${totalWeeklyClasses}">1,240</p>
+                    <p class="text-3xl font-extrabold text-gray-900 mt-2" th:text="${analytics.totalWeeklyClasses}">1,240</p>
                     <p class="text-xs text-gray-400 font-medium mt-2">Currently scheduled</p>
                 </div>
             </div>
@@ -103,7 +103,7 @@
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-100 text-sm">
-                            <tr th:each="perf : ${deptPerformances}" class="hover:bg-gray-50/50 transition-colors border-b last:border-b-0">
+                            <tr th:each="perf : ${analytics.deptPerformances}" class="hover:bg-gray-50/50 transition-colors border-b last:border-b-0">
                                 <td class="py-4 px-6 font-semibold text-gray-900">
                                     <i th:class="${perf.icon} + ' mr-2'"></i> <span th:text="${perf.name}">Computer Science</span>
                                 </td>
@@ -129,9 +129,9 @@
             const gridColor = '#f3f4f6'; // Tailwind gray-100
             
             // Backend dynamic data
-            const utilizationTrendsData = /*[[${utilizationTrends}]]*/ [72, 85, 92, 88, 76, 45];
-            const allocationLabels = /*[[${allocationLabels}]]*/ ['Lecture Halls', 'Labs', 'Seminar Rooms', 'Faculty Offices'];
-            const allocationData = /*[[${allocationData}]]*/ [45, 25, 15, 15];
+            const utilizationTrendsData = /*[[${analytics.utilizationTrends}]]*/ [72, 85, 92, 88, 76, 45];
+            const allocationLabels = /*[[${analytics.allocationLabels}]]*/ ['Lecture Halls', 'Labs', 'Seminar Rooms', 'Faculty Offices'];
+            const allocationData = /*[[${analytics.allocationData}]]*/ [45, 25, 15, 15];
 
             // 1. Line Chart Data & Config (Weekly Utilization Trends)
             const ctxUtil = document.getElementById('utilizationChart').getContext('2d');

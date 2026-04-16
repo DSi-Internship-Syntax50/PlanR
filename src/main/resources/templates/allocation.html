@@ -323,7 +323,7 @@
             loading.classList.remove("hidden");
 
             try {
-                const res = await fetch('/api/schedule/routines/room/' + roomId);
+                const res = await fetch('/api/schedule/management/routines/room/' + roomId);
                 const routines = await res.json();
                 renderTimeline(routines);
             } catch (err) {
@@ -434,7 +434,7 @@
             listDiv.innerHTML = `<div class="text-center text-sm text-gray-500 py-4">Loading...</div>`;
 
             try {
-                const res = await fetch('/api/schedule/routines/unassigned');
+                const res = await fetch('/api/schedule/management/routines/unassigned');
                 const routines = await res.json();
 
                 if (routines.length === 0) {
@@ -472,7 +472,7 @@
                     fetchHeaders[csrfHeader] = csrfToken; // Inject CSRF token if active
                 }
 
-                const res = await fetch('/api/schedule/reschedule', {
+                const res = await fetch('/api/schedule/management/reschedule', {
                     method: 'POST',
                     headers: fetchHeaders,
                     body: formData.toString()

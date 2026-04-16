@@ -9,10 +9,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Service for generating exam seat plans using backtracking.
+ * FIXED: iterationCount is now method-local to ensure thread safety
+ * (previously it was a mutable instance field in a Spring singleton).
+ */
 @Service
 public class SeatPlanService {
 
-    private int iterationCount = 0;
     private static final int MAX_ITERATIONS = 500000;
 
     public SeatPlanResponseDto generateSeatPlan(SeatPlanRequestDto request) {
@@ -48,8 +52,9 @@ public class SeatPlanService {
         }
 
         String[][] grid = new String[rows][cols];
-        iterationCount = 0;
-        boolean success = backtrack(grid, counts, 0, 0, rows, cols);
+        // Thread-safe: iteration counter is now stack-local instead of instance field
+        int[] iterationCount = {0};
+        boolean success = backtrack(grid, counts, 0, 0, rows, cols, iterationCount);
 
         if (success) {
             return new SeatPlanResponseDto(true, grid, "Optimal seat plan generated successfully.");
@@ -58,8 +63,8 @@ public class SeatPlanService {
         }
     }
 
-    private boolean backtrack(String[][] grid, Map<String, Integer> counts, int r, int c, int rows, int cols) {
-        if (iterationCount++ > MAX_ITERATIONS) {
+    private boolean backtrack(String[][] grid, Map<String, Integer> counts, int r, int c, int rows, int cols, int[] iterationCount) {
+        if (iterationCount[0]++ > MAX_ITERATIONS) {
             return false;
         }
         
@@ -87,7 +92,7 @@ public class SeatPlanService {
             if (isValid(grid, r, c, code)) {
                 grid[r][c] = code;
                 counts.put(code, counts.get(code) - 1);
-                if (backtrack(grid, counts, nextR, nextC, rows, cols)) {
+                if (backtrack(grid, counts, nextR, nextC, rows, cols, iterationCount)) {
                     return true;
                 }
                 counts.put(code, counts.get(code) + 1);
@@ -97,7 +102,7 @@ public class SeatPlanService {
 
         if (canBeEmpty) {
             grid[r][c] = null;
-            if (backtrack(grid, counts, nextR, nextC, rows, cols)) {
+            if (backtrack(grid, counts, nextR, nextC, rows, cols, iterationCount)) {
                 return true;
             }
         }

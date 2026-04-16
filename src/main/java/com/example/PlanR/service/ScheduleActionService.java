@@ -1,11 +1,8 @@
 package com.example.PlanR.service;
 
+import com.example.PlanR.exception.EntityNotFoundException;
 import com.example.PlanR.exception.SlotConflictException;
 import com.example.PlanR.model.Course;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
 import com.example.PlanR.model.MasterRoutine;
 import com.example.PlanR.model.Room;
 import com.example.PlanR.model.ScheduleRequest;
@@ -19,34 +16,42 @@ import com.example.PlanR.repository.RoomRepository;
 import com.example.PlanR.repository.ScheduleRequestRepository;
 import com.example.PlanR.repository.UserRepository;
 
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+/**
+ * Service for schedule action operations (allocate, reschedule, request/approve).
+ * Refactored to use constructor injection and typed exceptions.
+ */
 @Service
 public class ScheduleActionService {
 
-    @Autowired
-    private MasterRoutineRepository routineRepository;
+    private final MasterRoutineRepository routineRepository;
+    private final RoomRepository roomRepository;
+    private final ScheduleRequestRepository requestRepository;
+    private final UserRepository userRepository;
+    private final CourseRepository courseRepository;
 
-    @Autowired
-    private RoomRepository roomRepository;
-
-    @Autowired
-    private ScheduleRequestRepository requestRepository;
-
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private CourseRepository courseRepository;
+    public ScheduleActionService(MasterRoutineRepository routineRepository,
+                                  RoomRepository roomRepository,
+                                  ScheduleRequestRepository requestRepository,
+                                  UserRepository userRepository,
+                                  CourseRepository courseRepository) {
+        this.routineRepository = routineRepository;
+        this.roomRepository = roomRepository;
+        this.requestRepository = requestRepository;
+        this.userRepository = userRepository;
+        this.courseRepository = courseRepository;
+    }
 
     @Transactional
     public MasterRoutine allocateClass(Long courseId, Long teacherId, Long roomId, DayOfWeek day, int startSlotIndex) {
         Course course = courseRepository.findById(courseId)
-                .orElseThrow(() -> new RuntimeException("Course not found"));
+                .orElseThrow(() -> new EntityNotFoundException("Course", courseId));
         User teacher = userRepository.findById(teacherId)
-                .orElseThrow(() -> new RuntimeException("Teacher not found"));
+                .orElseThrow(() -> new EntityNotFoundException("Teacher", teacherId));
 
         String batch = course.getBatch();
         int slotCount = course.getSlotCount();
@@ -64,7 +69,7 @@ public class ScheduleActionService {
 
         if (roomId != null) {
             Room room = roomRepository.findById(roomId)
-                    .orElseThrow(() -> new RuntimeException("Room not found"));
+                    .orElseThrow(() -> new EntityNotFoundException("Room", roomId));
             routine.setRoom(room);
         }
 
@@ -73,9 +78,9 @@ public class ScheduleActionService {
 
     public MasterRoutine allocateRoom(Long routineId, Long roomId) {
         MasterRoutine routine = routineRepository.findById(routineId)
-                .orElseThrow(() -> new RuntimeException("Routine not found"));
+                .orElseThrow(() -> new EntityNotFoundException("Routine", routineId));
         Room room = roomRepository.findById(roomId)
-                .orElseThrow(() -> new RuntimeException("Room not found"));
+                .orElseThrow(() -> new EntityNotFoundException("Room", roomId));
 
         routine.setRoom(room);
         return routineRepository.save(routine);
@@ -83,14 +88,14 @@ public class ScheduleActionService {
 
     public MasterRoutine reschedule(Long routineId, DayOfWeek newDay, Integer newStartSlot, Long newRoomId) {
         MasterRoutine routine = routineRepository.findById(routineId)
-                .orElseThrow(() -> new RuntimeException("Routine not found"));
+                .orElseThrow(() -> new EntityNotFoundException("Routine", routineId));
 
         routine.setDayOfWeek(newDay);
         routine.setStartSlotIndex(newStartSlot);
 
         if (newRoomId != null) {
             Room room = roomRepository.findById(newRoomId)
-                    .orElseThrow(() -> new RuntimeException("Room not found"));
+                    .orElseThrow(() -> new EntityNotFoundException("Room", newRoomId));
             routine.setRoom(room);
         }
 
@@ -100,9 +105,9 @@ public class ScheduleActionService {
     public ScheduleRequest requestAction(Long routineId, Long requesterId, RequestType requestType,
             Long requestedRoomId, DayOfWeek requestedDay, Integer requestedStartSlot) {
         MasterRoutine routine = routineRepository.findById(routineId)
-                .orElseThrow(() -> new RuntimeException("Routine not found"));
+                .orElseThrow(() -> new EntityNotFoundException("Routine", routineId));
         User requester = userRepository.findById(requesterId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new EntityNotFoundException("User", requesterId));
 
         ScheduleRequest request = new ScheduleRequest();
         request.setRoutineSchedule(routine);
@@ -123,9 +128,9 @@ public class ScheduleActionService {
 
     public ScheduleRequest approveRequest(Long requestId, Long approverId) {
         ScheduleRequest request = requestRepository.findById(requestId)
-                .orElseThrow(() -> new RuntimeException("Request not found"));
+                .orElseThrow(() -> new EntityNotFoundException("ScheduleRequest", requestId));
         User approver = userRepository.findById(approverId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new EntityNotFoundException("User", approverId));
 
         if (request.getStatus() != RequestStatus.PENDING) {
             throw new RuntimeException("Request is not pending");

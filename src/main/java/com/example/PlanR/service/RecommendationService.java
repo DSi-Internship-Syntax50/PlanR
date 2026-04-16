@@ -4,9 +4,9 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.example.PlanR.dto.SlotCalculator;
 import com.example.PlanR.model.Course;
 import com.example.PlanR.model.MasterRoutine;
 import com.example.PlanR.model.Room;
@@ -14,14 +14,20 @@ import com.example.PlanR.model.enums.DayOfWeek;
 import com.example.PlanR.repository.MasterRoutineRepository;
 import com.example.PlanR.repository.RoomRepository;
 
+/**
+ * Service for recommending optimal rooms based on constraints.
+ * Refactored to use constructor injection.
+ */
 @Service
 public class RecommendationService {
 
-    @Autowired
-    private RoomRepository roomRepository;
+    private final RoomRepository roomRepository;
+    private final MasterRoutineRepository routineRepository;
 
-    @Autowired
-    private MasterRoutineRepository routineRepository;
+    public RecommendationService(RoomRepository roomRepository, MasterRoutineRepository routineRepository) {
+        this.roomRepository = roomRepository;
+        this.routineRepository = routineRepository;
+    }
 
     public static class RoomRecommendation {
         public Room room;
@@ -45,12 +51,10 @@ public class RecommendationService {
             boolean capacityOk = room.getCapacity() != null && course.getStudentCapacity() != null
                     && room.getCapacity() >= course.getStudentCapacity();
 
-            // Check room type (Simplified matching based on our robust schemas: isLab
-            // implies Lab type)
+            // Check room type
             boolean roomTypeOk;
             if (course.getIsLab() != null && course.getIsLab()) {
-                roomTypeOk = room.getType() == com.example.PlanR.model.enums.RoomType.LAB; // Assuming LAB exists in
-                                                                                           // enum
+                roomTypeOk = room.getType() == com.example.PlanR.model.enums.RoomType.LAB;
             } else {
                 roomTypeOk = room.getType() == com.example.PlanR.model.enums.RoomType.THEORY;
             }
@@ -77,15 +81,13 @@ public class RecommendationService {
         MasterRoutine nextClass = null;
 
         for (MasterRoutine routine : teacherRoutines) {
-            // For prev: max endSlot < startSlotIndex
-            int routineEnd = routine.getStartSlotIndex() + routine.getCourse().getSlotCount() - 1;
+            int routineEnd = routine.getStartSlotIndex() + SlotCalculator.getEffectiveSlotCount(routine.getCourse()) - 1;
             if (routineEnd < startSlotIndex) {
                 if (prevClass == null
-                        || (prevClass.getStartSlotIndex() + prevClass.getCourse().getSlotCount() - 1) < routineEnd) {
+                        || (prevClass.getStartSlotIndex() + SlotCalculator.getEffectiveSlotCount(prevClass.getCourse()) - 1) < routineEnd) {
                     prevClass = routine;
                 }
             }
-            // For next: min startSlot > endSlotIndex
             if (routine.getStartSlotIndex() > endSlotIndex) {
                 if (nextClass == null || nextClass.getStartSlotIndex() > routine.getStartSlotIndex()) {
                     nextClass = routine;

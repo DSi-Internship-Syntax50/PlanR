@@ -1,27 +1,33 @@
 package com.example.PlanR.controller;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
 import com.example.PlanR.model.Department;
 import com.example.PlanR.model.Room;
 import com.example.PlanR.dto.RoomCreateDto;
 import com.example.PlanR.repository.DepartmentRepository;
 import com.example.PlanR.repository.RoomRepository;
 
+/**
+ * REST API for room management.
+ * Refactored to use constructor injection.
+ */
 @RestController
 @RequestMapping("/api/rooms")
 public class RoomController {
 
-    @Autowired
-    private RoomRepository roomRepository;
+    private final RoomRepository roomRepository;
+    private final DepartmentRepository departmentRepository;
 
-    @Autowired
-    private DepartmentRepository departmentRepository;
+    public RoomController(RoomRepository roomRepository, DepartmentRepository departmentRepository) {
+        this.roomRepository = roomRepository;
+        this.departmentRepository = departmentRepository;
+    }
 
     @PostMapping
     @PreAuthorize("hasAnyRole('SUPERADMIN', 'COORDINATOR')")
@@ -30,17 +36,11 @@ public class RoomController {
         room.setRoomNumber(dto.getRoomNumber());
         room.setType(dto.getType());
         room.setCapacity(dto.getCapacity());
-        if(dto.getHasComputers())
-            room.setHasComputers(dto.getHasComputers());
-        else
-            room.setHasComputers(false);
-        
-        if(dto.getHasHardwareKits())
-            room.setHasHardwareKits(dto.getHasHardwareKits());
-        else
-            room.setHasHardwareKits(false);
+        room.setHasComputers(Boolean.TRUE.equals(dto.getHasComputers()));
+        room.setHasHardwareKits(Boolean.TRUE.equals(dto.getHasHardwareKits()));
         room.setFloorNumber(dto.getFloorNumber());
         room.setBlock(dto.getBlock());
+
         if (dto.getDeptId() != null) {
             Department dept = departmentRepository.findById(dto.getDeptId()).orElse(null);
             if (dept != null) {
