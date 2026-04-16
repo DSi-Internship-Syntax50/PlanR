@@ -89,8 +89,8 @@ public class AnalyticsService {
 
         int dailyPossibleSlots = rooms.size() * 11;
         List<Integer> trends = new ArrayList<>();
-        DayOfWeek[] days = { DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY,
-                DayOfWeek.THURSDAY, DayOfWeek.FRIDAY, DayOfWeek.SATURDAY };
+        DayOfWeek[] days = { DayOfWeek.SUNDAY, DayOfWeek.MONDAY, DayOfWeek.TUESDAY,
+                DayOfWeek.WEDNESDAY, DayOfWeek.THURSDAY };
 
         for (DayOfWeek day : days) {
             int dailyUsed = slotsPerDay.getOrDefault(day, 0);
@@ -119,18 +119,20 @@ public class AnalyticsService {
 
         for (Department dept : departments) {
             List<MasterRoutine> deptRoutines = routines.stream()
-                    .filter(r -> r.getCourse() != null && dept.equals(r.getCourse().getDepartment()))
+                    .filter(r -> r.getCourse() != null && 
+                                 r.getCourse().getDepartment() != null && 
+                                 dept.getId().equals(r.getCourse().getDepartment().getId()))
                     .collect(Collectors.toList());
 
-            int assignedHours = (int) Math.round(deptRoutines.stream()
+            int assignedHours = deptRoutines.stream()
                     .filter(r -> r.getCourse().getSlotCount() != null)
                     .mapToInt(r -> r.getCourse().getSlotCount())
-                    .sum() * 1.5);
+                    .sum();
 
-            int overbookedHours = (int) Math.round(deptRoutines.stream()
+            int overbookedHours = deptRoutines.stream()
                     .filter(r -> r.getRoom() == null && r.getCourse().getSlotCount() != null)
                     .mapToInt(r -> r.getCourse().getSlotCount())
-                    .sum() * 1.5);
+                    .sum();
 
             int score = assignedHours == 0 ? 100
                     : (int) Math.round((double) (assignedHours - overbookedHours) / assignedHours * 100);
