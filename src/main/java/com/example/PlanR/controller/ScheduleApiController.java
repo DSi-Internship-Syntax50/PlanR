@@ -34,10 +34,10 @@ public class ScheduleApiController {
     private final MasterRoutineRepository routineRepository;
     private final CourseRepository courseRepository;
 
-    public ScheduleApiController(ScheduleService scheduleService, 
-                                 ScheduleActionService scheduleActionService,
-                                 MasterRoutineRepository routineRepository,
-                                 CourseRepository courseRepository) {
+    public ScheduleApiController(ScheduleService scheduleService,
+            ScheduleActionService scheduleActionService,
+            MasterRoutineRepository routineRepository,
+            CourseRepository courseRepository) {
         this.scheduleService = scheduleService;
         this.scheduleActionService = scheduleActionService;
         this.routineRepository = routineRepository;
@@ -57,32 +57,34 @@ public class ScheduleApiController {
 
     // 2. FETCH ROUTINE TO PAINT THE GRID
     @GetMapping("/routine")
-    public ResponseEntity<List<Map<String, Object>>> getRoutineForBatch(@RequestParam Long departmentId, @RequestParam String batch) {
-        List<MasterRoutine> routines = routineRepository.findAll(); 
+    public ResponseEntity<List<Map<String, Object>>> getRoutineForBatch(@RequestParam Long departmentId,
+            @RequestParam String batch) {
+        List<MasterRoutine> routines = routineRepository.findAll();
         List<Map<String, Object>> response = new ArrayList<>();
-        
+
         for (MasterRoutine rt : routines) {
-            if (rt.getCourse() != null 
-                && batch.equals(rt.getCourse().getBatch()) 
-                && rt.getCourse().getDepartment() != null 
-                && rt.getCourse().getDepartment().getId().equals(departmentId)) {
-                
+            if (rt.getCourse() != null
+                    && batch.equals(rt.getCourse().getBatch())
+                    && rt.getCourse().getDepartment() != null
+                    && rt.getCourse().getDepartment().getId().equals(departmentId)) {
+
                 Map<String, Object> dto = new HashMap<>();
                 dto.put("id", rt.getId());
                 dto.put("dayOfWeek", rt.getDayOfWeek().name());
                 dto.put("startSlotIndex", rt.getStartSlotIndex());
-                
+
                 Map<String, Object> courseDto = new HashMap<>();
                 courseDto.put("courseCode", rt.getCourse().getCourseCode());
                 courseDto.put("title", rt.getCourse().getTitle());
                 courseDto.put("isLab", rt.getCourse().getIsLab());
-                
-                int slotCount = rt.getCourse().getRequiredSlots() != null ? rt.getCourse().getRequiredSlots() : (Boolean.TRUE.equals(rt.getCourse().getIsLab()) ? 3 : 1);
-                courseDto.put("slotCount", slotCount); 
+
+                int slotCount = rt.getCourse().getRequiredSlots() != null ? rt.getCourse().getRequiredSlots(): (Boolean.TRUE.equals(rt.getCourse().getIsLab()) ? 3 : 1);
+                courseDto.put("slotCount", slotCount);
                 dto.put("course", courseDto);
-                
-                dto.put("teacher", Map.of("id", rt.getTeacher() != null ? rt.getTeacher().getId() : 1)); 
-                
+
+                if (rt.getTeacher() != null)
+                    dto.put("teacher", Map.of("id", rt.getTeacher().getId()));
+
                 // FIXED: Now mapping the room's floor number and block to the JSON
                 if (rt.getRoom() != null) {
                     Map<String, Object> roomDto = new HashMap<>();
@@ -90,7 +92,7 @@ public class ScheduleApiController {
                     roomDto.put("roomNumber", rt.getRoom().getRoomNumber());
                     roomDto.put("floorNumber", rt.getRoom().getFloorNumber());
                     roomDto.put("block", rt.getRoom().getBlock());
-                    
+
                     dto.put("room", roomDto);
                 }
                 response.add(dto);
@@ -101,20 +103,23 @@ public class ScheduleApiController {
 
     // 3. FETCH COURSES FOR THE MODAL DROPDOWN
     @GetMapping("/courses")
-    public ResponseEntity<List<Map<String, Object>>> getCourses(@RequestParam Long departmentId, @RequestParam String batch) {
+    public ResponseEntity<List<Map<String, Object>>> getCourses(@RequestParam Long departmentId,
+            @RequestParam String batch) {
         List<Course> courses = courseRepository.findAll().stream()
-                .filter(c -> batch.equals(c.getBatch()) && c.getDepartment() != null && c.getDepartment().getId().equals(departmentId))
+                .filter(c -> batch.equals(c.getBatch()) && c.getDepartment() != null
+                        && c.getDepartment().getId().equals(departmentId))
                 .collect(Collectors.toList());
-                
+
         List<Map<String, Object>> response = new ArrayList<>();
-        
-        for(Course c : courses) {
+
+        for (Course c : courses) {
             Map<String, Object> dto = new HashMap<>();
             dto.put("id", c.getId());
             dto.put("courseCode", c.getCourseCode());
             dto.put("title", c.getTitle());
-            
-            int slotCount = c.getRequiredSlots() != null ? c.getRequiredSlots() : (Boolean.TRUE.equals(c.getIsLab()) ? 3 : 1);
+
+            int slotCount = c.getRequiredSlots() != null ? c.getRequiredSlots()
+                    : (Boolean.TRUE.equals(c.getIsLab()) ? 3 : 1);
             dto.put("slotCount", slotCount);
             response.add(dto);
         }
@@ -125,7 +130,7 @@ public class ScheduleApiController {
     @PostMapping("/allocate-class")
     public ResponseEntity<?> allocateClass(
             @RequestParam Long courseId,
-            @RequestParam Long teacherId, 
+            @RequestParam Long teacherId,
             @RequestParam DayOfWeek dayOfWeek,
             @RequestParam int startSlotIndex,
             @RequestParam(required = false) Long roomId) { // Allow optional Room ID
@@ -133,7 +138,7 @@ public class ScheduleApiController {
             // Using your existing Action Service to handle conflicts properly!
             scheduleActionService.allocateClass(courseId, teacherId, roomId, dayOfWeek, startSlotIndex);
             return ResponseEntity.ok(Map.of("message", "Class scheduled successfully!"));
-            
+
         } catch (SlotConflictException e) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("message", e.getMessage()));
         } catch (Exception e) {
