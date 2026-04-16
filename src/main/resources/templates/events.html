@@ -922,9 +922,19 @@
             await this.fetchBookings();
 
             // From fix-event-page: trigger server-side occupancy fetch
-            // whenever the user opens the room-wise view
+            // whenever the user opens the room-wise view OR paginates/searches
             this.$watch("modalView", (val) => {
               if (val === "roomwise" && this.formDate) {
+                this.fetchAllRoomOccupancy(this.formDate);
+              }
+            });
+            this.$watch("currentPage", () => {
+              if (this.modalView === "roomwise" && this.formDate) {
+                this.fetchAllRoomOccupancy(this.formDate);
+              }
+            });
+            this.$watch("roomSearchQuery", () => {
+              if (this.modalView === "roomwise" && this.formDate) {
                 this.fetchAllRoomOccupancy(this.formDate);
               }
             });
