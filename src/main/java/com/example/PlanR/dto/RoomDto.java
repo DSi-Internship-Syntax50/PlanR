@@ -16,25 +16,8 @@ public class RoomDto {
         this.block = room.getBlock();
         this.floorNumber = room.getFloorNumber();
         this.roomType = room.getType() != null ? room.getType().name() : null;
+        this.displayName = room.getRoomNumber();
 
-        // Compose full display name e.g. "1A01" or "7C05"
-        // DB structure: floorNumber=1, block="A", roomNumber="01" → "1A01"
-        String blockVal = room.getBlock();
-        boolean hasBlock = blockVal != null && !blockVal.isBlank();
-        boolean hasFloor = room.getFloorNumber() != null;
-
-        if (hasFloor && hasBlock) {
-            // Full composite: floor + block + roomNumber → "1A01"
-            this.displayName = room.getFloorNumber() + blockVal + room.getRoomNumber();
-        } else if (hasBlock) {
-            // block + roomNumber → "A01"
-            this.displayName = blockVal + room.getRoomNumber();
-        } else if (hasFloor) {
-            // floor + roomNumber → "1C05"
-            this.displayName = room.getFloorNumber() + room.getRoomNumber();
-        } else {
-            this.displayName = room.getRoomNumber();
-        }
     }
 
     public Long getId() { return id; }
