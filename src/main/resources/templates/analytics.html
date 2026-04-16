@@ -30,11 +30,6 @@
                     <h1 class="text-4xl font-extrabold text-[#0a192f] tracking-tight">System Analytics</h1>
                     <p class="text-gray-500 font-medium mt-3 text-sm leading-relaxed">Comprehensive data visualization for university logistics, resource utilization, and faculty load.</p>
                 </div>
-                <div class="flex gap-3">
-                    <button class="px-5 py-2.5 bg-[#0a192f] text-white font-semibold rounded-lg text-sm shadow-md hover:bg-gray-800 transition-colors flex items-center justify-center gap-2">
-                        <i class="fas fa-download"></i> Download Report
-                    </button>
-                </div>
             </div>
 
             <!-- Top Row (KPI Cards) -->
@@ -142,7 +137,7 @@
             new Chart(ctxUtil, {
                 type: 'line',
                 data: {
-                    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+                    labels: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu'],
                     datasets: [{
                         label: 'Capacity Used (%)',
                         data: utilizationTrendsData,
