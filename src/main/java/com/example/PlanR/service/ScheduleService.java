@@ -64,8 +64,7 @@ public class ScheduleService {
 
                 int dayIndex = rt.getDayOfWeek().ordinal();
                 int start = rt.getStartSlotIndex();
-                int length = rt.getCourse().getRequiredSlots() != null ? rt.getCourse().getRequiredSlots()
-                        : (Boolean.TRUE.equals(rt.getCourse().getIsLab()) ? 3 : 1);
+                int length = rt.getCourse().getSlotCount();
 
                 for (int i = 0; i < length; i++) {
                     if (start + i <= 12)
@@ -79,8 +78,7 @@ public class ScheduleService {
                 DayOfWeek.THURSDAY };
 
         for (Course course : coursesToAssign) {
-            int slotsNeeded = course.getRequiredSlots() != null ? course.getRequiredSlots()
-                    : (Boolean.TRUE.equals(course.getIsLab()) ? 3 : 1);
+            int slotsNeeded = course.getSlotCount();
             int timesPerWeek = course.getWeeklyClasses() != null ? course.getWeeklyClasses()
                     : (Boolean.TRUE.equals(course.getIsLab()) ? 1 : 2);
 
@@ -181,8 +179,7 @@ public class ScheduleService {
         for (MasterRoutine rt : allRoutines) {
             if (rt.getRoom() != null && rt.getRoom().getId().equals(room.getId()) && rt.getDayOfWeek() == day) {
                 int rtStart = rt.getStartSlotIndex();
-                int rtLength = rt.getCourse().getRequiredSlots() != null ? rt.getCourse().getRequiredSlots()
-                        : (Boolean.TRUE.equals(rt.getCourse().getIsLab()) ? 3 : 1);
+                int rtLength = rt.getCourse().getSlotCount();
 
                 // Overlap check formula
                 if (startSlot < rtStart + rtLength && startSlot + slotsNeeded > rtStart) {

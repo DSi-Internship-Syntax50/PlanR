@@ -44,6 +44,12 @@ public class DataSeeder {
                 System.out.println("MIGRATION: Updated " + migrated + " user(s) from ADMIN to COORDINATOR role.");
             }
 
+            // 0.5 Self-healing: Ensure 'slot_count' is populated if missing (Migration for existing data)
+            int fixedSlots = jdbcTemplate.update("UPDATE courses SET slot_count = COALESCE(required_slots, CASE WHEN is_lab = true THEN 3 ELSE 1 END) WHERE slot_count IS NULL");
+            if (fixedSlots > 0) {
+                System.out.println("MIGRATION: Populated 'slot_count' for " + fixedSlots + " existing courses.");
+            }
+
             // 1. Seed Departments FIRST (So we can assign them to rooms)
             if (departmentRepository.count() == 0) {
                 departmentRepository.save(new Department("SYS", "System Administration"));
@@ -205,6 +211,7 @@ public class DataSeeder {
                 c1.setYear(3);
                 c1.setSemester(1);
                 c1.setRequiredSlots(1);
+                c1.setSlotCount(1);
                 c1.setWeeklyClasses(3); // Meets 3 times a week
                 c1.setIsLab(false);
                 c1.setDepartment(cseDept);
@@ -219,6 +226,7 @@ public class DataSeeder {
                 c2.setYear(3);
                 c2.setSemester(2);
                 c2.setRequiredSlots(3); // Takes 3 consecutive slots
+                c2.setSlotCount(3);
                 c2.setWeeklyClasses(1); // Meets once a week
                 c2.setIsLab(true);
                 c2.setDepartment(cseDept);
@@ -233,6 +241,7 @@ public class DataSeeder {
                 c3.setYear(3);
                 c3.setSemester(2);
                 c3.setRequiredSlots(1);
+                c3.setSlotCount(1);
                 c3.setWeeklyClasses(2); // Meets 2 times a week
                 c3.setIsLab(false);
                 c3.setDepartment(cseDept);
@@ -247,6 +256,7 @@ public class DataSeeder {
                 c4.setYear(3);
                 c4.setSemester(1);
                 c4.setRequiredSlots(1);
+                c4.setSlotCount(1);
                 c4.setWeeklyClasses(3); // Meets 3 times a week
                 c4.setIsLab(false);
                 c4.setDepartment(cseDept);
@@ -291,7 +301,9 @@ public class DataSeeder {
                         dummyCourse.setCourseCode(dept.getShortCode() + " " + (1000 + random.nextInt(4000)));
                         dummyCourse.setTitle("Dummy Course " + i + " " + dept.getShortCode());
                         dummyCourse.setDepartment(dept);
-                        dummyCourse.setRequiredSlots(i % 3 + 1); // 1, 2, or 3 slots
+                        int sc = i % 3 + 1;
+                        dummyCourse.setRequiredSlots(sc); // 1, 2, or 3 slots
+                        dummyCourse.setSlotCount(sc);
                         dummyCourse.setWeeklyClasses(random.nextInt(3) + 3);
                         dummyCourse.setIsLab(random.nextBoolean());
                         dummyCourse.setSemester((i % 2) + 1);

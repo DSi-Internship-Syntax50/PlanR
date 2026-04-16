@@ -77,7 +77,7 @@ public class ScheduleApiController {
                 courseDto.put("title", rt.getCourse().getTitle());
                 courseDto.put("isLab", rt.getCourse().getIsLab());
                 
-                int slotCount = rt.getCourse().getRequiredSlots() != null ? rt.getCourse().getRequiredSlots() : (Boolean.TRUE.equals(rt.getCourse().getIsLab()) ? 3 : 1);
+                int slotCount = rt.getCourse().getSlotCount();
                 courseDto.put("slotCount", slotCount); 
                 dto.put("course", courseDto);
                 
@@ -114,7 +114,7 @@ public class ScheduleApiController {
             dto.put("courseCode", c.getCourseCode());
             dto.put("title", c.getTitle());
             
-            int slotCount = c.getRequiredSlots() != null ? c.getRequiredSlots() : (Boolean.TRUE.equals(c.getIsLab()) ? 3 : 1);
+            int slotCount = c.getSlotCount();
             dto.put("slotCount", slotCount);
             response.add(dto);
         }
@@ -146,5 +146,16 @@ public class ScheduleApiController {
     public ResponseEntity<?> deleteRoutine(@PathVariable Long id) {
         routineRepository.deleteById(id);
         return ResponseEntity.ok(Map.of("message", "Slot freed successfully"));
+    }
+    @PostMapping("/unassign/{routineId}")
+    @org.springframework.security.access.prepost.PreAuthorize("hasAnyRole('SUPERADMIN', 'COORDINATOR')")
+    public ResponseEntity<?> unassignRoom(@PathVariable Long routineId) {
+        MasterRoutine routine = routineRepository.findById(routineId).orElse(null);
+        if (routine != null) {
+            routine.setRoom(null); // Remove the room allocation
+            routineRepository.save(routine);
+            return ResponseEntity.ok().build();
+        }
+        return ResponseEntity.badRequest().body("Routine not found");
     }
 }
