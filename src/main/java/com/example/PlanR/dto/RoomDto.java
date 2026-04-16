@@ -1,40 +1,41 @@
 package com.example.PlanR.dto;
 
 import com.example.PlanR.model.Room;
-import com.example.PlanR.model.enums.RoomType;
 
 public class RoomDto {
     private Long id;
     private String roomNumber;
-    private RoomType type;
-    
+    private String block;
+    private Integer floorNumber;
+    private String displayName;
+    private String roomType; // String for frontend safety (avoids enum serialization quirks)
+
     public RoomDto(Room room) {
         this.id = room.getId();
         this.roomNumber = room.getRoomNumber();
-        this.type = room.getType();
+        this.block = room.getBlock();
+        this.floorNumber = room.getFloorNumber();
+        this.roomType = room.getType() != null ? room.getType().name() : null;
+        this.displayName = room.getRoomNumber();
+
     }
 
-    public Long getId() {
-        return id;
-    }
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+    public String getRoomNumber() { return roomNumber; }
+    public void setRoomNumber(String roomNumber) { this.roomNumber = roomNumber; }
 
-    public String getRoomNumber() {
-        return roomNumber;
-    }
+    public String getBlock() { return block; }
+    public void setBlock(String block) { this.block = block; }
 
-    public void setRoomNumber(String roomNumber) {
-        this.roomNumber = roomNumber;
-    }
+    public Integer getFloorNumber() { return floorNumber; }
+    public void setFloorNumber(Integer floorNumber) { this.floorNumber = floorNumber; }
 
-    public RoomType getType() {
-        return type;
-    }
+    public String getDisplayName() { return displayName; }
+    public void setDisplayName(String displayName) { this.displayName = displayName; }
 
-    public void setType(RoomType type) {
-        this.type = type;
-    }
+    public String getRoomType() { return roomType; }
+    public void setRoomType(String roomType) { this.roomType = roomType; }
 }
+

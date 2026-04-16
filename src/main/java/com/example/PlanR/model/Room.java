@@ -13,18 +13,24 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 
 @Entity
 @Table(name = "rooms")
+@SQLDelete(sql = "UPDATE rooms SET is_active = false WHERE id=?")
+@SQLRestriction("is_active = true")
 public class Room {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "room_number")
+    @Column(name = "room_number", nullable = false, unique = true)
     private String roomNumber;
 
     @Enumerated(EnumType.STRING)
@@ -43,21 +49,27 @@ public class Room {
 
     @Column(name = "block_name")
     private String block;
-    
+
     @Column(name = "dept_name")
     private String dept;
 
-    @OneToMany(mappedBy = "room", cascade = CascadeType.ALL)
+    @Column(name = "is_active", nullable = false)
+    private Boolean isActive = true;
+
+    @ManyToOne
+    @JoinColumn(name = "department_id")
+    private Department department;
+
+    @OneToMany(mappedBy = "room", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JsonIgnore
     private List<MasterRoutine> routines;
-    
-    @OneToMany(mappedBy = "room", cascade = CascadeType.ALL)
+
+    @OneToMany(mappedBy = "room", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JsonIgnore
     private List<EventBooking> bookings;
 
-  
-    public Room() {}
-
+    public Room() {
+    }
 
     public Long getId() {
         return id;
@@ -91,14 +103,20 @@ public class Room {
         this.capacity = capacity;
     }
 
-    public void setDept(String dept)
-    {
+    public void setDept(String dept) {
         this.dept = dept;
     }
 
-    public String getDept()
-    {
+    public String getDept() {
         return dept;
+    }
+
+    public Department getDepartment() {
+        return department;
+    }
+
+    public void setDepartment(Department department) {
+        this.department = department;
     }
 
     public Boolean getHasComputers() {
@@ -147,5 +165,13 @@ public class Room {
 
     public void setBlock(String block) {
         this.block = block;
+    }
+
+    public Boolean getIsActive() {
+        return isActive;
+    }
+
+    public void setIsActive(Boolean isActive) {
+        this.isActive = isActive;
     }
 }

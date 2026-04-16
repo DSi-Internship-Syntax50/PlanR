@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Manage Users - PlanR Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body class="bg-[#f3f6f8]">
+
+    <!-- Sidebar -->
+    <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+
+    <div class="ml-0 lg:ml-64 flex flex-col min-h-screen">
+        <!-- Header -->
+        <div th:replace="~{fragments/header :: header}"></div>
+
+        <main class="flex-1 p-8">
+            <div class="max-w-6xl mx-auto">
+                <div class="flex justify-between items-end mb-8">
+                    <div>
+                        <h1 class="text-4xl font-extrabold text-[#0a192f] tracking-tight">User Governance</h1>
+                        <p class="text-sm text-gray-500 mt-2 font-medium">Manage faculty, staff, and student accounts.</p>
+                    </div>
+                    <a th:href="@{/admin/users/create}" class="px-6 py-3 bg-[#0a192f] text-white font-bold rounded-xl text-sm shadow-lg hover:shadow-xl transition-all flex items-center gap-2">
+                        <i class="fas fa-user-plus"></i> Create New User
+                    </a>
+                </div>
+
+                <!-- Users Table -->
+                <div class="bg-white/80 backdrop-blur-xl rounded-3xl shadow-sm border border-white/60 overflow-hidden">
+                    <table class="w-full text-left">
+                        <thead>
+                            <tr class="bg-gray-50/50 border-b border-gray-100">
+                                <th class="px-6 py-5 text-[10px] font-black uppercase tracking-widest text-gray-400">Identity</th>
+                                <th class="px-6 py-5 text-[10px] font-black uppercase tracking-widest text-gray-400">Role</th>
+                                <th class="px-6 py-5 text-[10px] font-black uppercase tracking-widest text-gray-400">Department</th>
+                                <th class="px-6 py-5 text-[10px] font-black uppercase tracking-widest text-gray-400">Academic ID</th>
+                                <th class="px-6 py-5 text-[10px] font-black uppercase tracking-widest text-gray-400 text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-50">
+                            <tr th:each="u : ${users}" class="group hover:bg-white/40 transition-colors">
+                                <td class="px-6 py-5">
+                                    <div class="flex items-center gap-4">
+                                        <div class="w-10 h-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center font-bold shadow-inner">
+                                            <span th:text="${#strings.substring(u.name, 0, 1)}">U</span>
+                                        </div>
+                                        <div>
+                                            <p class="text-sm font-bold text-gray-900" th:text="${u.name}">User Name</p>
+                                            <p class="text-[11px] text-gray-400 font-medium" th:text="${u.email}">user@aust.edu</p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-5">
+                                    <span class="px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border"
+                                          th:classappend="${u.role.name() == 'SUPERADMIN' ? 'bg-red-50 text-red-600 border-red-100' :
+                                                           (u.role.name() == 'COORDINATOR' ? 'bg-blue-50 text-blue-600 border-blue-100' :
+                                                           'bg-green-50 text-green-600 border-green-100')}"
+                                          th:text="${u.role}">ROLE</span>
+                                </td>
+                                <td class="px-6 py-5">
+                                    <p class="text-sm font-semibold text-gray-600" th:text="${u.department != null ? u.department.shortCode : 'Global'}">DEPT</p>
+                                </td>
+                                <td class="px-6 py-5">
+                                    <p class="text-sm font-mono text-gray-400" th:text="${u.studentId ?: '—'}">ID</p>
+                                </td>
+                                <td class="px-6 py-5 text-right">
+                                    <a th:href="@{'/admin/profile/' + ${u.id}}" class="px-4 py-2 bg-white border border-gray-200 text-gray-700 font-bold rounded-lg text-xs hover:bg-gray-50 hover:border-blue-300 transition-all">
+                                        Edit Profile
+                                    </a>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+</body>
+</html>

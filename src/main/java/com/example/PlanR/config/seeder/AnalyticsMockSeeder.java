@@ -106,7 +106,7 @@ public class AnalyticsMockSeeder implements DataSeederBase {
                     else if (rand < 0.9) dayIndex = 3; // Wednesday
                     else dayIndex = 4; // Thursday
                     
-                    r.setDayOfWeek(days[dayIndex]);
+                    r.setDayOfWeek(days[random.nextInt(days.length)]);
 
                     if (random.nextInt(100) > 10 && !allRooms.isEmpty()) {
                         r.setRoom(allRooms.get(random.nextInt(allRooms.size())));

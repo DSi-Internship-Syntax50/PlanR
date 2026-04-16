@@ -3,10 +3,14 @@ package com.example.PlanR.model;
 import com.example.PlanR.model.enums.Role;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 import java.util.List;
 
 @Entity
 @Table(name = "users")
+@SQLDelete(sql = "UPDATE users SET is_active = false WHERE id=?")
+@SQLRestriction("is_active = true")
 public class User {
 
     @Id
@@ -20,6 +24,7 @@ public class User {
 
     private String name;
 
+    @Column(nullable = false, unique = true)
     private String email;
 
     @JsonIgnore
@@ -34,17 +39,29 @@ public class User {
     @Column(name = "current_batch")
     private String currentBatch;
 
+    @Column(name = "is_active", nullable = false)
+    private Boolean isActive = true;
+
     @Column(name = "seniority_rank")
     private Integer seniorityRank;
 
     @Column(name = "is_cr")
     private Boolean isCr;
 
-    @OneToMany(mappedBy = "teacher", cascade = CascadeType.ALL)
+    @Column(name = "admitted_semester")
+    private String admittedSemester;
+
+    @Column(name = "enrollment_status")
+    private String enrollmentStatus;
+
+    @Column(name = "lab_clearance_status")
+    private String labClearanceStatus;
+    
+    @OneToMany(mappedBy = "teacher", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JsonIgnore
     private List<MasterRoutine> taughtRoutines;
 
-    @OneToMany(mappedBy = "requestedBy", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "requestedBy", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JsonIgnore
     private List<EventBooking> requestedEvents;
 
@@ -154,4 +171,35 @@ public class User {
         this.requestedEvents = requestedEvents;
     }
 
+    public String getAdmittedSemester() {
+        return admittedSemester;
+    }
+
+    public void setAdmittedSemester(String admittedSemester) {
+        this.admittedSemester = admittedSemester;
+    }
+
+    public String getEnrollmentStatus() {
+        return enrollmentStatus;
+    }
+
+    public void setEnrollmentStatus(String enrollmentStatus) {
+        this.enrollmentStatus = enrollmentStatus;
+    }
+
+    public String getLabClearanceStatus() {
+        return labClearanceStatus;
+    }
+
+    public void setLabClearanceStatus(String labClearanceStatus) {
+        this.labClearanceStatus = labClearanceStatus;
+    }
+    
+    public Boolean getIsActive() {
+        return isActive;
+    }
+
+    public void setIsActive(Boolean isActive) {
+        this.isActive = isActive;
+    }
 }

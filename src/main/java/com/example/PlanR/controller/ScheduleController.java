@@ -1,9 +1,7 @@
 package com.example.PlanR.controller;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -18,27 +16,34 @@ import com.example.PlanR.model.Course;
 import com.example.PlanR.model.MasterRoutine;
 import com.example.PlanR.model.ScheduleRequest;
 import com.example.PlanR.model.enums.DayOfWeek;
-import com.example.PlanR.model.enums.RequestType; // Added missing import
-import com.example.PlanR.repository.CourseRepository;
-import com.example.PlanR.repository.MasterRoutineRepository;
+import com.example.PlanR.model.enums.RequestType;
+import com.example.PlanR.service.CourseService;
 import com.example.PlanR.service.RecommendationService;
+import com.example.PlanR.service.RoutineQueryService;
 import com.example.PlanR.service.ScheduleActionService;
 
+/**
+ * REST API for schedule management operations (room suggestions, allocation requests).
+ * Separate from ScheduleApiController to avoid route conflicts.
+ */
 @RestController
-@RequestMapping("/api/schedule")
+@RequestMapping("/api/schedule/management")
 public class ScheduleController {
 
-    @Autowired
-    private RecommendationService recommendationService;
+    private final RecommendationService recommendationService;
+    private final ScheduleActionService actionService;
+    private final RoutineQueryService routineQueryService;
+    private final CourseService courseService;
 
-    @Autowired
-    private ScheduleActionService actionService;
-
-    @Autowired
-    private CourseRepository courseRepository;
-
-    @Autowired
-    private MasterRoutineRepository routineRepository;
+    public ScheduleController(RecommendationService recommendationService,
+                              ScheduleActionService actionService,
+                              RoutineQueryService routineQueryService,
+                              CourseService courseService) {
+        this.recommendationService = recommendationService;
+        this.actionService = actionService;
+        this.routineQueryService = routineQueryService;
+        this.courseService = courseService;
+    }
 
     // Use the top-level RequestDto or rename this inner class to avoid confusion
     public static class ScheduleRequestDto {
@@ -50,22 +55,17 @@ public class ScheduleController {
         public Long requesterId;
     }
 
-    // Removed the second (duplicate) declaration of routineRepository that was here
-
-    // -----------------------------------------------------------
-
     @GetMapping("/suggest-rooms")
     public ResponseEntity<List<RecommendationService.RoomRecommendation>> getRoomSuggestions(
             @RequestParam Long courseId,
             @RequestParam DayOfWeek dayOfWeek,
             @RequestParam Integer startSlotIndex) {
 
-        Course course = courseRepository.findById(courseId)
+        Course course = courseService.findCourseById(courseId)
                 .orElseThrow(() -> new RuntimeException("Course not found"));
 
         List<RecommendationService.RoomRecommendation> suggestions = recommendationService.recommendRooms(course,
                 dayOfWeek, startSlotIndex);
-
         return ResponseEntity.ok(suggestions);
     }
 
@@ -73,16 +73,12 @@ public class ScheduleController {
 
     @GetMapping("/routines/room/{roomId}")
     public ResponseEntity<List<RoutineDTO>> getRoutinesByRoom(@PathVariable Long roomId) {
-        List<RoutineDTO> routines = routineRepository.findByRoomId(roomId)
-                .stream().map(RoutineDTO::new).collect(Collectors.toList());
-        return ResponseEntity.ok(routines);
+        return ResponseEntity.ok(routineQueryService.getRoutinesByRoom(roomId));
     }
 
     @GetMapping("/routines/unassigned")
     public ResponseEntity<List<RoutineDTO>> getUnassignedRoutines() {
-        List<RoutineDTO> routines = routineRepository.findByRoomIsNull()
-                .stream().map(RoutineDTO::new).collect(Collectors.toList());
-        return ResponseEntity.ok(routines);
+        return ResponseEntity.ok(routineQueryService.getUnassignedRoutines());
     }
 
     // --- Direct Execution (Admin / Coordinator) ---

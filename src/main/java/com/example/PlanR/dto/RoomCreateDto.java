@@ -10,7 +10,7 @@ public class RoomCreateDto {
     private Boolean hasHardwareKits;
     private Integer floorNumber;
     private String block;
-    private String dept;
+    private Long deptId;
 
     public String getRoomNumber() {
         return roomNumber;
@@ -68,11 +68,11 @@ public class RoomCreateDto {
         this.block = block;
     }
 
-    public String getDept() {
-        return dept;
+    public Long getDeptId() {
+        return deptId;
     }
 
-    public void setDept(String dept) {
-        this.dept = dept;
+    public void setDeptId(Long deptId) {
+        this.deptId = deptId;
     }
 }

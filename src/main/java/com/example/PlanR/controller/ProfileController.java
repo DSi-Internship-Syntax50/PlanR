@@ -1,46 +1,104 @@
 package com.example.PlanR.controller;
 
-import java.util.Optional;
+import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.authentication.AnonymousAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import com.example.PlanR.dto.ProfileUpdateDto;
+import com.example.PlanR.exception.EntityNotFoundException;
 import com.example.PlanR.model.User;
-import com.example.PlanR.repository.UserRepository;
+import com.example.PlanR.service.UserService;
+import com.example.PlanR.service.UserProfileService;
 
+/**
+ * Handles user profile viewing and editing.
+ * Business logic delegated to UserProfileService.
+ */
 @Controller
 public class ProfileController {
 
-    @Autowired
-    private UserRepository userRepository;
+    private final UserProfileService profileService;
+    private final UserService userService;
+
+    public ProfileController(UserProfileService profileService, UserService userService) {
+        this.profileService = profileService;
+        this.userService = userService;
+    }
 
     @GetMapping("/my-profile")
     public String myProfile(Model model) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        User user = null;
-        
-        if (auth != null && auth.isAuthenticated() && !(auth instanceof AnonymousAuthenticationToken)) {
-            String email = auth.getName();
-            Optional<User> optionalUser = userRepository.findByEmail(email);
-            if (optionalUser.isPresent()) {
-                user = optionalUser.get();
-            }
-        }
-        
+        User user = profileService.getCurrentUser();
         if (user == null) {
-            // Provide a dummy user for UI testing if unauthenticated
-            user = new User();
-            user.setName("UI Tester");
-            user.setEmail("tester@planr.com");
-            user.setRole(com.example.PlanR.model.enums.Role.STUDENT);
+            return "redirect:/login";
         }
-        
+
         model.addAttribute("user", user);
+        model.addAttribute("isSuperAdmin", profileService.isCurrentUserSuperAdmin());
+        model.addAttribute("isViewingSelf", true);
         return "profile";
+    }
+
+    @GetMapping("/admin/users")
+    @PreAuthorize("hasRole('SUPERADMIN')")
+    public String listUsers(Model model) {
+        if (!profileService.isCurrentUserSuperAdmin()) {
+            return "redirect:/dashboard";
+        }
+
+        List<User> users = userService.findAllUsers();
+        model.addAttribute("users", users);
+        return "admin/user-list";
+    }
+
+    @GetMapping("/admin/profile/{userId}")
+    @PreAuthorize("hasRole('SUPERADMIN')")
+    public String viewUserProfile(@PathVariable Long userId, Model model, RedirectAttributes redirectAttributes) {
+        if (!profileService.isCurrentUserSuperAdmin()) {
+            return "redirect:/dashboard";
+        }
+
+        try {
+            User targetUser = profileService.getUserById(userId);
+            model.addAttribute("user", targetUser);
+            model.addAttribute("isSuperAdmin", true);
+            model.addAttribute("isViewingSelf", false);
+            return "profile";
+        } catch (EntityNotFoundException e) {
+            redirectAttributes.addFlashAttribute("error", "User not found.");
+            return "redirect:/admin/users";
+        }
+    }
+
+    @PostMapping("/my-profile/update/{userId}")
+    public String updateProfile(
+            @PathVariable Long userId,
+            @ModelAttribute ProfileUpdateDto dto,
+            RedirectAttributes redirectAttributes) {
+
+        if (!profileService.isCurrentUserSuperAdmin()) {
+            redirectAttributes.addFlashAttribute("error", "Access denied. Only SUPERADMIN can edit profiles.");
+            return "redirect:/my-profile";
+        }
+
+        try {
+            profileService.updateProfile(userId, dto);
+            redirectAttributes.addFlashAttribute("success", "Profile updated successfully.");
+
+            User targetUser = profileService.getUserById(userId);
+            if (profileService.isViewingSelf(targetUser)) {
+                return "redirect:/my-profile";
+            }
+            return "redirect:/admin/users";
+        } catch (EntityNotFoundException e) {
+            redirectAttributes.addFlashAttribute("error", "User not found.");
+            return "redirect:/admin/users";
+        }
     }
 }

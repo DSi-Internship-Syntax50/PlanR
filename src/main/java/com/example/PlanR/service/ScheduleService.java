@@ -1,142 +1,143 @@
 package com.example.PlanR.service;
 
+import com.example.PlanR.dto.SlotCalculator;
 import com.example.PlanR.model.Course;
 import com.example.PlanR.model.MasterRoutine;
+import com.example.PlanR.model.Room;
 import com.example.PlanR.model.enums.DayOfWeek;
 import com.example.PlanR.repository.CourseRepository;
 import com.example.PlanR.repository.MasterRoutineRepository;
+import com.example.PlanR.repository.RoomRepository;
+import com.example.PlanR.service.scheduling.OccupancyGrid;
+import com.example.PlanR.service.scheduling.RoomMatcher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
+/**
+ * Service for auto-generating class schedules.
+ * Uses OccupancyGrid and RoomMatcher for cleaner separation of concerns.
+ */
 @Service
 public class ScheduleService {
 
     private final CourseRepository courseRepository;
     private final MasterRoutineRepository routineRepository;
+    private final RoomRepository roomRepository;
+    private final RoomMatcher roomMatcher = new RoomMatcher();
 
-    public ScheduleService(CourseRepository courseRepository, MasterRoutineRepository routineRepository) {
+    public ScheduleService(CourseRepository courseRepository, MasterRoutineRepository routineRepository,
+            RoomRepository roomRepository) {
         this.courseRepository = courseRepository;
         this.routineRepository = routineRepository;
+        this.roomRepository = roomRepository;
     }
 
     @Transactional
-    public void autoGenerateRoutine(String batch, int theoryCount, int labCount, int theoryClassesPerWeek) {
-        List<Course> coursesToAssign = new ArrayList<>();
+    public void autoGenerateRoutine(Long departmentId, String batch) {
+        // 1. Fetch courses for this batch and department
+        List<Course> coursesToAssign = courseRepository.findAll().stream()
+                .filter(c -> batch.equals(c.getBatch()) && c.getDepartment() != null
+                        && c.getDepartment().getId().equals(departmentId))
+                .collect(Collectors.toList());
 
-        // 1. Generate Lab Courses 
-        for(int i = 1; i <= labCount; i++) {
-            Course c = new Course();
-            c.setCourseCode(batch + "-LAB" + i);
-            c.setTitle("Auto Generated Lab " + i);
-            c.setIsLab(true);
-            c.setBatch(batch);
-            coursesToAssign.add(courseRepository.save(c));
+        if (coursesToAssign.isEmpty()) {
+            throw new RuntimeException("No courses found in the database for batch: " + batch
+                    + " in this department. Please add them in the Course Manager first.");
         }
 
-        // 2. Generate Theory Courses
-        for(int i = 1; i <= theoryCount; i++) {
-            Course c = new Course();
-            c.setCourseCode(batch + "-TH" + i);
-            c.setTitle("Auto Generated Theory " + i);
-            c.setIsLab(false);
-            c.setBatch(batch);
-            coursesToAssign.add(courseRepository.save(c));
-        }
+        // 2. Fetch rooms and current routines
+        List<Room> allRooms = roomRepository.findAll();
+        List<MasterRoutine> allRoutines = new ArrayList<>(routineRepository.findAll());
 
-        // 3. Setup the Memory Grid to track occupied slots
-        boolean[][] occupiedGrid = new boolean[7][13]; 
+        // 3. Clear old routines for this batch/department
+        List<MasterRoutine> oldRoutines = allRoutines.stream()
+                .filter(rt -> rt.getCourse() != null && batch.equals(rt.getCourse().getBatch())
+                        && rt.getCourse().getDepartment() != null
+                        && rt.getCourse().getDepartment().getId().equals(departmentId))
+                .collect(Collectors.toList());
+        routineRepository.deleteAll(oldRoutines);
+        allRoutines.removeAll(oldRoutines);
 
-        // 4. Pre-fill grid with existing classes in the DB so we don't overwrite them
-        List<MasterRoutine> existingRoutines = routineRepository.findAll();
-        for (MasterRoutine rt : existingRoutines) {
-            if (rt.getCourse() != null && batch.equals(rt.getCourse().getBatch())) {
-                int dayIndex = rt.getDayOfWeek().ordinal();
-                int start = rt.getStartSlotIndex();
-                int length = Boolean.TRUE.equals(rt.getCourse().getIsLab()) ? 3 : 1;
-                
-                for (int i = 0; i < length; i++) {
-                    if (start + i <= 12) occupiedGrid[dayIndex][start + i] = true;
-                }
-            }
-        }
+        // 4. Build the occupancy grid from existing routines
+        OccupancyGrid grid = buildOccupancyGrid(allRoutines, batch, departmentId);
 
-        // 5. Place the new courses using Load Balancing
-        DayOfWeek[] days = {DayOfWeek.SUNDAY, DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY, DayOfWeek.THURSDAY};
-        
+        // 5. Place courses using load balancing
+        DayOfWeek[] days = { DayOfWeek.SUNDAY, DayOfWeek.MONDAY, DayOfWeek.TUESDAY,
+                DayOfWeek.WEDNESDAY, DayOfWeek.THURSDAY };
+
         for (Course course : coursesToAssign) {
-            if (Boolean.TRUE.equals(course.getIsLab())) {
-                assignBalancedCourseToGrid(course, days, 3, 1, occupiedGrid);
-            } else {
-                assignBalancedCourseToGrid(course, days, 1, theoryClassesPerWeek, occupiedGrid);
-            }
+            int slotsNeeded = SlotCalculator.getEffectiveSlotCount(course);
+            int timesPerWeek = course.getWeeklyClasses() != null ? course.getWeeklyClasses()
+                    : (Boolean.TRUE.equals(course.getIsLab()) ? 1 : 2);
+
+            assignCourseWithRoom(course, days, slotsNeeded, timesPerWeek, grid, allRooms, allRoutines);
         }
     }
 
-    private void assignBalancedCourseToGrid(Course course, DayOfWeek[] days, int slotsNeeded, int timesPerWeek, boolean[][] occupiedGrid) {
+    private OccupancyGrid buildOccupancyGrid(List<MasterRoutine> allRoutines, String batch, Long departmentId) {
+        OccupancyGrid grid = new OccupancyGrid();
+        for (MasterRoutine rt : allRoutines) {
+            if (rt.getCourse() != null && batch.equals(rt.getCourse().getBatch())
+                    && rt.getCourse().getDepartment() != null
+                    && rt.getCourse().getDepartment().getId().equals(departmentId)) {
+
+                int length = SlotCalculator.getEffectiveSlotCount(rt.getCourse());
+                grid.markOccupied(rt.getDayOfWeek(), rt.getStartSlotIndex(), length);
+            }
+        }
+        return grid;
+    }
+
+    private void assignCourseWithRoom(Course course, DayOfWeek[] days, int slotsNeeded, int timesPerWeek,
+            OccupancyGrid grid, List<Room> allRooms, List<MasterRoutine> allRoutines) {
+
         List<DayOfWeek> courseAssignedDays = new ArrayList<>();
 
         for (int t = 0; t < timesPerWeek; t++) {
-            // Find available days that don't already have this specific course scheduled today
             List<DayOfWeek> availableDays = new ArrayList<>();
             for (DayOfWeek day : days) {
-                if (!courseAssignedDays.contains(day)) {
+                if (!courseAssignedDays.contains(day))
                     availableDays.add(day);
-                }
             }
 
-            // MAGIC HAPPENS HERE: Sort the days by how empty they are!
-            availableDays.sort((d1, d2) -> Integer.compare(
-                    getDayLoad(occupiedGrid, d1.ordinal()),
-                    getDayLoad(occupiedGrid, d2.ordinal())
-            ));
+            // Sort days by how empty the batch's schedule is
+            availableDays.sort((d1, d2) -> Integer.compare(grid.getDayLoad(d1), grid.getDayLoad(d2)));
 
             boolean placed = false;
 
-            // Try to place it in the emptiest day first
             for (DayOfWeek day : availableDays) {
-                int gridRow = day.ordinal();
-
-                // Look for consecutive empty slots on this day
                 for (int slot = 1; slot <= (12 - slotsNeeded + 1); slot++) {
-                    boolean isFree = true;
-                    for (int i = 0; i < slotsNeeded; i++) {
-                        if (occupiedGrid[gridRow][slot + i]) {
-                            isFree = false;
-                            break;
-                        }
-                    }
+                    // Check if the students are free
+                    if (!grid.isSlotFree(day, slot, slotsNeeded)) continue;
 
-                    // If we found a free block, reserve slots and save to DB
-                    if (isFree) {
-                        for (int i = 0; i < slotsNeeded; i++) {
-                            occupiedGrid[gridRow][slot + i] = true;
-                        }
+                    // Find a free room
+                    Room selectedRoom = roomMatcher.findAvailableRoom(
+                            course, day, slot, slotsNeeded, allRooms, allRoutines);
+
+                    if (selectedRoom != null) {
+                        grid.markOccupied(day, slot, slotsNeeded);
 
                         MasterRoutine routine = new MasterRoutine();
                         routine.setCourse(course);
+                        routine.setTeacher(course.getTeacher());
                         routine.setDayOfWeek(day);
                         routine.setStartSlotIndex(slot);
+                        routine.setRoom(selectedRoom);
+
                         routineRepository.save(routine);
+                        allRoutines.add(routine);
 
                         courseAssignedDays.add(day);
                         placed = true;
-                        break; // Move on to the next 't' (next class for the week)
+                        break;
                     }
                 }
-                if (placed) break; // Successfully placed, stop searching days
+                if (placed) break;
             }
         }
-    }
-
-    // Helper method to count how many slots are already taken on a specific day
-    private int getDayLoad(boolean[][] occupiedGrid, int dayOrdinal) {
-        int load = 0;
-        for (int i = 1; i <= 12; i++) {
-            if (occupiedGrid[dayOrdinal][i]) load++;
-        }
-        return load;
     }
 }
