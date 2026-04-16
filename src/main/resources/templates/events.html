@@ -131,7 +131,7 @@
 
         <!-- Calendar Wrap -->
         <div
-          class="flex-1 bg-white/80 backdrop-blur-3xl border border-white/60 rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-8 overflow-hidden flex flex-col relative z-10 Ring ring-1 ring-gray-100"
+          class="flex-1 bg-white/80 backdrop-blur-3xl border border-white/60 rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-8 overflow-hidden flex flex-col relative z-10 ring ring-1 ring-gray-100"
         >
           <div
             class="absolute inset-x-0 -top-40 -z-10 transform-gpu overflow-hidden blur-3xl sm:-top-80 pointer-events-none"
@@ -141,6 +141,7 @@
               class="relative left-[calc(50%-11rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 rotate-[30deg] bg-gradient-to-tr from-blue-100 to-indigo-100 opacity-30 sm:left-[calc(50%-30rem)] sm:w-[72.1875rem]"
             ></div>
           </div>
+
           <!-- Day of week headers -->
           <div class="grid grid-cols-7 gap-4 mb-4">
             <template
@@ -201,20 +202,20 @@
                     <div
                       class="text-[10px] px-2 py-1.5 rounded-lg font-semibold truncate flex items-center gap-1.5 shadow-sm border border-transparent"
                       :class="{
-                                            'bg-blue-50 text-blue-700 border-blue-100': booking.eventType === 'ACADEMIC',
-                                            'bg-purple-50 text-purple-700 border-purple-100': booking.eventType === 'CLUB',
-                                            'bg-orange-50 text-orange-700 border-orange-100': booking.eventType === 'EXAM',
-                                            'bg-gray-50 text-gray-700 border-gray-200': !['ACADEMIC','CLUB','EXAM'].includes(booking.eventType)
-                                        }"
+                        'bg-blue-50 text-blue-700 border-blue-100': booking.eventType === 'ACADEMIC',
+                        'bg-purple-50 text-purple-700 border-purple-100': booking.eventType === 'CLUB',
+                        'bg-orange-50 text-orange-700 border-orange-100': booking.eventType === 'EXAM',
+                        'bg-gray-50 text-gray-700 border-gray-200': !['ACADEMIC','CLUB','EXAM'].includes(booking.eventType)
+                      }"
                     >
                       <div
                         class="w-1.5 h-1.5 rounded-full flex-shrink-0"
                         :class="{
-                                                'bg-blue-500': booking.eventType === 'ACADEMIC',
-                                                'bg-purple-500': booking.eventType === 'CLUB',
-                                                'bg-orange-500': booking.eventType === 'EXAM',
-                                                'bg-gray-500': !['ACADEMIC','CLUB','EXAM'].includes(booking.eventType)
-                                             }"
+                          'bg-blue-500': booking.eventType === 'ACADEMIC',
+                          'bg-purple-500': booking.eventType === 'CLUB',
+                          'bg-orange-500': booking.eventType === 'EXAM',
+                          'bg-gray-500': !['ACADEMIC','CLUB','EXAM'].includes(booking.eventType)
+                        }"
                       ></div>
                       <span x-text="booking.title" class="truncate"></span>
                     </div>
@@ -292,9 +293,7 @@
               >
                 <div class="flex">
                   <div class="flex-shrink-0">
-                    <i
-                      class="fas fa-exclamation-circle text-red-500 mt-0.5"
-                    ></i>
+                    <i class="fas fa-exclamation-circle text-red-500 mt-0.5"></i>
                   </div>
                   <div class="ml-3">
                     <p
@@ -316,7 +315,7 @@
                 </div>
               </div>
 
-              <!-- List of Existing Bookings in this day -->
+              <!-- ── LIST VIEW ── -->
               <div x-show="modalView === 'list'" x-transition.opacity>
                 <div class="flex justify-between items-center mb-5">
                   <h4
@@ -359,6 +358,7 @@
                       </p>
                     </div>
                   </template>
+
                   <!-- Sort bookings by time -->
                   <template
                     x-for="booking in cellBookings.sort((a,b) => a.startTime.localeCompare(b.startTime))"
@@ -378,7 +378,7 @@
                           >
                             <i class="fas fa-door-open"></i> Room
                             <span
-                              x-text="rooms.find(r => r.id === booking.roomId)?.roomNumber || 'N/A'"
+                              x-text="rooms.find(r => r.id === booking.roomId)?.displayName || rooms.find(r => r.id === booking.roomId)?.roomNumber || 'N/A'"
                             ></span>
                           </span>
                           <span
@@ -409,22 +409,16 @@
                           ></span>
                           <span class="flex items-center gap-2"
                             ><i class="fas fa-user-circle text-gray-400"></i>
-                            <span
-                              x-text="booking.teacherName || 'Unknown'"
-                            ></span>
+                            <span x-text="booking.teacherName || 'Unknown'"></span>
                             •
-                            <span
-                              x-text="booking.departmentName || 'N/A'"
-                            ></span
+                            <span x-text="booking.departmentName || 'N/A'"></span
                           ></span>
                         </div>
                         <div
                           x-show="booking.additionalInfo"
                           class="mt-3 text-xs text-gray-600 bg-gray-50 p-3 rounded-xl border border-gray-100 flex gap-2 w-full"
                         >
-                          <i
-                            class="fas fa-info-circle text-gray-400 mt-0.5"
-                          ></i>
+                          <i class="fas fa-info-circle text-gray-400 mt-0.5"></i>
                           <span x-text="booking.additionalInfo"></span>
                         </div>
                       </div>
@@ -445,7 +439,7 @@
                 </div>
               </div>
 
-              <!-- Room-wise View -->
+              <!-- ── ROOM-WISE VIEW ── -->
               <div
                 x-show="modalView === 'roomwise'"
                 x-transition.opacity
@@ -484,9 +478,7 @@
                       <div
                         class="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center border border-blue-100"
                       >
-                        <i
-                          class="fas fa-calendar-day text-blue-500 text-xs"
-                        ></i>
+                        <i class="fas fa-calendar-day text-blue-500 text-xs"></i>
                       </div>
                       <div>
                         <h5
@@ -494,13 +486,12 @@
                         >
                           Daily Routine Grid
                         </h5>
-                        <p
-                          class="text-[9px] font-bold tracking-wider text-gray-400"
-                        >
+                        <p class="text-[9px] font-bold tracking-wider text-gray-400">
                           8 AM -- 8 PM SHIFT
                         </p>
                       </div>
                     </div>
+                    <!-- Legend: OPEN / PENDING / BOOKED / CLASS -->
                     <div
                       class="flex gap-4 text-[9px] font-black uppercase tracking-widest text-gray-500 pt-3 md:pt-0 pb-1"
                     >
@@ -521,6 +512,12 @@
                           class="w-2.5 h-2.5 bg-red-500 border border-red-600 rounded-sm shadow-sm"
                         ></div>
                         BOOKED
+                      </div>
+                      <div class="flex items-center gap-1.5">
+                        <div
+                          class="w-2.5 h-2.5 bg-slate-500 border border-slate-600 rounded-sm shadow-sm"
+                        ></div>
+                        CLASS
                       </div>
                     </div>
                   </div>
@@ -549,7 +546,7 @@
                 </div>
 
                 <div
-                  class="space-y-2 mb-4 max-h-[50vh] overflow-y-auto custom-scrollbar pr-1 pb-4 pb-2"
+                  class="space-y-2 mb-4 max-h-[50vh] overflow-y-auto custom-scrollbar pr-1 pb-2"
                 >
                   <template x-if="paginatedRooms.length === 0">
                     <div class="py-10 text-center text-gray-500 italic text-sm">
@@ -570,8 +567,8 @@
                         >
                           <i
                             class="fas fa-door-open text-blue-500/70 mr-2 md:hidden"
-                          ></i
-                          ><span x-text="r.roomNumber"></span>
+                          ></i>
+                          <span x-text="r.displayName || r.roomNumber"></span>
                         </div>
                         <div
                           class="text-[8px] text-gray-400 font-bold tracking-widest uppercase md:mt-1 bg-white px-2 py-0.5 rounded shadow-sm border border-gray-100"
@@ -583,30 +580,40 @@
                       <div
                         class="flex-1 p-2 md:p-3 flex items-center overflow-x-auto gap-1 custom-scrollbar min-h-[4rem]"
                       >
+                        <!-- Uses occupancy cache if available, falls back to local bookings -->
                         <template
-                          x-for="slot in getTimeSlots(r.id, formDate)"
+                          x-for="slot in getTimeSlotsFromOccupancy(r.id, formDate)"
                           :key="slot.start"
                         >
                           <button
                             type="button"
                             @click="if(!slot.isBooked && isTeacherOrAdmin) { openRoomwiseBookFormSpecific(r.id, slot.start, slot.end); }"
                             :class="[
-                                                            'flex-1 min-w-[3.2rem] md:min-w-[0] h-10 md:h-8 rounded-md flex flex-col items-center justify-center font-bold border transition-all duration-300 relative overflow-hidden',
-                                                            slot.isBooked 
-                                                                ? (slot.bookingStatus === 'PENDING' ? 'bg-gradient-to-br from-yellow-300 to-yellow-400 border-yellow-500 shadow-inner cursor-not-allowed opacity-90 hover:opacity-100' : 'bg-gradient-to-br from-red-500 to-red-600 border-red-700 shadow-inner cursor-not-allowed') 
-                                                                : 'bg-[#f1f5f9] border-transparent hover:bg-green-400 hover:border-green-500 hover:shadow-[0_0_15px_rgba(74,222,128,0.4)] cursor-pointer text-transparent hover:scale-[1.02]'
-                                                        ]"
+                              'flex-1 min-w-[3.2rem] md:min-w-[0] h-10 md:h-8 rounded-md flex flex-col items-center justify-center font-bold border transition-all duration-300 relative overflow-hidden',
+                              slot.isBooked
+                                ? (slot.isClass
+                                    ? 'bg-gradient-to-br from-slate-400 to-slate-500 border-slate-600 shadow-inner cursor-not-allowed'
+                                    : slot.bookingStatus === 'PENDING'
+                                      ? 'bg-gradient-to-br from-yellow-300 to-yellow-400 border-yellow-500 shadow-inner cursor-not-allowed opacity-90 hover:opacity-100'
+                                      : 'bg-gradient-to-br from-red-500 to-red-600 border-red-700 shadow-inner cursor-not-allowed')
+                                : 'bg-[#f1f5f9] border-transparent hover:bg-green-400 hover:border-green-500 hover:shadow-[0_0_15px_rgba(74,222,128,0.4)] cursor-pointer text-transparent hover:scale-[1.02]'
+                            ]"
                             :title="slot.title"
                           >
-                            <!-- Invisible text for screenreaders only -->
                             <span class="sr-only" x-text="slot.label"></span>
+                            <!-- CLASS slot icon -->
                             <i
-                              x-show="slot.isBooked && slot.bookingStatus === 'PENDING'"
-                              class="fas fa-hourglass-half text-[10px] text-yellow-900/60"
-                              data-tooltip="Pending"
+                              x-show="slot.isBooked && slot.isClass"
+                              class="fas fa-chalkboard-teacher text-[10px] text-white/70"
                             ></i>
+                            <!-- PENDING booking icon -->
                             <i
-                              x-show="slot.isBooked && slot.bookingStatus !== 'PENDING'"
+                              x-show="slot.isBooked && !slot.isClass && slot.bookingStatus === 'PENDING'"
+                              class="fas fa-hourglass-half text-[10px] text-yellow-900/60"
+                            ></i>
+                            <!-- BOOKED/APPROVED booking icon -->
+                            <i
+                              x-show="slot.isBooked && !slot.isClass && slot.bookingStatus !== 'PENDING'"
                               class="fas fa-times text-[10px] text-white/50"
                             ></i>
                           </button>
@@ -641,7 +648,7 @@
                 </div>
               </div>
 
-              <!-- Add New Booking Form -->
+              <!-- ── ADD BOOKING FORM ── -->
               <div
                 x-show="modalView === 'form' && isTeacherOrAdmin"
                 x-transition.opacity
@@ -676,7 +683,7 @@
                           <template x-for="room in rooms" :key="room.id">
                             <option
                               :value="room.id"
-                              x-text="'Room ' + room.roomNumber + ' (' + room.roomType + ')'"
+                              x-text="(room.displayName || room.roomNumber) + ' (' + (room.roomType || 'N/A') + ')'"
                             ></option>
                           </template>
                         </select>
@@ -820,6 +827,7 @@
     <script>
       document.addEventListener("alpine:init", () => {
         Alpine.data("eventBookingSystem", () => ({
+          // ── State ──────────────────────────────────────────────
           rooms: [],
           bookings: [],
           bookingsByDay: {},
@@ -837,19 +845,10 @@
           modalTitle: "",
           cellBookings: [],
           modalView: "list",
-          get isTeacherOrAdmin() {
-            return (
-              window.USER_ROLE === "ROLE_TEACHER" ||
-              window.USER_ROLE === "ROLE_COORDINATOR" ||
-              window.USER_ROLE === "ROLE_SUPERADMIN"
-            );
-          },
-          get isAdmin() {
-            return (
-              window.USER_ROLE === "ROLE_COORDINATOR" ||
-              window.USER_ROLE === "ROLE_SUPERADMIN"
-            );
-          },
+
+          // Occupancy cache (from fix-event-page) — avoids re-fetching on every render
+          roomOccupancyCache: {},
+          roomOccupancyLoading: false,
 
           formData: {
             roomId: "",
@@ -863,6 +862,9 @@
             additionalInfo: "",
           },
 
+          // ── Computed ───────────────────────────────────────────
+
+          // From dev — drives the month nav label
           get currentMonthDisplay() {
             return new Date(
               this.currentYear,
@@ -870,6 +872,45 @@
               1,
             ).toLocaleString("default", { month: "long", year: "numeric" });
           },
+
+          get isTeacherOrAdmin() {
+            return (
+              window.USER_ROLE === "ROLE_TEACHER" ||
+              window.USER_ROLE === "ROLE_COORDINATOR" ||
+              window.USER_ROLE === "ROLE_SUPERADMIN"
+            );
+          },
+
+          get isAdmin() {
+            return (
+              window.USER_ROLE === "ROLE_COORDINATOR" ||
+              window.USER_ROLE === "ROLE_SUPERADMIN"
+            );
+          },
+
+          get filteredRooms() {
+            const query = this.roomSearchQuery.trim().toLowerCase();
+            if (!query) return this.rooms;
+            return this.rooms.filter(
+              (r) =>
+                (r.displayName || r.roomNumber).toLowerCase().includes(query) ||
+                r.roomType.toLowerCase().includes(query),
+            );
+          },
+
+          get totalPages() {
+            return Math.max(
+              1,
+              Math.ceil(this.filteredRooms.length / this.roomsPerPage),
+            );
+          },
+
+          get paginatedRooms() {
+            const start = (this.currentPage - 1) * this.roomsPerPage;
+            return this.filteredRooms.slice(start, start + this.roomsPerPage);
+          },
+
+          // ── Lifecycle ──────────────────────────────────────────
 
           async initData() {
             const now = new Date();
@@ -880,8 +921,19 @@
             await this.fetchRooms();
             await this.fetchBookings();
 
+            // From fix-event-page: trigger server-side occupancy fetch
+            // whenever the user opens the room-wise view
+            this.$watch("modalView", (val) => {
+              if (val === "roomwise" && this.formDate) {
+                this.fetchAllRoomOccupancy(this.formDate);
+              }
+            });
+
+            // Refresh bookings every 30 s so the grid stays live
             setInterval(() => this.fetchBookings(), 30000);
           },
+
+          // ── Month navigation ───────────────────────────────────
 
           async prevMonth() {
             this.currentMonth--;
@@ -926,12 +978,14 @@
             return `${this.currentYear}-${m}-${d}`;
           },
 
+          // ── Data fetching ──────────────────────────────────────
+
           async fetchRooms() {
             try {
               const res = await apiFetch("/api/v1/rooms");
               if (res.ok) this.rooms = await res.json();
             } catch (e) {
-              console.error("Failed to load rooms");
+              console.error("Failed to load rooms", e);
             }
           },
 
@@ -943,14 +997,14 @@
                 this.bookings = await res.json();
                 this.processBookings();
 
-                // If modal is open, refresh cellBookings
+                // Keep the open modal in sync
                 if (this.isModalOpen && this.formDate) {
-                  const dayStr = this.formDate.split("-")[2];
-                  this.cellBookings = this.getDayBookings(parseInt(dayStr, 10));
+                  const dayNum = parseInt(this.formDate.split("-")[2], 10);
+                  this.cellBookings = this.getDayBookings(dayNum);
                 }
               }
             } catch (e) {
-              console.error("Failed to fetch bookings");
+              console.error("Failed to fetch bookings", e);
             }
           },
 
@@ -963,38 +1017,91 @@
             this.bookingsByDay = map;
           },
 
+          // From fix-event-page: fetch server-side occupancy for all visible rooms.
+          // SECURITY FIX: uses apiFetch() (not bare fetch) so the CSRF header is included.
+          async fetchAllRoomOccupancy(dateStr) {
+            this.roomOccupancyLoading = true;
+            await Promise.all(
+              this.paginatedRooms.map(async (r) => {
+                const key = `${r.id}_${dateStr}`;
+                if (this.roomOccupancyCache[key]) return; // already cached
+                try {
+                  const res = await apiFetch(
+                    `/api/v1/bookings/room-occupancy?roomId=${r.id}&date=${dateStr}`,
+                  );
+                  if (res.ok) {
+                    const slots = await res.json();
+                    // Spread to keep Alpine reactivity
+                    this.roomOccupancyCache = {
+                      ...this.roomOccupancyCache,
+                      [key]: slots,
+                    };
+                  }
+                } catch (e) {
+                  /* silently ignore per-room failures */
+                }
+              }),
+            );
+            this.roomOccupancyLoading = false;
+          },
+
+          // ── Slot helpers ───────────────────────────────────────
+
+          // From fix-event-page: prefer server occupancy cache; fall back to
+          // local booking data while cache is being populated.
+          getTimeSlotsFromOccupancy(roomId, dateStr) {
+            const key = `${roomId}_${dateStr}`;
+            const occupancy = this.roomOccupancyCache[key];
+            if (!occupancy) {
+              return this.getTimeSlots(roomId, dateStr); // fallback
+            }
+            return occupancy.map((s) => ({
+              label: s.slotLabel,
+              start: String(s.hour).padStart(2, "0") + ":00",
+              end: String(s.hour + 1).padStart(2, "0") + ":00",
+              isBooked: s.occupancyType !== "FREE",
+              isClass: s.occupancyType === "CLASS",
+              bookingStatus: s.bookingStatus,
+              title: s.label || "Free to book (click)",
+            }));
+          },
+
+          // Local fallback — derives slots from already-fetched bookings
+          getTimeSlots(roomId, dateStr) {
+            const bookings = this.getCellBookingsByDateStr(roomId, dateStr);
+            const slots = [];
+            for (let h = 8; h < 20; h++) {
+              const slotStart = `${h.toString().padStart(2, "0")}:00`;
+              const slotEnd = `${(h + 1).toString().padStart(2, "0")}:00`;
+              const hit = bookings.find(
+                (b) => b.startTime < slotEnd && b.endTime > slotStart,
+              );
+              slots.push({
+                label: `${h % 12 || 12} ${h < 12 ? "AM" : "PM"}`,
+                start: slotStart,
+                end: slotEnd,
+                isBooked: !!hit,
+                isClass: false, // local data has no class info
+                bookingStatus: hit ? hit.status : "FREE",
+                title: hit ? hit.title : "Free to book (click)",
+              });
+            }
+            return slots;
+          },
+
+          // ── Booking lookups ────────────────────────────────────
+
           getDayBookings(day) {
-            const dateStr = this.formatDateParam(day);
-            return this.bookingsByDay[dateStr] || [];
+            return this.bookingsByDay[this.formatDateParam(day)] || [];
           },
 
           getCellBookingsByDateStr(roomId, dateStr) {
-            const daily = this.bookingsByDay[dateStr] || [];
-            return daily.filter((b) => b.roomId === roomId);
-          },
-
-          get filteredRooms() {
-            const query = this.roomSearchQuery.trim().toLowerCase();
-            if (query === "") return this.rooms;
-            return this.rooms.filter(
-              (r) =>
-                r.roomNumber.toLowerCase().includes(query) ||
-                r.roomType.toLowerCase().includes(query),
+            return (this.bookingsByDay[dateStr] || []).filter(
+              (b) => b.roomId === roomId,
             );
           },
 
-          get totalPages() {
-            return Math.max(
-              1,
-              Math.ceil(this.filteredRooms.length / this.roomsPerPage),
-            );
-          },
-
-          get paginatedRooms() {
-            const start = (this.currentPage - 1) * this.roomsPerPage;
-            const end = start + this.roomsPerPage;
-            return this.filteredRooms.slice(start, end);
-          },
+          // ── Pagination ─────────────────────────────────────────
 
           nextPage() {
             if (this.currentPage < this.totalPages) this.currentPage++;
@@ -1004,44 +1111,7 @@
             if (this.currentPage > 1) this.currentPage--;
           },
 
-          getTimeSlots(roomId, dateStr) {
-            const bookings = this.getCellBookingsByDateStr(roomId, dateStr);
-            const slots = [];
-
-            for (let h = 8; h < 20; h++) {
-              const slotStartTime = `${h.toString().padStart(2, "0")}:00`;
-              const slotEndTime = `${(h + 1).toString().padStart(2, "0")}:00`;
-
-              const overlappingBooking = bookings.find((b) => {
-                const bStart = b.startTime;
-                const bEnd = b.endTime;
-                return bStart < slotEndTime && bEnd > slotStartTime;
-              });
-
-              slots.push({
-                label: `${Math.floor(h % 12 || 12)} ${h < 12 ? "AM" : "PM"}`,
-                start: slotStartTime,
-                end: slotEndTime,
-                isBooked: !!overlappingBooking,
-                bookingStatus: overlappingBooking
-                  ? overlappingBooking.status
-                  : "FREE",
-                title: overlappingBooking
-                  ? overlappingBooking.title
-                  : "Free to book (click)",
-              });
-            }
-            return slots;
-          },
-
-          openRoomwiseBookFormSpecific(roomId, start, end) {
-            this.resetFormData();
-            this.formData.roomId = roomId;
-            this.formData.specificDate = this.formDate;
-            this.formData.startTime = start;
-            this.formData.endTime = end;
-            this.modalView = "form";
-          },
+          // ── Modal openers ──────────────────────────────────────
 
           openDayBookingModal(day) {
             this.errorMessage = "";
@@ -1053,13 +1123,12 @@
               this.currentMonth - 1,
               day,
             );
-            const formattedDisplayDate = dateObj.toLocaleDateString("en-US", {
+            this.modalTitle = dateObj.toLocaleDateString("en-US", {
               weekday: "long",
               month: "long",
               day: "numeric",
               year: "numeric",
             });
-            this.modalTitle = formattedDisplayDate;
 
             this.cellBookings = this.getDayBookings(day);
             this.modalView = "list";
@@ -1071,11 +1140,20 @@
             this.errorMessage = "";
             this.formErrorMessage = "";
             this.formDate = this.formatDateParam(new Date().getDate());
-            this.modalTitle = `Quick Booking - ${this.formDate}`;
+            this.modalTitle = `Quick Booking — ${this.formDate}`;
             this.cellBookings = [];
             this.modalView = "form";
             this.resetFormData();
             this.isModalOpen = true;
+          },
+
+          openRoomwiseBookFormSpecific(roomId, start, end) {
+            this.resetFormData();
+            this.formData.roomId = roomId;
+            this.formData.specificDate = this.formDate;
+            this.formData.startTime = start;
+            this.formData.endTime = end;
+            this.modalView = "form";
           },
 
           resetFormData() {
@@ -1092,28 +1170,26 @@
             };
           },
 
+          // ── Actions ────────────────────────────────────────────
+
           async submitBooking() {
             this.isSubmitting = true;
             this.errorMessage = "";
             this.formErrorMessage = "";
             try {
-              const payload = { ...this.formData };
-
               const res = await apiFetch("/api/v1/bookings", {
                 method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                },
-                body: JSON.stringify(payload),
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ ...this.formData }),
               });
 
               if (res.ok) {
                 this.isModalOpen = false;
-                await this.fetchBookings(); // Refresh grid
+                await this.fetchBookings();
               } else {
                 const errText = await res.text();
                 this.formErrorMessage =
-                  errText || "Failed to book slot. It might be already taken.";
+                  errText || "Failed to book slot. It might already be taken.";
               }
             } catch (e) {
               this.formErrorMessage = "Network error. Please try again.";
@@ -1127,9 +1203,7 @@
             try {
               const res = await apiFetch(
                 `/api/v1/bookings/${bookingId}/approve`,
-                {
-                  method: "POST",
-                },
+                { method: "POST" },
               );
 
               if (res.ok) {
