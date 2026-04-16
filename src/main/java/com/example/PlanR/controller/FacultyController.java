@@ -25,7 +25,7 @@ public class FacultyController {
     }
 
     @GetMapping("/faculty")
-    @PreAuthorize("hasRole('SUPERADMIN')")
+    @PreAuthorize("hasAnyRole('SUPERADMIN', 'TEACHER', 'STUDENT', 'COORDINATOR')")
     public String showFacultyHub(Model model) {
         List<User> faculties = userService.findUsersByRole(Role.TEACHER);
         model.addAttribute("faculties", faculties);
@@ -37,5 +37,12 @@ public class FacultyController {
         List<User> students = userService.findUsersByRole(Role.STUDENT);
         model.addAttribute("students", students);
         return "students";
+    }
+
+    @GetMapping("/coordinators")
+    public String showCoordinatorsHub(Model model) {
+        List<User> coordinators = userService.findUsersByRole(Role.COORDINATOR);
+        model.addAttribute("coordinators", coordinators);
+        return "coordinators";
     }
 }
