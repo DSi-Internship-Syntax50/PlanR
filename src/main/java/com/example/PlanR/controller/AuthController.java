@@ -1,15 +1,10 @@
 package com.example.PlanR.controller;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -18,26 +13,23 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 
 import com.example.PlanR.dto.UserRegistrationDto;
-import com.example.PlanR.model.Department;
-import com.example.PlanR.model.User;
-import com.example.PlanR.model.enums.Role;
-import com.example.PlanR.repository.DepartmentRepository;
-import com.example.PlanR.repository.UserRepository;
+import com.example.PlanR.exception.ValidationException;
+import com.example.PlanR.service.UserRegistrationService;
 
 import jakarta.validation.Valid;
 
+/**
+ * Handles public-facing authentication (login, self-registration).
+ * Registration logic is delegated to UserRegistrationService.
+ */
 @Controller
 public class AuthController {
-    private final DepartmentRepository departmentRepository;
-    private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
-    private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
 
-    public AuthController(DepartmentRepository departmentRepository, UserRepository userRepository,
-            PasswordEncoder passwordEncoder) {
-        this.departmentRepository = departmentRepository;
-        this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
+    private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
+    private final UserRegistrationService registrationService;
+
+    public AuthController(UserRegistrationService registrationService) {
+        this.registrationService = registrationService;
     }
 
     @GetMapping("/login")
@@ -57,15 +49,8 @@ public class AuthController {
         }
 
         model.addAttribute("registrationForm", new UserRegistrationDto());
-        model.addAttribute("departments", departmentRepository.findAll().stream()
-                .filter(dept -> !"SYS".equals(dept.getShortCode()))
-                .collect(Collectors.toList()));
-
-        List<Role> assignableRoles = Arrays.stream(Role.values())
-                .filter(role -> role != Role.SUPERADMIN)
-                .collect(Collectors.toList());
-        model.addAttribute("roles", assignableRoles);
-
+        model.addAttribute("departments", registrationService.getAssignableDepartments());
+        model.addAttribute("roles", registrationService.getAssignableRoles());
         return "register";
     }
 
@@ -74,36 +59,25 @@ public class AuthController {
             BindingResult result, Model model) {
 
         String email = registrationDto.getEmail().trim().toLowerCase();
-        if (userRepository.findByEmail(email).isPresent()) {
+
+        if (registrationService.isEmailTaken(email)) {
             result.rejectValue("email", null, "There is already an account registered with that email");
         }
 
         if (result.hasErrors()) {
-            model.addAttribute("departments", departmentRepository.findAll().stream()
-                    .filter(dept -> !"SYS".equals(dept.getShortCode()))
-                    .collect(Collectors.toList()));
-            List<Role> assignableRoles = Arrays.stream(Role.values())
-                    .filter(role -> role != Role.SUPERADMIN)
-                    .collect(Collectors.toList());
-            model.addAttribute("roles", assignableRoles);
+            model.addAttribute("departments", registrationService.getAssignableDepartments());
+            model.addAttribute("roles", registrationService.getAssignableRoles());
             return "register";
         }
 
         try {
-            User user = new User();
-            user.setName(registrationDto.getName());
-            user.setEmail(email);
-            user.setPassword(passwordEncoder.encode(registrationDto.getPassword()));
-            user.setRole(registrationDto.getRole());
-
-            Department department = departmentRepository.findById(registrationDto.getDepartmentId())
-                    .orElseThrow(() -> new IllegalArgumentException(
-                            "Invalid department Id:" + registrationDto.getDepartmentId()));
-            user.setDepartment(department);
-
-            userRepository.save(user);
-            logger.info("New user registered: {}", email);
+            registrationService.registerUser(registrationDto);
             return "redirect:/login?success=true";
+        } catch (ValidationException e) {
+            result.rejectValue("email", null, e.getMessage());
+            model.addAttribute("departments", registrationService.getAssignableDepartments());
+            model.addAttribute("roles", registrationService.getAssignableRoles());
+            return "register";
         } catch (Exception e) {
             logger.error("Registration error", e);
             model.addAttribute("registrationError", "A system error occurred. Please try again.");

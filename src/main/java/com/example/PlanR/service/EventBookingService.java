@@ -1,7 +1,6 @@
 package com.example.PlanR.service;
 
 import java.time.LocalDate;
-import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -9,12 +8,13 @@ import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.example.PlanR.dto.EventBookingRequestDto;
 import com.example.PlanR.dto.EventBookingResponseDto;
 import com.example.PlanR.dto.RoomOccupancySlot;
+import com.example.PlanR.exception.EntityNotFoundException;
+import com.example.PlanR.exception.ValidationException;
 import com.example.PlanR.model.ClassOverride;
 import com.example.PlanR.model.EventBooking;
 import com.example.PlanR.model.MasterRoutine;
@@ -30,44 +30,48 @@ import com.example.PlanR.repository.MasterRoutineRepository;
 import com.example.PlanR.repository.RoomRepository;
 import com.example.PlanR.repository.UserRepository;
 
+/**
+ * Service for event booking operations.
+ * Merged: constructor injection + typed exceptions (our refactoring)
+ *       + room occupancy grid and ClassOverride support (other branch).
+ */
 @Service
 public class EventBookingService {
 
-    @Autowired
-    private EventBookingRepository bookingRepository;
+    private final EventBookingRepository bookingRepository;
+    private final RoomRepository roomRepository;
+    private final UserRepository userRepository;
+    private final MasterRoutineRepository masterRoutineRepository;
+    private final ClassOverrideRepository classOverrideRepository;
 
-    @Autowired
-    private RoomRepository roomRepository;
-
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private MasterRoutineRepository masterRoutineRepository;
-
-    @Autowired
-    private ClassOverrideRepository classOverrideRepository;
+    public EventBookingService(EventBookingRepository bookingRepository,
+                               RoomRepository roomRepository,
+                               UserRepository userRepository,
+                               MasterRoutineRepository masterRoutineRepository,
+                               ClassOverrideRepository classOverrideRepository) {
+        this.bookingRepository = bookingRepository;
+        this.roomRepository = roomRepository;
+        this.userRepository = userRepository;
+        this.masterRoutineRepository = masterRoutineRepository;
+        this.classOverrideRepository = classOverrideRepository;
+    }
 
     /**
-     * Returns a 12-slot hourly occupancy grid (8AM–7PM) for a room on a given date,
+     * Returns a 12-slot hourly occupancy grid (8AM-7PM) for a room on a given date,
      * merging MasterRoutine class schedules and EventBooking records.
-     * Slot index → hour: slot N = hour (7 + N), e.g. slot 1 = 8AM, slot 2 = 9AM
+     * (From other branch)
      */
     public List<RoomOccupancySlot> getRoomOccupancy(Long roomId, LocalDate date) {
-        // Build the 12-slot grid (hours 8..19)
         List<RoomOccupancySlot> grid = new ArrayList<>();
         for (int h = 8; h < 20; h++) {
             grid.add(new RoomOccupancySlot(h));
         }
 
-        // 1. Map date → day of week (using our custom enum ordinal)
         java.time.DayOfWeek javaDow = date.getDayOfWeek();
-        DayOfWeek dow = DayOfWeek.values()[javaDow.getValue() % 7]; // Sun=0..Sat=6
+        DayOfWeek dow = DayOfWeek.values()[javaDow.getValue() % 7];
 
-        // 2. Fetch class schedules for this room + day
         List<MasterRoutine> routines = masterRoutineRepository.findByRoomIdAndDayOfWeek(roomId, dow);
 
-        // 3. Find any ClassOverrides (cancellations) for this specific date
         List<Long> routineIds = routines.stream().map(MasterRoutine::getId).collect(Collectors.toList());
         Set<Long> cancelledRoutineIds = routineIds.isEmpty() ? Set.of() :
             classOverrideRepository.findBySpecificDateAndRoutineIdIn(date, routineIds)
@@ -76,32 +80,56 @@ public class EventBookingService {
                 .map(co -> co.getRoutine().getId())
                 .collect(Collectors.toSet());
 
-        // 4. Mark CLASS slots (slot index → hour: slotN = 7+N)
+        // 4. Mark CLASS slots
+        // Slot mapping: slot 1→8:00, slot 2→9:30, slot 3→11:00, slot 4→12:30, slot 5→14:00, slot 6→15:30
+        // Each slot spans 1.5 hours. Duration is in slots, so total hours = duration * 1.5
         for (MasterRoutine rt : routines) {
             if (cancelledRoutineIds.contains(rt.getId())) continue; // skip cancelled
-            if (rt.getStartSlotIndex() == null) continue;
 
-            int startHour = 7 + rt.getStartSlotIndex(); // slot 1 → 8AM
-            int duration = (rt.getCourse() != null && rt.getCourse().getRequiredSlots() != null)
-                    ? rt.getCourse().getRequiredSlots()
-                    : (rt.getCourse() != null && Boolean.TRUE.equals(rt.getCourse().getIsLab()) ? 3 : 1);
+            int startHour;
+            int endHour;
+
+            if (rt.getStartSlotIndex() != null) {
+                // Slot index based mapping (from routine builder)
+                double startHourFloat = 8.0 + (rt.getStartSlotIndex() - 1) * 1.5;
+                startHour = (int) startHourFloat;
+
+                int durationSlots = 1;
+                if (rt.getCourse() != null) {
+                    if (rt.getCourse().getRequiredSlots() != null) {
+                        durationSlots = rt.getCourse().getRequiredSlots();
+                    } else if (rt.getCourse().getSlotCount() != null) {
+                        durationSlots = rt.getCourse().getSlotCount();
+                    } else if (Boolean.TRUE.equals(rt.getCourse().getIsLab())) {
+                        durationSlots = 3;
+                    }
+                }
+                double totalHours = durationSlots * 1.5;
+                endHour = (int) Math.ceil(startHourFloat + totalHours);
+            } else if (rt.getStartTime() != null && rt.getEndTime() != null) {
+                // Fallback to time-based for manual/legacy entries
+                startHour = rt.getStartTime().getHour();
+                endHour = rt.getEndTime().getHour();
+                if (rt.getEndTime().getMinute() > 0) endHour++;
+            } else {
+                continue; // Cannot determine occupancy, skip
+            }
+
             String courseCode = (rt.getCourse() != null) ? rt.getCourse().getCourseCode() : "Class";
 
-            for (int i = 0; i < duration; i++) {
-                int h = startHour + i;
+            for (int h = startHour; h < endHour; h++) {
                 if (h >= 8 && h < 20) {
                     grid.get(h - 8).markAsClass(courseCode);
                 }
             }
         }
 
-        // 5. Overlay EventBookings (events override class display if overlapping)
         List<EventBooking> events = bookingRepository.findByRoomIdAndSpecificDate(roomId, date);
         for (EventBooking ev : events) {
             if (ev.getStartTime() == null || ev.getEndTime() == null) continue;
             int startH = ev.getStartTime().getHour();
             int endH = ev.getEndTime().getHour();
-            if (ev.getEndTime().getMinute() > 0) endH++; // round up partial hours
+            if (ev.getEndTime().getMinute() > 0) endH++;
 
             for (int h = startH; h < endH; h++) {
                 if (h >= 8 && h < 20) {
@@ -125,13 +153,13 @@ public class EventBookingService {
     @Transactional
     public EventBookingResponseDto bookSlot(EventBookingRequestDto requestDto, String username) {
         Room room = roomRepository.findById(requestDto.getRoomId())
-                .orElseThrow(() -> new RuntimeException("Room not found"));
+                .orElseThrow(() -> new EntityNotFoundException("Room", requestDto.getRoomId()));
 
         User requestor = userRepository.findByEmail(username)
-                .orElseThrow(() -> new RuntimeException("User not found: " + username));
+                .orElseThrow(() -> new EntityNotFoundException("User", username));
 
         if (requestDto.getStartTime().isAfter(requestDto.getEndTime())) {
-            throw new IllegalArgumentException("Start time must be before end time");
+            throw new ValidationException("Start time must be before end time");
         }
 
         List<EventBooking> overlaps = bookingRepository.findOverlappingBookings(
@@ -141,7 +169,7 @@ public class EventBookingService {
                 requestDto.getEndTime());
 
         if (!overlaps.isEmpty()) {
-            throw new RuntimeException("Slot is already booked by another event.");
+            throw new ValidationException("Slot is already booked by another event.");
         }
 
         EventBooking newBooking = new EventBooking();
@@ -156,7 +184,6 @@ public class EventBookingService {
         newBooking.setTeacherName(requestDto.getTeacherName());
         newBooking.setAdditionalInfo(requestDto.getAdditionalInfo());
 
-        // Auto-approve if requestor has elevated privileges, else PENDING
         if (requestor.getRole() == Role.SUPERADMIN
                 || requestor.getRole() == Role.COORDINATOR) {
             newBooking.setStatus(BookingStatus.APPROVED);
@@ -171,7 +198,7 @@ public class EventBookingService {
     @Transactional
     public void approveBooking(Long bookingId) {
         EventBooking booking = bookingRepository.findById(bookingId)
-                .orElseThrow(() -> new RuntimeException("Booking not found"));
+                .orElseThrow(() -> new EntityNotFoundException("Booking", bookingId));
         booking.setStatus(BookingStatus.APPROVED);
         bookingRepository.save(booking);
     }

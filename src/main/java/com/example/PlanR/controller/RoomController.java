@@ -1,26 +1,33 @@
 package com.example.PlanR.controller;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+
 import com.example.PlanR.model.Department;
 import com.example.PlanR.model.Room;
 import com.example.PlanR.dto.RoomCreateDto;
-import com.example.PlanR.repository.DepartmentRepository;
-import com.example.PlanR.repository.RoomRepository;
+import com.example.PlanR.service.DepartmentService;
+import com.example.PlanR.service.RoomService;
 
 import jakarta.validation.Valid;
 
+/**
+ * REST API for room management.
+ * Refactored to use constructor injection.
+ * Includes CRUD operations from both branches.
+ */
 @RestController
 @RequestMapping("/api/rooms")
 public class RoomController {
 
-    @Autowired
-    private RoomRepository roomRepository;
+    private final RoomService roomService;
+    private final DepartmentService departmentService;
 
-    @Autowired
-    private DepartmentRepository departmentRepository;
+    public RoomController(RoomService roomService, DepartmentService departmentService) {
+        this.roomService = roomService;
+        this.departmentService = departmentService;
+    }
 
     // --- CREATE ---
     @PostMapping
@@ -34,7 +41,7 @@ public class RoomController {
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('SUPERADMIN', 'COORDINATOR')")
     public ResponseEntity<Room> updateRoom(@PathVariable Long id, @Valid @RequestBody RoomCreateDto dto) {
-        Room room = roomRepository.findById(id).orElse(null);
+        Room room = roomService.findRoomById(id).orElse(null);
         if (room == null) {
             return ResponseEntity.notFound().build();
         }
@@ -45,29 +52,25 @@ public class RoomController {
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAnyRole('SUPERADMIN', 'COORDINATOR')")
     public ResponseEntity<?> deleteRoom(@PathVariable Long id) {
-        if (!roomRepository.existsById(id)) {
+        if (!roomService.existsById(id)) {
             return ResponseEntity.notFound().build();
         }
-        // Note: If a room is actively assigned to a MasterRoutine, 
-        // PostgreSQL might block this via foreign key constraints. 
-        // This is good for data integrity!
-        roomRepository.deleteById(id);
+        roomService.deleteRoomById(id);
         return ResponseEntity.ok().build();
     }
 
     // Shared logic to prevent NullPointerExceptions and handle mapping
     private ResponseEntity<Room> saveRoomDetails(Room room, RoomCreateDto dto) {
-        room.setHasComputers(Boolean.TRUE.equals(dto.getHasComputers()));
-        room.setHasHardwareKits(Boolean.TRUE.equals(dto.getHasHardwareKits()));
-        
         room.setRoomNumber(dto.getRoomNumber());
         room.setType(dto.getType());
         room.setCapacity(dto.getCapacity());
+        room.setHasComputers(Boolean.TRUE.equals(dto.getHasComputers()));
+        room.setHasHardwareKits(Boolean.TRUE.equals(dto.getHasHardwareKits()));
         room.setFloorNumber(dto.getFloorNumber());
         room.setBlock(dto.getBlock());
-        
+
         if (dto.getDeptId() != null) {
-            Department dept = departmentRepository.findById(dto.getDeptId()).orElse(null);
+            Department dept = departmentService.findDepartmentById(dto.getDeptId()).orElse(null);
             if (dept != null) {
                 room.setDept(dept.getShortCode());
                 room.setDepartment(dept);
@@ -77,7 +80,7 @@ public class RoomController {
             room.setDepartment(null);
         }
 
-        Room savedRoom = roomRepository.save(room);
+        Room savedRoom = roomService.saveRoom(room);
         return ResponseEntity.ok(savedRoom);
     }
 }

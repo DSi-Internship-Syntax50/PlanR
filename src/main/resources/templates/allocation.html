@@ -10,6 +10,46 @@
     <link rel="stylesheet" th:href="@{/css/tailwind-output.css}">
     <link rel="stylesheet" href="/css/fontawesome/all.min.css">
     <link rel="stylesheet" th:href="@{/css/style.css}">
+    <style>
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #2563eb;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .allocation-block {
+            transition: all 0.2s ease-in-out;
+        }
+
+        .allocation-block:hover {
+            transform: scale(1.02);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            z-index: 10;
+        }
+
+        /* Hide scrollbar for the sidebar pagination but keep it functional */
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+
+        .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
 </head>
 
 <body class="bg-[#f3f6f8] font-['Inter',sans-serif]" th:data-user-role="${user != null ? user.role : 'GUEST'}">
@@ -24,7 +64,8 @@
             <div class="flex justify-between items-start mb-8">
                 <div class="max-w-2xl">
                     <h1 class="text-4xl font-extrabold text-[#0a192f] tracking-tight">Room Allocation Builder</h1>
-                    <p class="text-gray-500 font-medium mt-3 text-sm leading-relaxed">Drag-and-drop style interface to manage lecture halls using a 12-slot system.</p>
+                    <p class="text-gray-500 font-medium mt-3 text-sm leading-relaxed">Drag-and-drop style interface to
+                        manage lecture halls using a 12-slot system.</p>
                 </div>
                 <div class="flex gap-3">
                     <div sec:authorize="hasAnyRole('SUPERADMIN', 'COORDINATOR')">
@@ -37,19 +78,23 @@
             </div>
 
             <div class="grid grid-cols-12 gap-6">
-                <div class="col-span-4 bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col min-h-[600px] max-h-[800px] relative">
+                <div
+                    class="col-span-4 bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col min-h-[600px] max-h-[800px] relative">
                     <div class="p-5 border-b border-gray-100 bg-gray-50/50">
-                        <h3 class="font-bold text-gray-900 mb-4"><i class="fas fa-door-open text-blue-600 mr-2"></i> Facilities Directory</h3>
-                        
+                        <h3 class="font-bold text-gray-900 mb-4"><i class="fas fa-door-open text-blue-600 mr-2"></i>
+                            Facilities Directory</h3>
+
                         <div class="relative mb-3">
-                            <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm"></i>
+                            <i
+                                class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm"></i>
                             <input type="text" id="roomSearchInput" placeholder="Search by name, block, or capacity..."
                                 class="w-full bg-white border border-gray-200 text-sm rounded-xl py-2 pl-9 pr-4 focus:ring-2 focus:ring-blue-500 outline-none transition-all">
                         </div>
-                        
+
                         <div class="flex gap-2">
                             <div class="flex-1">
-                                <select id="typeFilter" class="w-full bg-white border border-gray-200 text-xs text-gray-600 font-bold rounded-lg py-2 px-3 focus:ring-blue-500 outline-none">
+                                <select id="typeFilter"
+                                    class="w-full bg-white border border-gray-200 text-xs text-gray-600 font-bold rounded-lg py-2 px-3 focus:ring-blue-500 outline-none">
                                     <option value="">All Types</option>
                                     <option value="THEORY">Theory</option>
                                     <option value="LAB">Lab</option>
@@ -60,63 +105,76 @@
                     </div>
 
                     <div class="flex-1 overflow-y-auto p-4 space-y-3 pb-24" id="roomList">
-                        <div th:each="room : ${rooms}" 
-                            th:data-room-id="${room.id}"
-                            th:data-room-name="${room.roomNumber}" 
-                            th:data-room-floor="${room.floorNumber}"
+                        <div th:each="room : ${rooms}" th:data-room-id="${room.id}"
+                            th:data-room-name="${room.roomNumber}" th:data-room-floor="${room.floorNumber}"
                             th:data-room-block="${room.block}"
                             th:data-room-dept="${room.department != null ? room.department.shortCode : room.dept}"
-                            th:data-room-type="${room.type}"
-                            th:data-room-cap="${room.capacity}"
+                            th:data-room-type="${room.type}" th:data-room-cap="${room.capacity}"
                             th:data-room-dept-id="${room.department != null ? room.department.id : ''}"
-                            th:data-has-comp="${room.hasComputers}"
-                            th:data-has-kits="${room.hasHardwareKits}"
+                            th:data-has-comp="${room.hasComputers}" th:data-has-kits="${room.hasHardwareKits}"
                             class="room-card p-4 rounded-xl border border-gray-100 bg-white hover:border-blue-300 cursor-pointer transition-all shadow-sm relative group">
-                            
-                            <div class="absolute bottom-3 right-3 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity" sec:authorize="hasAnyRole('SUPERADMIN', 'COORDINATOR')">
-                                <button onclick="openRoomModal(this.closest('.room-card'), event)" class="w-7 h-7 rounded bg-blue-50 border border-blue-100 text-blue-600 hover:bg-blue-600 hover:text-white flex items-center justify-center transition shadow-sm" title="Edit Facility"><i class="fas fa-pencil-alt text-[10px]"></i></button>
-                                <button onclick="deleteRoom(event, this.closest('.room-card'))" class="w-7 h-7 rounded bg-red-50 border border-red-100 text-red-600 hover:bg-red-600 hover:text-white flex items-center justify-center transition shadow-sm" title="Delete Facility"><i class="fas fa-trash text-[10px]"></i></button>
+
+                            <div class="absolute bottom-3 right-3 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                                sec:authorize="hasAnyRole('SUPERADMIN', 'COORDINATOR')">
+                                <button onclick="openRoomModal(this.closest('.room-card'), event)"
+                                    class="w-7 h-7 rounded bg-blue-50 border border-blue-100 text-blue-600 hover:bg-blue-600 hover:text-white flex items-center justify-center transition shadow-sm"
+                                    title="Edit Facility"><i class="fas fa-pencil-alt text-[10px]"></i></button>
+                                <button onclick="deleteRoom(event, this.closest('.room-card'))"
+                                    class="w-7 h-7 rounded bg-red-50 border border-red-100 text-red-600 hover:bg-red-600 hover:text-white flex items-center justify-center transition shadow-sm"
+                                    title="Delete Facility"><i class="fas fa-trash text-[10px]"></i></button>
                             </div>
 
-                            <div class="selected-badge hidden absolute top-0 right-0 bg-blue-600 text-white text-[9px] font-bold px-3 py-1 rounded-bl-xl rounded-tr-xl shadow-sm">
+                            <div
+                                class="selected-badge hidden absolute top-0 right-0 bg-blue-600 text-white text-[9px] font-bold px-3 py-1 rounded-bl-xl rounded-tr-xl shadow-sm">
                                 ACTIVE
                             </div>
                             <div class="flex justify-between items-start mb-2 mt-1">
                                 <h4 class="font-bold text-gray-900 room-title text-lg">
-                                    <span th:if="${room.floorNumber != null}" th:text="|${room.floorNumber}${room.block ?: ''}${room.roomNumber}|">Room</span>
-                                    <span th:unless="${room.floorNumber != null}" th:text="${room.roomNumber}">Room</span>
+                                    <span th:text="${room.roomNumber}">Room</span>
                                 </h4>
-                                <span class="room-type-badge bg-indigo-50 text-indigo-700 border border-indigo-100 px-2 py-0.5 rounded text-[10px] font-extrabold uppercase tracking-wider" th:text="${room.type}">Type</span>
+                                <span
+                                    class="room-type-badge bg-indigo-50 text-indigo-700 border border-indigo-100 px-2 py-0.5 rounded text-[10px] font-extrabold uppercase tracking-wider"
+                                    th:text="${room.type}">Type</span>
                             </div>
                             <div class="mt-2 text-xs text-gray-500 font-medium flex items-center gap-2 flex-wrap pr-16">
-                                <span class="bg-gray-100 px-2 py-1 rounded-md"><i class="fas fa-users mr-1"></i> <span th:text="${room.capacity}"></span></span>
-                                <span class="bg-gray-100 text-gray-600 px-2 py-1 rounded-md text-[10px] font-bold" th:if="${room.department != null}" th:text="${room.department.shortCode}"></span>
-                                <span class="bg-gray-100 px-2 py-1 rounded-md" th:if="${room.block != null}">Block <span th:text="${room.block}"></span></span>
+                                <span class="bg-gray-100 px-2 py-1 rounded-md"><i class="fas fa-users mr-1"></i> <span
+                                        th:text="${room.capacity}"></span></span>
+                                <span class="bg-gray-100 text-gray-600 px-2 py-1 rounded-md text-[10px] font-bold"
+                                    th:if="${room.department != null}" th:text="${room.department.shortCode}"></span>
+                                <span class="bg-gray-100 px-2 py-1 rounded-md" th:if="${room.block != null}">Block <span
+                                        th:text="${room.block}"></span></span>
                             </div>
                         </div>
-                        
+
                         <div id="noRoomsMessage" class="hidden text-center py-10 text-gray-400">
                             <i class="fas fa-search-minus text-3xl mb-3"></i>
                             <p class="text-sm font-medium">No facilities match your filters.</p>
                         </div>
                     </div>
-                    
-                    <div class="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-100 flex justify-between items-center bg-white rounded-b-2xl shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.02)] z-10">
-                        <button id="prevPageBtn" onclick="prevPage()" class="flex items-center justify-center w-8 h-8 bg-white border border-gray-200 rounded-lg text-gray-500 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 disabled:opacity-40 disabled:hover:bg-white disabled:hover:border-gray-200 disabled:hover:text-gray-500 disabled:cursor-not-allowed transition-all shadow-sm"><i class="fas fa-chevron-left text-xs"></i></button>
-                        
-                        <div id="pageNumbers" class="flex gap-1.5 items-center mx-2 overflow-x-auto scrollbar-hide">
-                            </div>
 
-                        <button id="nextPageBtn" onclick="nextPage()" class="flex items-center justify-center w-8 h-8 bg-white border border-gray-200 rounded-lg text-gray-500 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 disabled:opacity-40 disabled:hover:bg-white disabled:hover:border-gray-200 disabled:hover:text-gray-500 disabled:cursor-not-allowed transition-all shadow-sm"><i class="fas fa-chevron-right text-xs"></i></button>
+                    <div
+                        class="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-100 flex justify-between items-center bg-white rounded-b-2xl shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.02)] z-10">
+                        <button id="prevPageBtn" onclick="prevPage()"
+                            class="flex items-center justify-center w-8 h-8 bg-white border border-gray-200 rounded-lg text-gray-500 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 disabled:opacity-40 disabled:hover:bg-white disabled:hover:border-gray-200 disabled:hover:text-gray-500 disabled:cursor-not-allowed transition-all shadow-sm"><i
+                                class="fas fa-chevron-left text-xs"></i></button>
+
+                        <div id="pageNumbers" class="flex gap-1.5 items-center mx-2 overflow-x-auto scrollbar-hide">
+                        </div>
+
+                        <button id="nextPageBtn" onclick="nextPage()"
+                            class="flex items-center justify-center w-8 h-8 bg-white border border-gray-200 rounded-lg text-gray-500 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 disabled:opacity-40 disabled:hover:bg-white disabled:hover:border-gray-200 disabled:hover:text-gray-500 disabled:cursor-not-allowed transition-all shadow-sm"><i
+                                class="fas fa-chevron-right text-xs"></i></button>
                     </div>
                 </div>
 
-                <div class="col-span-8 bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex flex-col overflow-hidden">
+                <div
+                    class="col-span-8 bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex flex-col overflow-hidden">
                     <div class="flex justify-between items-center mb-6 pb-6 border-b border-gray-100 shrink-0">
                         <div>
                             <h2 class="text-2xl font-extrabold text-gray-900 flex items-center gap-3">
                                 <span id="selectedRoomTitle">Workspace Unselected</span>
-                                <span id="roomStatusBadge" class="hidden bg-green-50 border border-green-200 text-green-700 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider items-center gap-1.5">
+                                <span id="roomStatusBadge"
+                                    class="hidden bg-green-50 border border-green-200 text-green-700 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider items-center gap-1.5">
                                     <i class="fas fa-circle text-[8px] animate-pulse"></i> Live Edit
                                 </span>
                             </h2>
@@ -124,17 +182,21 @@
                     </div>
 
                     <div class="flex-1 border border-gray-200 rounded-xl overflow-x-auto bg-white relative">
-                        <div id="calendarLoading" class="absolute inset-0 bg-white/80 backdrop-blur-sm flex justify-center items-center z-20 hidden">
+                        <div id="calendarLoading"
+                            class="absolute inset-0 bg-white/80 backdrop-blur-sm flex justify-center items-center z-20 hidden">
                             <div class="loader"></div>
                         </div>
 
-                        <div id="calendarHeader" class="border-b border-gray-200 bg-gray-50 text-[11px] font-extrabold text-gray-500 uppercase tracking-widest text-center min-w-max">
-                            </div>
+                        <div id="calendarHeader"
+                            class="border-b border-gray-200 bg-gray-50 text-[11px] font-extrabold text-gray-500 uppercase tracking-widest text-center min-w-max">
+                        </div>
 
                         <div id="calendarBody" class="overflow-y-auto bg-gray-50/30 min-w-max">
-                            <div class="flex flex-col items-center justify-center h-full text-gray-400 mt-32" id="calendarPlaceholder">
+                            <div class="flex flex-col items-center justify-center h-full text-gray-400 mt-32"
+                                id="calendarPlaceholder">
                                 <i class="fas fa-border-all text-5xl mb-4 text-gray-200"></i>
-                                <p class="font-medium text-gray-500">Select a facility from the directory to begin allocation</p>
+                                <p class="font-medium text-gray-500">Select a facility from the directory to begin
+                                    allocation</p>
                             </div>
                         </div>
                     </div>
@@ -143,15 +205,20 @@
         </main>
     </div>
 
-    <div id="allocationModal" class="hidden fixed inset-0 bg-gray-900/40 backdrop-blur-sm z-50 justify-center items-center">
+    <div id="allocationModal"
+        class="hidden fixed inset-0 bg-gray-900/40 backdrop-blur-sm z-50 justify-center items-center">
         <div class="bg-white rounded-2xl shadow-2xl p-6 w-[550px] max-w-[90vw] transform transition-all">
             <div class="flex justify-between items-center mb-5 border-b border-gray-100 pb-4">
                 <h3 class="text-xl font-extrabold text-gray-900">Assign Course</h3>
-                <button onclick="closeModal()" class="text-gray-400 hover:text-red-500 transition-colors bg-gray-100 rounded-full w-8 h-8 flex items-center justify-center"><i class="fas fa-times"></i></button>
+                <button onclick="closeModal()"
+                    class="text-gray-400 hover:text-red-500 transition-colors bg-gray-100 rounded-full w-8 h-8 flex items-center justify-center"><i
+                        class="fas fa-times"></i></button>
             </div>
             <div class="bg-blue-50 border border-blue-100 rounded-xl p-3 mb-5 flex items-center gap-3">
                 <i class="fas fa-info-circle text-blue-500 text-lg"></i>
-                <p class="text-sm text-blue-900 font-medium">Allocating to <span id="modalRoomName" class="font-extrabold"></span> <br><span id="modalDayTime" class="font-extrabold text-xs text-blue-700 mt-1 block"></span></p>
+                <p class="text-sm text-blue-900 font-medium">Allocating to <span id="modalRoomName"
+                        class="font-extrabold"></span> <br><span id="modalDayTime"
+                        class="font-extrabold text-xs text-blue-700 mt-1 block"></span></p>
             </div>
             <div class="max-h-[350px] overflow-y-auto mb-5 pr-2 space-y-2" id="unassignedList"></div>
         </div>
@@ -162,19 +229,25 @@
         <div class="bg-white rounded-2xl shadow-2xl p-6 w-[500px] max-w-[90vw]">
             <div class="flex justify-between items-center mb-5 border-b border-gray-100 pb-4">
                 <h3 id="roomModalTitle" class="text-xl font-extrabold text-gray-900">Create New Facility</h3>
-                <button onclick="closeRoomModal()" class="text-gray-400 hover:text-red-500 bg-gray-100 rounded-full w-8 h-8 flex items-center justify-center"><i class="fas fa-times"></i></button>
+                <button onclick="closeRoomModal()"
+                    class="text-gray-400 hover:text-red-500 bg-gray-100 rounded-full w-8 h-8 flex items-center justify-center"><i
+                        class="fas fa-times"></i></button>
             </div>
             <form id="roomForm" class="space-y-4">
                 <input type="hidden" id="editingRoomId" value="">
 
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Room Number *</label>
-                        <input type="text" id="r_roomNumber" required class="w-full border border-gray-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Room Number
+                            *</label>
+                        <input type="text" id="r_roomNumber" required
+                            class="w-full border border-gray-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Room Type *</label>
-                        <select id="r_type" class="w-full border border-gray-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Room Type
+                            *</label>
+                        <select id="r_type"
+                            class="w-full border border-gray-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
                             <option value="THEORY">Theory (Lecture)</option>
                             <option value="LAB">Lab</option>
                             <option value="SEMINAR">Seminar</option>
@@ -183,43 +256,447 @@
                 </div>
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Capacity</label>
-                        <input type="number" id="r_capacity" class="w-full border border-gray-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                        <label
+                            class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Capacity</label>
+                        <input type="number" id="r_capacity"
+                            class="w-full border border-gray-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Floor</label>
-                        <input type="number" id="r_floorNumber" class="w-full border border-gray-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                        <input type="number" id="r_floorNumber"
+                            class="w-full border border-gray-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
                     </div>
                 </div>
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Block / Building</label>
-                        <input type="text" id="r_block" class="w-full border border-gray-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Block /
+                            Building</label>
+                        <input type="text" id="r_block"
+                            class="w-full border border-gray-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Department</label>
-                        <select id="r_dept" class="w-full border border-gray-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                        <label
+                            class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Department</label>
+                        <select id="r_dept"
+                            class="w-full border border-gray-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
                             <option value="">-- Shared / Public --</option>
-                            <option th:each="department : ${departments}" th:value="${department.id}" th:text="${department.shortCode}"></option>
+                            <option th:each="department : ${departments}" th:value="${department.id}"
+                                th:text="${department.shortCode}"></option>
                         </select>
                     </div>
                 </div>
                 <div class="flex gap-4 p-4 bg-gray-50 rounded-xl border border-gray-100">
                     <label class="flex items-center gap-2 text-sm font-bold text-gray-700 cursor-pointer">
-                        <input type="checkbox" id="r_hasComputers" class="w-4 h-4 rounded text-blue-600 focus:ring-blue-500"> Has Computers
+                        <input type="checkbox" id="r_hasComputers"
+                            class="w-4 h-4 rounded text-blue-600 focus:ring-blue-500"> Has Computers
                     </label>
                     <label class="flex items-center gap-2 text-sm font-bold text-gray-700 cursor-pointer">
-                        <input type="checkbox" id="r_hasHardwareKits" class="w-4 h-4 rounded text-blue-600 focus:ring-blue-500"> Has Hardware Kits
+                        <input type="checkbox" id="r_hasHardwareKits"
+                            class="w-4 h-4 rounded text-blue-600 focus:ring-blue-500"> Has Hardware Kits
                     </label>
                 </div>
                 <div class="flex justify-end gap-3 pt-4 border-t border-gray-100 mt-6">
-                    <button type="button" onclick="closeRoomModal()" class="px-5 py-2.5 bg-white border border-gray-200 text-gray-700 font-bold rounded-xl text-sm hover:bg-gray-50">Cancel</button>
-                    <button type="submit" class="px-5 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-bold hover:bg-blue-700 shadow-md hover:shadow-lg">Save Facility</button>
+                    <button type="button" onclick="closeRoomModal()"
+                        class="px-5 py-2.5 bg-white border border-gray-200 text-gray-700 font-bold rounded-xl text-sm hover:bg-gray-50">Cancel</button>
+                    <button type="submit"
+                        class="px-5 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-bold hover:bg-blue-700 shadow-md hover:shadow-lg">Save
+                        Facility</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <script th:src="@{/js/app.js}"></script>
+    <script th:src="@{/js/app.js}">
+  
+        // Security Context
+        const csrfToken = document.querySelector('meta[name="_csrf"]')?.getAttribute('content');
+        const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content');
+
+        const userRole = "[[${user != null ? user.role : 'GUEST'}]]";
+        const canEdit = (userRole === 'SUPERADMIN' || userRole === 'COORDINATOR');
+
+        // --- PURE SLOT CONFIGURATION ---
+        const MAX_SLOTS = 12; // Adjusted to match routine builder strictly by slots
+        const daysOrder = ["SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY"];
+        const dayLabel = { "SUNDAY": "Sunday", "MONDAY": "Monday", "TUESDAY": "Tuesday", "WEDNESDAY": "Wednesday", "THURSDAY": "Thursday" };
+
+        let currentRoomId = null;
+        let currentRoomName = null;
+
+        // --- SMART PAGINATION VARIABLES ---
+        let allRooms = [];
+        let filteredRooms = [];
+        let currentPage = 1;
+        const roomsPerPage = 5;
+
+        document.addEventListener("DOMContentLoaded", () => {
+            allRooms = Array.from(document.querySelectorAll('.room-card'));
+            filteredRooms = [...allRooms];
+
+            document.getElementById('roomSearchInput').addEventListener('input', applyFilters);
+            document.getElementById('typeFilter').addEventListener('change', applyFilters);
+
+            applyFilters();
+            bindRoomSelection();
+        });
+
+        function applyFilters() {
+            const searchTerm = document.getElementById('roomSearchInput').value.toLowerCase();
+            const typeFilter = document.getElementById('typeFilter').value;
+
+            filteredRooms = allRooms.filter(card => {
+                const text = card.innerText.toLowerCase();
+                const type = card.querySelector('.room-type-badge').innerText.toUpperCase();
+                return text.includes(searchTerm) && (typeFilter === "" || type === typeFilter);
+            });
+
+            currentPage = 1;
+            renderPagination();
+        }
+
+        function renderPagination() {
+            allRooms.forEach(c => c.style.display = 'none');
+
+            const totalPages = Math.max(1, Math.ceil(filteredRooms.length / roomsPerPage));
+            if (currentPage > totalPages) currentPage = totalPages;
+
+            const start = (currentPage - 1) * roomsPerPage;
+            const toShow = filteredRooms.slice(start, start + roomsPerPage);
+            toShow.forEach(c => c.style.display = 'block');
+
+            document.getElementById('noRoomsMessage').style.display = filteredRooms.length === 0 ? 'block' : 'none';
+            document.getElementById('prevPageBtn').disabled = currentPage <= 1;
+            document.getElementById('nextPageBtn').disabled = currentPage >= totalPages;
+
+            const pageNumbersDiv = document.getElementById('pageNumbers');
+            pageNumbersDiv.innerHTML = '';
+
+            let startPage = Math.max(1, currentPage - 2);
+            let endPage = Math.min(totalPages, startPage + 4);
+            if (endPage - startPage < 4) startPage = Math.max(1, endPage - 4);
+
+            for (let i = startPage; i <= endPage; i++) {
+                const btn = document.createElement('button');
+                btn.innerText = i;
+                if (i === currentPage) {
+                    btn.className = `w-8 h-8 flex items-center justify-center rounded-lg text-xs font-extrabold bg-blue-600 text-white shadow-md shadow-blue-200/50 ring-2 ring-blue-600 ring-offset-1 transition-all flex-shrink-0`;
+                } else {
+                    btn.className = `w-8 h-8 flex items-center justify-center rounded-lg text-xs font-semibold text-gray-500 hover:bg-blue-50 hover:text-blue-700 transition-colors flex-shrink-0`;
+                }
+                btn.onclick = () => goToPage(i);
+                pageNumbersDiv.appendChild(btn);
+            }
+        }
+
+        function prevPage() { if (currentPage > 1) goToPage(currentPage - 1); }
+        function nextPage() { if (currentPage < Math.ceil(filteredRooms.length / roomsPerPage)) goToPage(currentPage + 1); }
+        function goToPage(p) { currentPage = p; renderPagination(); }
+
+        // --- ROOM SELECTION ---
+        function bindRoomSelection() {
+            allRooms.forEach(card => {
+                card.addEventListener("click", () => {
+                    allRooms.forEach(c => {
+                        c.classList.remove('border-blue-500', 'bg-blue-50/30', 'ring-1', 'ring-blue-500');
+                        c.classList.add('border-gray-100', 'bg-white');
+                        c.querySelector('.selected-badge').classList.add('hidden');
+                        c.querySelector('.room-title').classList.remove('text-blue-700');
+                        c.querySelector('.room-title').classList.add('text-gray-900');
+                    });
+
+                    card.classList.remove('border-gray-100', 'bg-white');
+                    card.classList.add('border-blue-500', 'bg-blue-50/30', 'ring-1', 'ring-blue-500');
+                    card.querySelector('.selected-badge').classList.remove('hidden');
+                    card.querySelector('.room-title').classList.remove('text-gray-900');
+                    card.querySelector('.room-title').classList.add('text-blue-700');
+
+                    currentRoomId = card.getAttribute("data-room-id");
+                    const floor = card.getAttribute("data-room-floor");
+                    const block = card.getAttribute("data-room-block");
+                    const rName = card.getAttribute("data-room-name");
+
+                    currentRoomName = rName || '';
+
+                    document.getElementById("selectedRoomTitle").innerText = `${currentRoomName} Workspace`;
+                    document.getElementById("roomStatusBadge").classList.remove("hidden");
+                    document.getElementById("roomStatusBadge").classList.add("flex");
+
+                    loadRoomSchedule(currentRoomId);
+                });
+            });
+        }
+
+        // --- DYNAMIC CALENDAR LOGIC (12 SLOTS) ---
+        async function loadRoomSchedule(roomId) {
+            const loading = document.getElementById("calendarLoading");
+            loading.classList.remove("hidden");
+
+            try {
+                const res = await fetch('/api/schedule/management/routines/room/' + roomId);
+                const routines = await res.json();
+                renderTimeline(routines);
+            } catch (err) { console.error(err); }
+            finally { loading.classList.add("hidden"); }
+        }
+
+        function renderTimeline(routines) {
+            const headerDiv = document.getElementById("calendarHeader");
+            const bodyDiv = document.getElementById("calendarBody");
+
+            // Grid Columns: 100px for Day label, then repeat MAX_SLOTS
+            // minmax(100px, 1fr) ensures slots don't get too squeezed
+            const gridStyle = `grid-template-columns: 100px repeat(${MAX_SLOTS}, minmax(100px, 1fr)); display: grid;`;
+
+            // Generate Header purely by slot number
+            let headerHtml = `<div class="py-4 border-r border-gray-200 flex items-center justify-center"><i class="fas fa-calendar-day text-gray-400"></i></div>`;
+            for (let i = 1; i <= MAX_SLOTS; i++) {
+                headerHtml += `
+                    <div class="py-4 border-r border-gray-200 flex items-center justify-center font-bold text-gray-600">
+                        Slot ${i}
+                    </div>`;
+            }
+            headerDiv.style.cssText = gridStyle;
+            headerDiv.className = "border-b border-gray-200 bg-gray-50 text-[11px] font-extrabold text-gray-500 uppercase tracking-widest text-center min-w-max p-2 gap-2";
+            headerDiv.innerHTML = headerHtml;
+
+            // Generate Body Grid
+            bodyDiv.style.cssText = gridStyle;
+            bodyDiv.className = "flex-1 overflow-y-auto bg-gray-50/30 p-2 gap-2 min-w-max";
+            bodyDiv.innerHTML = "";
+
+            const matrix = {};
+            for (let d of daysOrder) {
+                matrix[d] = {};
+                for (let s = 1; s <= MAX_SLOTS; s++) matrix[d][s] = null;
+            }
+
+            // Fill Matrix Safely
+            routines.forEach(r => {
+                if (r.startSlotIndex && r.dayOfWeek && matrix[r.dayOfWeek]) {
+                    if (r.startSlotIndex <= MAX_SLOTS) {
+                        matrix[r.dayOfWeek][r.startSlotIndex] = r;
+                        if (r.slotCount > 1) {
+                            for (let i = 1; i < r.slotCount; i++) {
+                                if (r.startSlotIndex + i <= MAX_SLOTS) {
+                                    matrix[r.dayOfWeek][r.startSlotIndex + i] = "SPAN";
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Render Rows
+            let rowIndex = 1;
+            for (let d of daysOrder) {
+                bodyDiv.insertAdjacentHTML('beforeend', `
+                    <div class="flex items-center justify-center font-extrabold text-[11px] text-gray-500 bg-white rounded-xl shadow-sm border border-gray-100 uppercase tracking-widest" style="grid-column: 1; grid-row: ${rowIndex};">
+                        ${dayLabel[d]}
+                    </div>
+                `);
+
+                let colIndex = 2; // Slots start at col 2
+                for (let s = 1; s <= MAX_SLOTS; s++) {
+                    let cellData = matrix[d][s];
+
+                    if (cellData === "SPAN") {
+                        // Handled by CSS Grid span
+                    } else if (cellData && cellData.id) {
+                        const courseCode = cellData.courseCode || 'TBA';
+                        const courseTitle = cellData.courseTitle || 'Untitled Course';
+                        const teacherName = cellData.teacherInitials || 'NA';
+                        const capacity = cellData.studentCapacity || '--';
+                        const batch = cellData.batch || 'N/A';
+
+                        // Span correctly up to MAX_SLOTS limit
+                        const actualSpan = Math.min(cellData.slotCount, MAX_SLOTS - s + 1);
+
+                        const removeBtnHTML = canEdit ? `
+                            <button onclick="unassignRoutine(${cellData.id})" class="absolute top-2 right-2 w-6 h-6 bg-red-100 text-red-600 rounded-md flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 hover:text-white" title="Unassign">
+                                <i class="fas fa-trash-alt text-[10px]"></i>
+                            </button>` : '';
+
+                        bodyDiv.insertAdjacentHTML('beforeend', `
+                            <div class="allocation-block relative group" style="grid-row: ${rowIndex}; grid-column: ${colIndex} / span ${actualSpan};">
+                                <div class="bg-white border-l-4 border-blue-600 rounded-xl p-3 h-full shadow-md flex flex-col justify-between overflow-hidden">
+                                    ${removeBtnHTML}
+                                    <div>
+                                        <div class="flex gap-2 items-center mb-1">
+                                            <span class="bg-blue-100 text-blue-700 text-[9px] font-extrabold px-2 py-0.5 rounded uppercase">${courseCode}</span>
+                                        </div>
+                                        <p class="text-xs font-bold text-gray-900 leading-tight pr-6 mt-1 line-clamp-2" title="${courseTitle}">${courseTitle}</p>
+                                        <p class="text-[10px] text-gray-500 mt-1"><i class="fas fa-users mr-1"></i> Batch: ${batch}</p>
+                                    </div>
+                                    <div class="flex items-center gap-2 mt-3 pt-2 border-t border-gray-100">
+                                        <div class="w-6 h-6 rounded-full bg-gradient-to-tr from-gray-200 to-gray-300 text-gray-700 flex items-center justify-center text-[9px] font-bold shadow-sm" title="${teacherName}">${teacherName.substring(0, 2).toUpperCase()}</div>
+                                        <p class="text-[10px] text-gray-500 font-medium ml-auto">Cap: ${capacity}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        `);
+                    } else {
+                        const addClickAttr = canEdit ? `onclick="openAllocationModal('${d}', ${s})"` : '';
+                        const cursorClass = canEdit ? 'cursor-pointer hover:border-blue-400 hover:bg-blue-50/50' : 'cursor-not-allowed opacity-50';
+                        const hoverContent = canEdit ? `
+                            <div class="opacity-0 group-hover:opacity-100 transition flex flex-col items-center justify-center text-blue-500">
+                                <i class="fas fa-plus-circle text-xl mb-1 drop-shadow-sm"></i>
+                                <span class="text-[10px] font-bold uppercase tracking-widest text-blue-600">Assign</span>
+                            </div>` : '';
+
+                        bodyDiv.insertAdjacentHTML('beforeend', `
+                            <div class="group h-full w-full border-2 border-dashed border-gray-200 rounded-xl flex flex-col justify-center items-center transition bg-white/50 ${cursorClass}" ${addClickAttr} style="grid-row: ${rowIndex}; grid-column: ${colIndex};">
+                                ${hoverContent}
+                            </div>
+                        `);
+                    }
+                    colIndex++;
+                }
+                rowIndex++;
+            }
+        }
+
+        async function unassignRoutine(routineId) {
+            if (!confirm('Return this course to the unassigned pool?')) return;
+            try {
+                const fetchHeaders = { 'Content-Type': 'application/x-www-form-urlencoded' };
+                if (csrfHeader && csrfToken) fetchHeaders[csrfHeader] = csrfToken;
+                const res = await fetch('/api/schedule/unassign/' + routineId, { method: 'POST', headers: fetchHeaders });
+                if (res.ok) loadRoomSchedule(currentRoomId);
+                else alert("Failed to unassign.");
+            } catch (err) { alert("Network error."); }
+        }
+
+        // --- CRUD MODALS: CREATE, EDIT, DELETE ---
+        async function deleteRoom(e, card) {
+            e.stopPropagation();
+            const roomId = card.getAttribute('data-room-id');
+            const rName = card.querySelector('.room-title').innerText;
+            if (!confirm(`Are you sure you want to permanently delete ${rName}?`)) return;
+
+            try {
+                const fetchHeaders = {};
+                if (csrfHeader && csrfToken) fetchHeaders[csrfHeader] = csrfToken;
+                const res = await fetch('/api/rooms/' + roomId, { method: 'DELETE', headers: fetchHeaders });
+                if (res.ok) window.location.reload();
+                else alert("Failed to delete. The room might have active courses assigned to it.");
+            } catch (err) { alert("Network Error"); }
+        }
+
+        function openRoomModal(card = null, e = null) {
+            if (e) e.stopPropagation();
+            const form = document.getElementById("roomForm");
+            form.reset();
+            const title = document.getElementById("roomModalTitle");
+
+            if (card) {
+                document.getElementById('editingRoomId').value = card.getAttribute('data-room-id');
+                title.innerText = "Edit Facility Details";
+                document.getElementById('r_roomNumber').value = card.getAttribute('data-room-name') || '';
+                document.getElementById('r_type').value = card.getAttribute('data-room-type') || 'THEORY';
+                document.getElementById('r_capacity').value = card.getAttribute('data-room-cap') || '';
+                document.getElementById('r_floorNumber').value = card.getAttribute('data-room-floor') || '';
+                document.getElementById('r_block').value = card.getAttribute('data-room-block') || '';
+                document.getElementById('r_dept').value = card.getAttribute('data-room-dept-id') || '';
+                document.getElementById('r_hasComputers').checked = card.getAttribute('data-has-comp') === 'true';
+                document.getElementById('r_hasHardwareKits').checked = card.getAttribute('data-has-kits') === 'true';
+            } else {
+                document.getElementById('editingRoomId').value = "";
+                title.innerText = "Create New Facility";
+            }
+            document.getElementById("roomModal").classList.remove("hidden");
+            document.getElementById("roomModal").classList.add("flex");
+        }
+
+        function closeRoomModal() {
+            document.getElementById("roomModal").classList.add("hidden");
+            document.getElementById("roomModal").classList.remove("flex");
+        }
+
+        const rmForm = document.getElementById("roomForm");
+        if (rmForm) {
+            rmForm.addEventListener("submit", async (e) => {
+                e.preventDefault();
+                const editingId = document.getElementById('editingRoomId').value;
+                const payload = {
+                    roomNumber: document.getElementById("r_roomNumber").value,
+                    type: document.getElementById("r_type").value,
+                    capacity: document.getElementById("r_capacity").value ? parseInt(document.getElementById("r_capacity").value) : null,
+                    floorNumber: document.getElementById("r_floorNumber").value ? parseInt(document.getElementById("r_floorNumber").value) : null,
+                    block: document.getElementById("r_block").value,
+                    deptId: document.getElementById("r_dept").value ? parseInt(document.getElementById("r_dept").value) : null,
+                    hasComputers: document.getElementById("r_hasComputers").checked,
+                    hasHardwareKits: document.getElementById("r_hasHardwareKits").checked
+                };
+
+                const fetchHeaders = { 'Content-Type': 'application/json' };
+                if (csrfHeader && csrfToken) fetchHeaders[csrfHeader] = csrfToken;
+
+                try {
+                    const method = editingId ? 'PUT' : 'POST';
+                    const url = editingId ? `/api/rooms/${editingId}` : `/api/rooms`;
+                    const res = await fetch(url, { method: method, headers: fetchHeaders, body: JSON.stringify(payload) });
+                    if (res.ok) window.location.reload();
+                    else alert("Action failed. Check permissions.");
+                } catch (e) { alert("Network error."); }
+            });
+        }
+
+        // --- ALLOCATION MODAL LOGIC ---
+        let currentModalDay = null;
+        let currentModalSlot = null;
+
+        function openAllocationModal(day, slotIndex) {
+            currentModalDay = day; currentModalSlot = slotIndex;
+            document.getElementById("modalRoomName").innerText = currentRoomName;
+            document.getElementById("modalDayTime").innerText = `On ${dayLabel[day]} starting at Slot ${slotIndex}`;
+            document.getElementById("allocationModal").classList.remove("hidden");
+            document.getElementById("allocationModal").classList.add("flex");
+            loadUnassignedRoutines();
+        }
+
+        function closeModal() {
+            document.getElementById("allocationModal").classList.add("hidden");
+            document.getElementById("allocationModal").classList.remove("flex");
+        }
+
+        async function loadUnassignedRoutines() {
+            const listDiv = document.getElementById("unassignedList");
+            listDiv.innerHTML = `<div class="text-center text-gray-500 py-8"><i class="fas fa-circle-notch fa-spin text-blue-500 text-2xl mb-2"></i><br>Scanning unassigned pool...</div>`;
+            try {
+                const res = await fetch('/api/schedule/management/routines/unassigned');
+                const routines = await res.json();
+                if (routines.length === 0) {
+                    listDiv.innerHTML = `<div class="text-center text-sm text-gray-500 py-8">🎉 All courses have been allocated!</div>`;
+                    return;
+                }
+                listDiv.innerHTML = routines.map(r => {
+                    const teacherName = r.teacherInitials || 'NA';
+                    return `
+                    <div class="p-4 bg-white border border-gray-100 rounded-xl shadow-sm flex justify-between items-center hover:border-blue-400 hover:shadow-md transition-all cursor-pointer group" onclick="allocateRoutine(${r.id})">
+                        <div>
+                            <span class="bg-gray-100 text-gray-800 text-[10px] font-extrabold px-2 py-0.5 rounded uppercase group-hover:bg-blue-100 group-hover:text-blue-800 transition">${r.courseCode || 'TBA'}</span>
+                            <div class="font-bold text-sm text-gray-900 group-hover:text-blue-700 transition mt-1">${r.courseTitle || 'Untitled'}</div>
+                            <div class="text-[10px] text-gray-500 mt-1 font-medium"><i class="fas fa-chalkboard-teacher"></i> ${teacherName} &nbsp;|&nbsp; Cap: ${r.studentCapacity || '--'}</div>
+                        </div>
+                        <span class="text-[10px] text-gray-400 font-bold bg-gray-50 px-2 py-1 rounded"><i class="fas fa-clock"></i> ${r.slotCount} slots</span>
+                    </div>
+                `}).join('');
+            } catch (err) { listDiv.innerHTML = `<div class="text-center text-red-500 py-4">Error loading data.</div>`; }
+        }
+
+        async function allocateRoutine(routineId) {
+            if (!currentRoomId) return;
+            try {
+                const formData = new URLSearchParams({ routineId: routineId, newDay: currentModalDay, newStartSlot: currentModalSlot, newRoomId: currentRoomId });
+                const fetchHeaders = { 'Content-Type': 'application/x-www-form-urlencoded' };
+                if (csrfHeader && csrfToken) fetchHeaders[csrfHeader] = csrfToken;
+
+                const res = await fetch('/api/schedule/management/reschedule', { method: 'POST', headers: fetchHeaders, body: formData.toString() });
+                if (res.ok) { closeModal(); loadRoomSchedule(currentRoomId); }
+                else alert("Allocation Failed. Potential conflict detected.");
+            } catch (error) { alert("Error during allocation."); }
+        }
+    </script>
 </body>
+
 </html>

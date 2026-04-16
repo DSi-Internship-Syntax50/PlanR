@@ -18,6 +18,11 @@ public class SeatPlanResponseDto {
         return success;
     }
 
+    private Long seatPlanId;
+
+    public Long getSeatPlanId() { return seatPlanId; }
+    public void setSeatPlanId(Long seatPlanId) { this.seatPlanId = seatPlanId; }
+
     public void setSuccess(boolean success) {
         this.success = success;
     }

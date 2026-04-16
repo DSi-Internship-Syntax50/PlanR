@@ -1,10 +1,7 @@
 package com.example.PlanR.controller;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,32 +14,36 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.PlanR.dto.CourseDTO;
 import com.example.PlanR.exception.SlotConflictException;
-import com.example.PlanR.model.Course;
 import com.example.PlanR.model.MasterRoutine;
 import com.example.PlanR.model.enums.DayOfWeek;
-import com.example.PlanR.repository.CourseRepository;
-import com.example.PlanR.repository.MasterRoutineRepository;
+import com.example.PlanR.service.MasterRoutineService;
+import com.example.PlanR.service.RoutineQueryService;
 import com.example.PlanR.service.ScheduleActionService;
 import com.example.PlanR.service.ScheduleService;
 
+/**
+ * REST API for schedule CRUD operations (auto-generate, allocate, fetch, delete).
+ * Business logic delegated to services; no inline DTO construction.
+ */
 @RestController
 @RequestMapping("/api/schedule")
 public class ScheduleApiController {
 
     private final ScheduleService scheduleService;
     private final ScheduleActionService scheduleActionService;
-    private final MasterRoutineRepository routineRepository;
-    private final CourseRepository courseRepository;
+    private final RoutineQueryService routineQueryService;
+    private final MasterRoutineService routineService;
 
     public ScheduleApiController(ScheduleService scheduleService,
-            ScheduleActionService scheduleActionService,
-            MasterRoutineRepository routineRepository,
-            CourseRepository courseRepository) {
+                                 ScheduleActionService scheduleActionService,
+                                 RoutineQueryService routineQueryService,
+                                 MasterRoutineService routineService) {
         this.scheduleService = scheduleService;
         this.scheduleActionService = scheduleActionService;
-        this.routineRepository = routineRepository;
-        this.courseRepository = courseRepository;
+        this.routineQueryService = routineQueryService;
+        this.routineService = routineService;
     }
 
     // 1. AUTO-GENERATE
@@ -58,79 +59,16 @@ public class ScheduleApiController {
 
     // 2. FETCH ROUTINE TO PAINT THE GRID
     @GetMapping("/routine")
-    public ResponseEntity<List<Map<String, Object>>> getRoutineForBatch(@RequestParam Long departmentId,
-            @RequestParam String batch) {
-        List<MasterRoutine> routines = routineRepository.findAll();
-        List<Map<String, Object>> response = new ArrayList<>();
-
-        for (MasterRoutine rt : routines) {
-            if (rt.getCourse() != null
-                    && batch.equals(rt.getCourse().getBatch())
-                    && rt.getCourse().getDepartment() != null
-                    && rt.getCourse().getDepartment().getId().equals(departmentId)) {
-
-                Map<String, Object> dto = new HashMap<>();
-                dto.put("id", rt.getId());
-                dto.put("dayOfWeek", rt.getDayOfWeek().name());
-                dto.put("startSlotIndex", rt.getStartSlotIndex());
-
-                Map<String, Object> courseDto = new HashMap<>();
-                courseDto.put("courseCode", rt.getCourse().getCourseCode());
-                courseDto.put("title", rt.getCourse().getTitle());
-                courseDto.put("isLab", rt.getCourse().getIsLab());
-                
-                // MERGED LOGIC: Bulletproof slot counting (Labs = 3 slots, Theory = 1 slot)
-                Integer slotCount = rt.getCourse().getSlotCount();
-                if (slotCount == null) slotCount = rt.getCourse().getRequiredSlots();
-                if (slotCount == null) slotCount = Boolean.TRUE.equals(rt.getCourse().getIsLab()) ? 3 : 1;
-                
-                courseDto.put("slotCount", slotCount); 
-                dto.put("course", courseDto);
-
-                if (rt.getTeacher() != null)
-                    dto.put("teacher", Map.of("id", rt.getTeacher().getId()));
-
-                if (rt.getRoom() != null) {
-                    Map<String, Object> roomDto = new HashMap<>();
-                    roomDto.put("id", rt.getRoom().getId());
-                    roomDto.put("roomNumber", rt.getRoom().getRoomNumber());
-                    roomDto.put("floorNumber", rt.getRoom().getFloorNumber());
-                    roomDto.put("block", rt.getRoom().getBlock());
-
-                    dto.put("room", roomDto);
-                }
-                response.add(dto);
-            }
-        }
-        return ResponseEntity.ok(response);
+    public ResponseEntity<List<Map<String, Object>>> getRoutineForBatch(
+            @RequestParam Long departmentId, @RequestParam String batch) {
+        return ResponseEntity.ok(routineQueryService.getRoutinesForBatch(departmentId, batch));
     }
 
     // 3. FETCH COURSES FOR THE MODAL DROPDOWN
     @GetMapping("/courses")
-    public ResponseEntity<List<Map<String, Object>>> getCourses(@RequestParam Long departmentId,
-            @RequestParam String batch) {
-        List<Course> courses = courseRepository.findAll().stream()
-                .filter(c -> batch.equals(c.getBatch()) && c.getDepartment() != null
-                        && c.getDepartment().getId().equals(departmentId))
-                .collect(Collectors.toList());
-
-        List<Map<String, Object>> response = new ArrayList<>();
-
-        for (Course c : courses) {
-            Map<String, Object> dto = new HashMap<>();
-            dto.put("id", c.getId());
-            dto.put("courseCode", c.getCourseCode());
-            dto.put("title", c.getTitle());
-            
-            // MERGED LOGIC: Bulletproof slot counting
-            Integer slotCount = c.getSlotCount();
-            if (slotCount == null) slotCount = c.getRequiredSlots();
-            if (slotCount == null) slotCount = Boolean.TRUE.equals(c.getIsLab()) ? 3 : 1;
-            
-            dto.put("slotCount", slotCount);
-            response.add(dto);
-        }
-        return ResponseEntity.ok(response);
+    public ResponseEntity<List<CourseDTO>> getCourses(
+            @RequestParam Long departmentId, @RequestParam String batch) {
+        return ResponseEntity.ok(routineQueryService.getCoursesForBatch(departmentId, batch));
     }
 
     // 4. MANUALLY ALLOCATE
@@ -140,11 +78,10 @@ public class ScheduleApiController {
             @RequestParam Long teacherId,
             @RequestParam DayOfWeek dayOfWeek,
             @RequestParam int startSlotIndex,
-            @RequestParam(required = false) Long roomId) { 
+            @RequestParam(required = false) Long roomId) {
         try {
             scheduleActionService.allocateClass(courseId, teacherId, roomId, dayOfWeek, startSlotIndex);
             return ResponseEntity.ok(Map.of("message", "Class scheduled successfully!"));
-
         } catch (SlotConflictException e) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("message", e.getMessage()));
         } catch (Exception e) {
@@ -155,18 +92,18 @@ public class ScheduleApiController {
     // 5. DELETE A ROUTINE SLOT
     @DeleteMapping("/routine/{id}")
     public ResponseEntity<?> deleteRoutine(@PathVariable Long id) {
-        routineRepository.deleteById(id);
+        routineService.deleteRoutineById(id);
         return ResponseEntity.ok(Map.of("message", "Slot freed successfully"));
     }
 
-    // 6. UNASSIGN ROOM (Kept Secure)
+    // 6. UNASSIGN ROOM (from other branch)
     @PostMapping("/unassign/{routineId}")
     @PreAuthorize("hasAnyRole('SUPERADMIN', 'COORDINATOR')")
     public ResponseEntity<?> unassignRoom(@PathVariable Long routineId) {
-        MasterRoutine routine = routineRepository.findById(routineId).orElse(null);
+        MasterRoutine routine = routineService.findRoutineById(routineId).orElse(null);
         if (routine != null) {
-            routine.setRoom(null); // Remove the room allocation
-            routineRepository.save(routine);
+            routine.setRoom(null);
+            routineService.saveRoutine(routine);
             return ResponseEntity.ok().build();
         }
         return ResponseEntity.badRequest().body("Routine not found");
