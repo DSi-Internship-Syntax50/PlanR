@@ -2,10 +2,14 @@ package com.example.PlanR.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 import java.util.List;
 
 @Entity
 @Table(name = "departments")
+@SQLDelete(sql = "UPDATE departments SET is_active = false WHERE id=?")
+@SQLRestriction("is_active = true")
 public class Department {
 
     @Id
@@ -17,11 +21,14 @@ public class Department {
 
     private String name;
 
-    @OneToMany(mappedBy = "department", cascade = CascadeType.ALL)
+    @Column(name = "is_active", nullable = false)
+    private Boolean isActive = true;
+
+    @OneToMany(mappedBy = "department", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JsonIgnore
     private List<Course> courses;
 
-    @OneToMany(mappedBy = "department", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "department", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JsonIgnore
     private List<User> users;
 
@@ -57,6 +64,14 @@ public class Department {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public Boolean getIsActive() {
+        return isActive;
+    }
+
+    public void setIsActive(Boolean isActive) {
+        this.isActive = isActive;
     }
 
     public List<Course> getCourses() {

@@ -2,10 +2,14 @@ package com.example.PlanR.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 import java.util.List;
 
 @Entity
 @Table(name = "courses")
+@SQLDelete(sql = "UPDATE courses SET is_active = false WHERE id=?")
+@SQLRestriction("is_active = true")
 public class Course {
 
     private Integer year;
@@ -31,6 +35,9 @@ public class Course {
 
     private String batch;
 
+    @Column(name = "is_active", nullable = false)
+    private Boolean isActive = true;
+
     @Column(name = "student_capacity")
     private Integer studentCapacity;
 
@@ -47,7 +54,7 @@ public class Course {
     @JoinColumn(name = "teacher_id")
     private User teacher;
 
-    @OneToMany(mappedBy = "course", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "course", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JsonIgnore
     private List<MasterRoutine> routines;
 
@@ -147,4 +154,12 @@ public class Course {
 
     public Integer getWeeklyClasses() { return weeklyClasses; }
     public void setWeeklyClasses(Integer weeklyClasses) { this.weeklyClasses = weeklyClasses; }
+
+    public Boolean getIsActive() {
+        return isActive;
+    }
+
+    public void setIsActive(Boolean isActive) {
+        this.isActive = isActive;
+    }
 }
