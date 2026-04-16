@@ -1,0 +1,966 @@
+﻿<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+    <title>Event Bookings spreadsheet - PlanR</title>
+    <!-- Tailwind CSS -->
+    <link rel="stylesheet" th:href="@{/css/tailwind-output.css}">
+    <!-- Alpine.js -->
+    <script
+      defer
+      src="/js/alpine.min.js"
+    ></script>
+    <!-- FontAwesome 6 -->
+    <link
+      rel="stylesheet"
+      href="/css/fontawesome/all.min.css"
+    />
+    <!-- Custom CSS -->
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <style>
+        .spreadsheet-container::-webkit-scrollbar { height: 12px; width: 12px; }
+        .spreadsheet-container::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 8px;}
+        .spreadsheet-container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 8px;}
+        .spreadsheet-container::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        .cell-content { min-width: 100px; display: inline-block;}
+        [x-cloak] { display: none !important; }
+    </style>
+    
+</head>
+
+<body class="bg-[#f3f6f8] font-['Inter',sans-serif]">
+  <!-- Sidebar fragment -->
+  <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+
+  <div class="ml-64 flex flex-col min-h-screen" x-data="eventBookingSystem()" x-init="initData()">
+    <!-- Header fragment -->
+    <div th:replace="~{fragments/header :: header}"></div>
+
+    <main class="flex-1 p-8 flex flex-col">
+      <!-- Page Header -->
+      <div class="flex justify-between items-start mb-6">
+        <div>
+          <h1
+            class="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-[#0a192f] to-blue-600 tracking-tight">
+            Event Schedule Planner
+          </h1>
+          <p class="text-gray-500 font-medium mt-3 text-sm">
+            Monthly chronological spreadsheet for tracking academic and
+            extracurricular events.
+          </p>
+        </div>
+        <div class="flex gap-3">
+          <div
+            class="bg-white border border-gray-200 rounded-lg p-1 mr-4 flex text-sm shadow-sm font-semibold text-gray-600">
+            <button @click="prevMonth()" class="px-3 py-1.5 hover:bg-gray-50 rounded">
+              <i class="fas fa-chevron-left text-xs"></i>
+            </button>
+            <span class="px-4 py-1.5 border-x border-gray-100 flex items-center justify-center min-w-[120px]"
+              x-text="currentMonthDisplay"></span>
+            <button @click="nextMonth()" class="px-3 py-1.5 hover:bg-gray-50 rounded">
+              <i class="fas fa-chevron-right text-xs"></i>
+            </button>
+          </div>
+
+          <button x-show="isTeacherOrAdmin"
+            class="px-5 py-2.5 bg-[#0a192f] text-white font-bold rounded-lg text-sm shadow-md hover:bg-gray-800 transition-colors flex items-center gap-2"
+            @click="openNewBookingModal()" x-cloak>
+            <i class="fas fa-plus"></i> Quick Booking
+          </button>
+        </div>
+      </div>
+
+      <!-- Error Toast -->
+      <div x-show="errorMessage" x-cloak
+        class="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+        <span class="block sm:inline" x-text="errorMessage"></span>
+        <span class="absolute top-0 bottom-0 right-0 px-4 py-3" @click="errorMessage = ''">
+          <svg class="fill-current h-6 w-6 text-red-500" role="button" xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 20 20">
+            <title>Close</title>
+            <path
+              d="M14.348 14.849a1.2 1.2 0 0 1-1.697 0L10 11.819l-2.651 3.029a1.2 1.2 0 1 1-1.697-1.697l2.758-3.15-2.759-3.152a1.2 1.2 0 1 1 1.697-1.697L10 8.183l2.651-3.031a1.2 1.2 0 1 1 1.697 1.697l-2.758 3.152 2.758 3.15a1.2 1.2 0 0 1 0 1.698z" />
+          </svg>
+        </span>
+      </div>
+
+      <!-- Calendar Wrap -->
+      <div
+        class="flex-1 bg-white/80 backdrop-blur-3xl border border-white/60 rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-8 overflow-hidden flex flex-col relative z-10 ring ring-1 ring-gray-100">
+        <div
+          class="absolute inset-x-0 -top-40 -z-10 transform-gpu overflow-hidden blur-3xl sm:-top-80 pointer-events-none"
+          aria-hidden="true">
+          <div
+            class="relative left-[calc(50%-11rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 rotate-[30deg] bg-gradient-to-tr from-blue-100 to-indigo-100 opacity-30 sm:left-[calc(50%-30rem)] sm:w-[72.1875rem]">
+          </div>
+        </div>
+
+        <!-- Day of week headers -->
+        <div class="grid grid-cols-7 gap-4 mb-4">
+          <template x-for="dayName in ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']"
+            :key="dayName">
+            <div class="text-center text-xs font-bold text-gray-500 uppercase tracking-wider" x-text="dayName"></div>
+          </template>
+        </div>
+
+        <!-- Calendar Grid -->
+        <div class="flex-1 grid grid-cols-7 gap-4 auto-rows-fr">
+          <!-- Blank cells for start offset -->
+          <template x-for="blank in getMonthStartOffset()" :key="'blank-'+blank">
+            <div class="bg-gray-50/50 rounded-xl border border-dashed border-gray-200 p-2 opacity-50"></div>
+          </template>
+
+          <!-- Days -->
+          <template x-for="day in daysInMonth" :key="day">
+            <div
+              class="bg-white border border-gray-100 rounded-2xl p-3 hover:border-blue-300 hover:shadow-xl hover:shadow-blue-900/5 hover:-translate-y-1 transition-all duration-300 cursor-pointer flex flex-col group relative overflow-hidden"
+              @click="openDayBookingModal(day)">
+              <div
+                class="absolute top-0 right-0 w-16 h-16 bg-gradient-to-bl from-blue-50 to-transparent rounded-bl-full opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+              </div>
+              <div class="flex justify-between items-start mb-3 relative z-10">
+                <span class="text-sm font-black text-gray-500 group-hover:text-blue-600 transition-colors"
+                  x-text="day"></span>
+                <template x-if="getDayBookings(day).length === 0">
+                  <div
+                    class="bg-gray-50 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300 h-6 w-6 rounded-full flex items-center justify-center group-hover:bg-blue-50 group-hover:text-blue-500 shadow-sm">
+                    <i class="fas fa-plus text-[10px]"></i>
+                  </div>
+                </template>
+              </div>
+
+              <div class="flex-1 overflow-y-auto space-y-1.5 custom-scrollbar pr-1">
+                <template x-for="(booking, index) in getDayBookings(day).slice(0, 3)" :key="booking.id">
+                  <div
+                    class="text-[10px] px-2 py-1.5 rounded-lg font-semibold truncate flex items-center gap-1.5 shadow-sm border border-transparent"
+                    :class="{
+                        'bg-blue-50 text-blue-700 border-blue-100': booking.eventType === 'ACADEMIC',
+                        'bg-purple-50 text-purple-700 border-purple-100': booking.eventType === 'CLUB',
+                        'bg-orange-50 text-orange-700 border-orange-100': booking.eventType === 'EXAM',
+                        'bg-gray-50 text-gray-700 border-gray-200': !['ACADEMIC','CLUB','EXAM'].includes(booking.eventType)
+                      }">
+                    <div class="w-1.5 h-1.5 rounded-full flex-shrink-0" :class="{
+                          'bg-blue-500': booking.eventType === 'ACADEMIC',
+                          'bg-purple-500': booking.eventType === 'CLUB',
+                          'bg-orange-500': booking.eventType === 'EXAM',
+                          'bg-gray-500': !['ACADEMIC','CLUB','EXAM'].includes(booking.eventType)
+                        }"></div>
+                    <span x-text="booking.title" class="truncate"></span>
+                  </div>
+                </template>
+                <template x-if="getDayBookings(day).length > 3">
+                  <div
+                    class="text-[10px] text-gray-500 font-bold ml-1 mt-1 text-center bg-gray-50 rounded-md py-1 border border-gray-100">
+                    +<span x-text="getDayBookings(day).length - 3"></span>
+                    more...
+                  </div>
+                </template>
+              </div>
+            </div>
+          </template>
+        </div>
+      </div>
+    </main>
+
+    <!-- Combined Day Details & Booking Modal -->
+    <div x-show="isModalOpen" x-cloak class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title"
+      role="dialog" aria-modal="true">
+      <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div x-show="isModalOpen" x-transition.opacity
+          class="fixed inset-0 bg-gray-900/40 backdrop-blur-sm transition-opacity" aria-hidden="true"
+          @click="isModalOpen = false"></div>
+
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+        <div x-show="isModalOpen" x-transition.scale.origin.bottom
+          class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full border border-gray-100">
+          <!-- Modal Header -->
+          <div
+            class="bg-white px-6 pt-6 pb-4 border-b border-gray-100 flex justify-between items-center sticky top-0 z-10">
+            <h3 class="text-xl font-black text-[#0a192f] tracking-tight" id="modal-title" x-text="modalTitle"></h3>
+            <button type="button" @click="isModalOpen = false"
+              class="text-gray-400 hover:text-gray-600 transition-colors bg-gray-50 hover:bg-gray-100 p-2 rounded-full h-8 w-8 flex items-center justify-center">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+
+          <div class="bg-white px-6 py-4 max-h-[70vh] overflow-y-auto">
+            <!-- Modal Error Toast -->
+            <div x-show="formErrorMessage" x-cloak
+              class="mb-5 bg-red-50 border-l-4 border-red-500 p-4 rounded-r-lg shadow-sm">
+              <div class="flex">
+                <div class="flex-shrink-0">
+                  <i class="fas fa-exclamation-circle text-red-500 mt-0.5"></i>
+                </div>
+                <div class="ml-3">
+                  <p class="text-sm text-red-700 font-medium" x-text="formErrorMessage"></p>
+                </div>
+                <div class="ml-auto pl-3">
+                  <div class="-mx-1.5 -my-1.5">
+                    <button @click="formErrorMessage = ''"
+                      class="inline-flex bg-red-50 rounded-md p-1.5 text-red-500 hover:bg-red-100 focus:outline-none">
+                      <span class="sr-only">Dismiss</span>
+                      <i class="fas fa-times"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- ── LIST VIEW ── -->
+            <div x-show="modalView === 'list'" x-transition.opacity>
+              <div class="flex justify-between items-center mb-5">
+                <h4 class="text-sm font-bold text-gray-500 uppercase tracking-wider flex items-center gap-2">
+                  <i class="far fa-calendar-alt"></i> Scheduled Events
+                </h4>
+                <div class="flex gap-2">
+                  <button @click="modalView = 'roomwise'; currentPage = 1; roomSearchQuery = '';"
+                    class="bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 text-xs font-bold px-4 py-2 rounded-lg transition shadow-sm flex items-center gap-2">
+                    <i class="fas fa-fw fa-door-open"></i> Show Room-wise
+                  </button>
+                  <button x-show="isTeacherOrAdmin" @click="modalView = 'form'"
+                    class="bg-[#0a192f] text-white text-xs font-bold px-4 py-2 rounded-lg hover:bg-gray-800 transition shadow-sm flex items-center gap-2">
+                    <i class="fas fa-plus"></i> Add Event
+                  </button>
+                </div>
+              </div>
+
+              <div class="space-y-4 mb-2">
+                <template x-if="cellBookings.length === 0">
+                  <div
+                    class="py-16 flex flex-col items-center justify-center bg-gray-50 rounded-2xl border border-dashed border-gray-200">
+                    <div
+                      class="bg-white p-4 rounded-full shadow-sm mb-3 text-center flex items-center justify-center h-16 w-16">
+                      <i class="fas fa-mug-hot text-gray-300 text-3xl"></i>
+                    </div>
+                    <p class="text-base font-semibold text-gray-600">
+                      No events scheduled.
+                    </p>
+                    <p class="text-sm text-gray-400 mt-1">
+                      The day is currently open.
+                    </p>
+                  </div>
+                </template>
+
+                <!-- Sort bookings by time -->
+                <template x-for="booking in cellBookings.sort((a,b) => a.startTime.localeCompare(b.startTime))"
+                  :key="booking.id">
+                  <div
+                    class="border rounded-2xl p-5 flex flex-col sm:flex-row justify-between sm:items-center bg-white shadow-sm hover:shadow-md transition-shadow border-gray-100 gap-4 group">
+                    <div class="flex-1">
+                      <div class="flex items-center gap-3 mb-2 flex-wrap">
+                        <span class="font-black text-lg text-[#0a192f]" x-text="booking.title"></span>
+                        <span
+                          class="text-[10px] bg-blue-50 text-blue-700 px-2.5 py-1 rounded-md font-bold border border-blue-100 flex items-center gap-1.5">
+                          <i class="fas fa-door-open"></i> Room
+                          <span
+                            x-text="rooms.find(r => r.id === booking.roomId)?.roomNumber || 'N/A'"></span>
+                        </span>
+                        <span x-show="booking.status === 'PENDING'"
+                          class="text-[10px] bg-yellow-50 text-yellow-700 px-2.5 py-1 rounded-md font-black tracking-wider uppercase border border-yellow-200"><i
+                            class="fas fa-hourglass-half mr-1"></i>
+                          PENDING</span>
+                        <span x-show="booking.status === 'APPROVED'"
+                          class="text-[10px] bg-green-50 text-green-700 px-2.5 py-1 rounded-md font-black tracking-wider uppercase border border-green-200"><i
+                            class="fas fa-check mr-1"></i> APPROVED</span>
+                      </div>
+                      <div class="text-xs text-gray-500 flex flex-wrap gap-x-5 gap-y-2 font-medium mt-3">
+                        <span
+                          class="flex items-center gap-2 text-gray-700 font-bold bg-gray-50 px-2 py-1 rounded-md border border-gray-200"><i
+                            class="far fa-clock text-blue-500"></i>
+                          <span x-text="booking.startTime + ' - ' + booking.endTime"></span></span>
+                        <span class="flex items-center gap-2"><i class="fas fa-tag text-purple-400"></i>
+                          <span x-text="booking.eventType"></span></span>
+                        <span class="flex items-center gap-2"><i class="fas fa-user-circle text-gray-400"></i>
+                          <span x-text="booking.teacherName || 'Unknown'"></span>
+                          •
+                          <span x-text="booking.departmentName || 'N/A'"></span></span>
+                      </div>
+                      <div x-show="booking.additionalInfo"
+                        class="mt-3 text-xs text-gray-600 bg-gray-50 p-3 rounded-xl border border-gray-100 flex gap-2 w-full">
+                        <i class="fas fa-info-circle text-gray-400 mt-0.5"></i>
+                        <span x-text="booking.additionalInfo"></span>
+                      </div>
+                    </div>
+                    <div x-show="isAdmin && booking.status === 'PENDING'"
+                      class="sm:ml-4 sm:pl-4 sm:border-l sm:border-gray-100">
+                      <button type="button" @click.prevent="approveBooking(booking.id)"
+                        class="w-full sm:w-auto px-5 py-2.5 bg-green-600 text-white rounded-xl text-xs font-bold hover:bg-green-700 shadow-sm transition-all focus:ring-2 focus:ring-green-500 focus:ring-offset-2 flex items-center justify-center gap-2">
+                        <i class="fas fa-check"></i> Approve
+                      </button>
+                    </div>
+                  </div>
+                </template>
+              </div>
+            </div>
+
+            <!-- ── ROOM-WISE VIEW ── -->
+            <div x-show="modalView === 'roomwise'" x-transition.opacity class="pt-2">
+              <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center gap-3">
+                  <button @click="modalView = 'list'"
+                    class="text-gray-400 hover:text-[#0a192f] transition bg-gray-50 hover:bg-gray-100 h-8 w-8 rounded-full flex items-center justify-center">
+                    <i class="fas fa-arrow-left"></i>
+                  </button>
+                  <h4 class="text-sm font-bold text-[#0a192f]">
+                    Room Overview for <span x-text="formDate"></span>
+                  </h4>
+                </div>
+                <div class="relative text-[#0a192f]">
+                  <i class="fas fa-search absolute left-3 top-2.5 text-gray-400 text-sm"></i>
+                  <input type="text" x-model="roomSearchQuery" @input="currentPage = 1" placeholder="Search room..."
+                    class="pl-9 pr-3 py-2 border border-gray-200 rounded-lg text-sm bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 w-48 transition-colors" />
+                </div>
+              </div>
+
+              <!-- Legend & Time Headers -->
+              <div class="mb-4">
+                <div class="flex justify-between items-end mb-3 pr-1 pl-1">
+                  <div class="hidden md:flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center border border-blue-100">
+                      <i class="fas fa-calendar-day text-blue-500 text-xs"></i>
+                    </div>
+                    <div>
+                      <h5 class="text-xs font-black text-[#0a192f] tracking-wide uppercase">
+                        Daily Routine Grid
+                      </h5>
+                      <p class="text-[9px] font-bold tracking-wider text-gray-400">
+                        8 AM -- 8 PM SHIFT
+                      </p>
+                    </div>
+                  </div>
+                  <!-- Legend: OPEN / PENDING / BOOKED / CLASS -->
+                  <div
+                    class="flex gap-4 text-[9px] font-black uppercase tracking-widest text-gray-500 pt-3 md:pt-0 pb-1">
+                    <div class="flex items-center gap-1.5">
+                      <div class="w-2.5 h-2.5 bg-green-500 border border-green-600 rounded-sm shadow-sm"></div>
+                      OPEN
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                      <div class="w-2.5 h-2.5 bg-yellow-400 border border-yellow-500 rounded-sm shadow-sm"></div>
+                      PENDING
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                      <div class="w-2.5 h-2.5 bg-red-500 border border-red-600 rounded-sm shadow-sm"></div>
+                      BOOKED
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                      <div class="w-2.5 h-2.5 bg-slate-500 border border-slate-600 rounded-sm shadow-sm"></div>
+                      CLASS
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Header Row for Routine Times -->
+                <div
+                  class="hidden md:flex items-center text-[9px] font-black text-gray-400 uppercase tracking-widest bg-gray-50/80 pt-2 pb-1.5 rounded-xl border border-gray-200">
+                  <div class="w-36 shrink-0 text-center border-r border-gray-200">
+                    ROOM
+                  </div>
+                  <div class="flex-1 flex gap-1 px-3">
+                    <template
+                      x-for="timeLabel in ['8 AM', '9 AM', '10 AM', '11 AM', '12 PM', '1 PM', '2 PM', '3 PM', '4 PM', '5 PM', '6 PM', '7 PM']"
+                      :key="timeLabel">
+                      <div class="flex-1 text-center" x-text="timeLabel"></div>
+                    </template>
+                  </div>
+                </div>
+              </div>
+
+              <div class="space-y-2 mb-4 max-h-[50vh] overflow-y-auto custom-scrollbar pr-1 pb-2">
+                <template x-if="paginatedRooms.length === 0">
+                  <div class="py-10 text-center text-gray-500 italic text-sm">
+                    No rooms match your search.
+                  </div>
+                </template>
+
+                <template x-for="r in paginatedRooms" :key="r.id">
+                  <div
+                    class="border border-gray-100 rounded-xl bg-white shadow-sm hover:shadow-md overflow-hidden flex flex-col md:flex-row md:items-stretch group transition-all duration-300">
+                    <!-- Left Side: Room Info -->
+                    <div
+                      class="h-16 md:h-auto px-4 md:py-3 bg-[#f8fafc] flex items-center md:flex-col md:justify-center md:items-center gap-1 w-full md:w-36 border-b md:border-b-0 md:border-r border-gray-100 shrink-0">
+                      <div class="font-black text-[#0a192f] text-sm flex items-center">
+                        <i class="fas fa-door-open text-blue-500/70 mr-2 md:hidden"></i>
+                        <span x-text="r.roomNumber"></span>
+                      </div>
+                      <div
+                        class="text-[8px] text-gray-400 font-bold tracking-widest uppercase md:mt-1 bg-white px-2 py-0.5 rounded shadow-sm border border-gray-100"
+                        x-text="r.roomType"></div>
+                    </div>
+
+                    <!-- Right Side: Visual Slots timeline -->
+                    <div
+                      class="flex-1 p-2 md:p-3 flex items-center overflow-x-auto gap-1 custom-scrollbar min-h-[4rem]">
+                      <!-- Uses occupancy cache if available, falls back to local bookings -->
+                      <template x-for="slot in getTimeSlotsFromOccupancy(r.id, formDate)" :key="slot.start">
+                        <button type="button"
+                          @click="if(!slot.isBooked && isTeacherOrAdmin) { openRoomwiseBookFormSpecific(r.id, slot.start, slot.end); }"
+                          :class="[
+                              'flex-1 min-w-[3.2rem] md:min-w-[0] h-10 md:h-8 rounded-md flex flex-col items-center justify-center font-bold border transition-all duration-300 relative overflow-hidden',
+                              slot.isBooked
+                                ? (slot.isClass
+                                    ? 'bg-gradient-to-br from-slate-400 to-slate-500 border-slate-600 shadow-inner cursor-not-allowed'
+                                    : slot.bookingStatus === 'PENDING'
+                                      ? 'bg-gradient-to-br from-yellow-300 to-yellow-400 border-yellow-500 shadow-inner cursor-not-allowed opacity-90 hover:opacity-100'
+                                      : 'bg-gradient-to-br from-red-500 to-red-600 border-red-700 shadow-inner cursor-not-allowed')
+                                : 'bg-[#f1f5f9] border-transparent hover:bg-green-400 hover:border-green-500 hover:shadow-[0_0_15px_rgba(74,222,128,0.4)] cursor-pointer text-transparent hover:scale-[1.02]'
+                            ]" :title="slot.title">
+                          <span class="sr-only" x-text="slot.label"></span>
+                          <!-- CLASS slot icon -->
+                          <i x-show="slot.isBooked && slot.isClass"
+                            class="fas fa-chalkboard-teacher text-[10px] text-white/70"></i>
+                          <!-- PENDING booking icon -->
+                          <i x-show="slot.isBooked && !slot.isClass && slot.bookingStatus === 'PENDING'"
+                            class="fas fa-hourglass-half text-[10px] text-yellow-900/60"></i>
+                          <!-- BOOKED/APPROVED booking icon -->
+                          <i x-show="slot.isBooked && !slot.isClass && slot.bookingStatus !== 'PENDING'"
+                            class="fas fa-times text-[10px] text-white/50"></i>
+                        </button>
+                      </template>
+                    </div>
+                  </div>
+                </template>
+              </div>
+
+              <!-- Pagination -->
+              <div
+                class="flex justify-between items-center text-xs font-bold text-gray-500 pt-2 border-t border-gray-100">
+                <button @click="prevPage" :disabled="currentPage === 1"
+                  class="px-3 py-1.5 rounded-md border border-gray-200 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition text-[#0a192f]">
+                  Previous
+                </button>
+                <span>Page <span x-text="currentPage"></span> of
+                  <span x-text="totalPages"></span></span>
+                <button @click="nextPage" :disabled="currentPage === totalPages"
+                  class="px-3 py-1.5 rounded-md border border-gray-200 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition text-[#0a192f]">
+                  Next
+                </button>
+              </div>
+            </div>
+
+            <!-- ── ADD BOOKING FORM ── -->
+            <div x-show="modalView === 'form' && isTeacherOrAdmin" x-transition.opacity class="pt-2">
+              <div class="flex items-center gap-3 mb-6">
+                <button type="button" @click="modalView = 'list'"
+                  class="text-gray-400 hover:text-[#0a192f] transition bg-gray-50 hover:bg-gray-100 h-8 w-8 rounded-full flex items-center justify-center">
+                  <i class="fas fa-arrow-left"></i>
+                </button>
+                <h4 class="text-sm font-bold text-[#0a192f]">
+                  Book a Room Slot for <span x-text="formDate"></span>
+                </h4>
+              </div>
+              <form @submit.prevent="submitBooking">
+                <div class="space-y-5">
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                    <div>
+                      <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1.5">Room</label>
+                      <select x-model="formData.roomId" required
+                        class="block w-full pl-3 pr-10 py-3 text-sm border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent rounded-xl border bg-gray-50/50 font-semibold text-gray-900 transition-shadow">
+                        <option value="" disabled>Select a room</option>
+                        <template x-for="room in rooms" :key="room.id">
+                          <option :value="room.id"
+                            x-text="room.roomNumber + ' (' + (room.roomType || 'N/A') + ')'">
+                          </option>
+                        </template>
+                      </select>
+                    </div>
+                    <div>
+                      <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1.5">Event
+                        Type</label>
+                      <select x-model="formData.eventType" required
+                        class="block w-full pl-3 pr-10 py-3 text-sm border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent rounded-xl bg-gray-50/50 font-semibold text-gray-900 transition-shadow">
+                        <option value="ACADEMIC">Academic</option>
+                        <option value="CLUB">Extracurricular / Club</option>
+                        <option value="EXAM">Exam</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1.5">Event
+                      Title</label>
+                    <input type="text" x-model="formData.title" required
+                      placeholder="e.g. CSE 4101 Final Project Presentation"
+                      class="block w-full rounded-xl border-gray-200 border p-3 text-sm font-semibold text-gray-900 bg-gray-50/50 focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-gray-400 transition-shadow" />
+                  </div>
+
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                    <div>
+                      <label
+                        class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1.5">Department</label>
+                      <input type="text" x-model="formData.departmentName" required placeholder="e.g. CSE"
+                        class="block w-full rounded-xl border-gray-200 border p-3 text-sm font-semibold text-gray-900 bg-gray-50/50 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow" />
+                    </div>
+                    <div>
+                      <label
+                        class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1.5">Teacher</label>
+                      <input type="text" x-model="formData.teacherName" required placeholder="Name"
+                        class="block w-full rounded-xl border-gray-200 border p-3 text-sm font-semibold text-gray-900 bg-gray-50/50 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow" />
+                    </div>
+                  </div>
+
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                    <div>
+                      <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1.5">Start
+                        Time</label>
+                      <input type="time" x-model="formData.startTime" required
+                        class="block w-full rounded-xl border-gray-200 border p-3 text-sm font-semibold text-gray-900 bg-gray-50/50 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow" />
+                    </div>
+                    <div>
+                      <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1.5">End
+                        Time</label>
+                      <input type="time" x-model="formData.endTime" required
+                        class="block w-full rounded-xl border-gray-200 border p-3 text-sm font-semibold text-gray-900 bg-gray-50/50 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow" />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1.5">Additional
+                      Info (Optional)</label>
+                    <textarea x-model="formData.additionalInfo" rows="2" placeholder="Any special requirements..."
+                      class="block w-full rounded-xl border-gray-200 border p-3 text-sm font-semibold text-gray-900 bg-gray-50/50 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow"></textarea>
+                  </div>
+
+                  <div class="flex flex-row-reverse gap-3 pt-2">
+                    <button type="submit"
+                      class="w-full inline-flex justify-center items-center rounded-xl border border-transparent shadow-md px-6 py-3 bg-blue-600 text-sm font-black text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:w-auto transition-all"
+                      :disabled="isSubmitting">
+                      <span x-show="!isSubmitting">Confirm Booking</span>
+                      <span x-show="isSubmitting" class="flex items-center gap-2"><i
+                          class="fas fa-circle-notch animate-spin"></i>
+                        Processing...</span>
+                    </button>
+                    <button type="button" @click="modalView = 'list'"
+                      class="w-full inline-flex justify-center items-center rounded-xl border border-gray-200 px-6 py-3 bg-white text-sm font-bold text-gray-700 hover:bg-gray-50 sm:w-auto transition-all shadow-sm">
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Alpine Logic -->
+  <script th:inline="javascript">
+    window.USER_ROLE =
+        /*[[${#authentication.principal.authorities[0].authority}]]*/ "ROLE_STUDENT";
+  </script>
+  <script>
+    document.addEventListener("alpine:init", () => {
+      Alpine.data("eventBookingSystem", () => ({
+        // ── State ──────────────────────────────────────────────
+        rooms: [],
+        bookings: [],
+        bookingsByDay: {},
+        currentYear: 2024,
+        currentMonth: 10,
+        daysInMonth: 31,
+        roomSearchQuery: "",
+        currentPage: 1,
+        roomsPerPage: 10,
+        isModalOpen: false,
+        isSubmitting: false,
+        errorMessage: "",
+        formErrorMessage: "",
+        formDate: "",
+        modalTitle: "",
+        cellBookings: [],
+        modalView: "list",
+
+        // Occupancy cache (from fix-event-page) — avoids re-fetching on every render
+        roomOccupancyCache: {},
+        roomOccupancyLoading: false,
+
+        formData: {
+          roomId: "",
+          specificDate: "",
+          startTime: "10:00",
+          endTime: "11:00",
+          eventType: "ACADEMIC",
+          title: "",
+          departmentName: "",
+          teacherName: "",
+          additionalInfo: "",
+        },
+
+        // ── Computed ───────────────────────────────────────────
+
+        // From dev — drives the month nav label
+        get currentMonthDisplay() {
+          return new Date(
+            this.currentYear,
+            this.currentMonth - 1,
+            1,
+          ).toLocaleString("default", { month: "long", year: "numeric" });
+        },
+
+        get isTeacherOrAdmin() {
+          return (
+            window.USER_ROLE === "ROLE_TEACHER" ||
+            window.USER_ROLE === "ROLE_COORDINATOR" ||
+            window.USER_ROLE === "ROLE_SUPERADMIN"
+          );
+        },
+
+        get isAdmin() {
+          return (
+            window.USER_ROLE === "ROLE_COORDINATOR" ||
+            window.USER_ROLE === "ROLE_SUPERADMIN"
+          );
+        },
+
+        get filteredRooms() {
+          const query = this.roomSearchQuery.trim().toLowerCase();
+          if (!query) return this.rooms;
+          return this.rooms.filter(
+            (r) =>
+              r.roomNumber.toLowerCase().includes(query) ||
+              r.roomType.toLowerCase().includes(query),
+          );
+        },
+
+        get totalPages() {
+          return Math.max(
+            1,
+            Math.ceil(this.filteredRooms.length / this.roomsPerPage),
+          );
+        },
+
+        get paginatedRooms() {
+          const start = (this.currentPage - 1) * this.roomsPerPage;
+          return this.filteredRooms.slice(start, start + this.roomsPerPage);
+        },
+
+        // ── Lifecycle ──────────────────────────────────────────
+
+        async initData() {
+          const now = new Date();
+          this.currentYear = now.getFullYear();
+          this.currentMonth = now.getMonth() + 1;
+          this.updateDaysInMonth();
+
+          await this.fetchRooms();
+          await this.fetchBookings();
+
+          // From fix-event-page: trigger server-side occupancy fetch
+          // whenever the user opens the room-wise view OR paginates/searches
+          this.$watch("modalView", (val) => {
+            if (val === "roomwise" && this.formDate) {
+              this.fetchAllRoomOccupancy(this.formDate);
+            }
+          });
+          this.$watch("currentPage", () => {
+            if (this.modalView === "roomwise" && this.formDate) {
+              this.fetchAllRoomOccupancy(this.formDate);
+            }
+          });
+          this.$watch("roomSearchQuery", () => {
+            if (this.modalView === "roomwise" && this.formDate) {
+              this.fetchAllRoomOccupancy(this.formDate);
+            }
+          });
+
+          // Refresh bookings every 30 s so the grid stays live
+          setInterval(() => this.fetchBookings(), 30000);
+        },
+
+        // ── Month navigation ───────────────────────────────────
+
+        async prevMonth() {
+          this.currentMonth--;
+          if (this.currentMonth < 1) {
+            this.currentMonth = 12;
+            this.currentYear--;
+          }
+          this.updateDaysInMonth();
+          await this.fetchBookings();
+        },
+
+        async nextMonth() {
+          this.currentMonth++;
+          if (this.currentMonth > 12) {
+            this.currentMonth = 1;
+            this.currentYear++;
+          }
+          this.updateDaysInMonth();
+          await this.fetchBookings();
+        },
+
+        updateDaysInMonth() {
+          this.daysInMonth = new Date(
+            this.currentYear,
+            this.currentMonth,
+            0,
+          ).getDate();
+        },
+
+        getMonthStartOffset() {
+          const firstDay = new Date(
+            this.currentYear,
+            this.currentMonth - 1,
+            1,
+          ).getDay();
+          return Array.from({ length: firstDay }, (_, i) => i);
+        },
+
+        formatDateParam(day) {
+          const m = this.currentMonth.toString().padStart(2, "0");
+          const d = day.toString().padStart(2, "0");
+          return `${this.currentYear}-${m}-${d}`;
+        },
+
+        // ── Data fetching ──────────────────────────────────────
+
+        async fetchRooms() {
+          try {
+            const res = await apiFetch("/api/v1/rooms");
+            if (res.ok) this.rooms = await res.json();
+          } catch (e) {
+            console.error("Failed to load rooms", e);
+          }
+        },
+
+        async fetchBookings() {
+          try {
+            const monthStr = `${this.currentYear}-${this.currentMonth.toString().padStart(2, "0")}-01`;
+            const res = await apiFetch(`/api/v1/bookings?month=${monthStr}`);
+            if (res.ok) {
+              this.bookings = await res.json();
+              this.processBookings();
+
+              // Keep the open modal in sync
+              if (this.isModalOpen && this.formDate) {
+                const dayNum = parseInt(this.formDate.split("-")[2], 10);
+                this.cellBookings = this.getDayBookings(dayNum);
+              }
+            }
+          } catch (e) {
+            console.error("Failed to fetch bookings", e);
+          }
+        },
+
+        processBookings() {
+          const map = {};
+          for (const b of this.bookings) {
+            if (!map[b.specificDate]) map[b.specificDate] = [];
+            map[b.specificDate].push(b);
+          }
+          this.bookingsByDay = map;
+        },
+
+        // From fix-event-page: fetch server-side occupancy for all visible rooms.
+        // SECURITY FIX: uses apiFetch() (not bare fetch) so the CSRF header is included.
+        async fetchAllRoomOccupancy(dateStr) {
+          this.roomOccupancyLoading = true;
+          await Promise.all(
+            this.paginatedRooms.map(async (r) => {
+              const key = `${r.id}_${dateStr}`;
+              if (this.roomOccupancyCache[key]) return; // already cached
+              try {
+                const res = await apiFetch(
+                  `/api/v1/bookings/room-occupancy?roomId=${r.id}&date=${dateStr}`,
+                );
+                if (res.ok) {
+                  const slots = await res.json();
+                  // Spread to keep Alpine reactivity
+                  this.roomOccupancyCache = {
+                    ...this.roomOccupancyCache,
+                    [key]: slots,
+                  };
+                }
+              } catch (e) {
+                /* silently ignore per-room failures */
+              }
+            }),
+          );
+          this.roomOccupancyLoading = false;
+        },
+
+        // ── Slot helpers ───────────────────────────────────────
+
+        // From fix-event-page: prefer server occupancy cache; fall back to
+        // local booking data while cache is being populated.
+        getTimeSlotsFromOccupancy(roomId, dateStr) {
+          const key = `${roomId}_${dateStr}`;
+          const occupancy = this.roomOccupancyCache[key];
+          if (!occupancy) {
+            return this.getTimeSlots(roomId, dateStr); // fallback
+          }
+          return occupancy.map((s) => ({
+            label: s.slotLabel,
+            start: String(s.hour).padStart(2, "0") + ":00",
+            end: String(s.hour + 1).padStart(2, "0") + ":00",
+            isBooked: s.occupancyType !== "FREE",
+            isClass: s.occupancyType === "CLASS",
+            bookingStatus: s.bookingStatus,
+            title: s.label || "Free to book (click)",
+          }));
+        },
+
+        // Local fallback — derives slots from already-fetched bookings
+        getTimeSlots(roomId, dateStr) {
+          const bookings = this.getCellBookingsByDateStr(roomId, dateStr);
+          const slots = [];
+          for (let h = 8; h < 20; h++) {
+            const slotStart = `${h.toString().padStart(2, "0")}:00`;
+            const slotEnd = `${(h + 1).toString().padStart(2, "0")}:00`;
+            const hit = bookings.find(
+              (b) => b.startTime < slotEnd && b.endTime > slotStart,
+            );
+            slots.push({
+              label: `${h % 12 || 12} ${h < 12 ? "AM" : "PM"}`,
+              start: slotStart,
+              end: slotEnd,
+              isBooked: !!hit,
+              isClass: false, // local data has no class info
+              bookingStatus: hit ? hit.status : "FREE",
+              title: hit ? hit.title : "Free to book (click)",
+            });
+          }
+          return slots;
+        },
+
+        // ── Booking lookups ────────────────────────────────────
+
+        getDayBookings(day) {
+          return this.bookingsByDay[this.formatDateParam(day)] || [];
+        },
+
+        getCellBookingsByDateStr(roomId, dateStr) {
+          return (this.bookingsByDay[dateStr] || []).filter(
+            (b) => b.roomId === roomId,
+          );
+        },
+
+        // ── Pagination ─────────────────────────────────────────
+
+        nextPage() {
+          if (this.currentPage < this.totalPages) this.currentPage++;
+        },
+
+        prevPage() {
+          if (this.currentPage > 1) this.currentPage--;
+        },
+
+        // ── Modal openers ──────────────────────────────────────
+
+        openDayBookingModal(day) {
+          this.errorMessage = "";
+          this.formErrorMessage = "";
+          this.formDate = this.formatDateParam(day);
+
+          const dateObj = new Date(
+            this.currentYear,
+            this.currentMonth - 1,
+            day,
+          );
+          this.modalTitle = dateObj.toLocaleDateString("en-US", {
+            weekday: "long",
+            month: "long",
+            day: "numeric",
+            year: "numeric",
+          });
+
+          this.cellBookings = this.getDayBookings(day);
+          this.modalView = "list";
+          this.resetFormData();
+          this.isModalOpen = true;
+        },
+
+        openNewBookingModal() {
+          this.errorMessage = "";
+          this.formErrorMessage = "";
+          this.formDate = this.formatDateParam(new Date().getDate());
+          this.modalTitle = `Quick Booking — ${this.formDate}`;
+          this.cellBookings = [];
+          this.modalView = "form";
+          this.resetFormData();
+          this.isModalOpen = true;
+        },
+
+        openRoomwiseBookFormSpecific(roomId, start, end) {
+          this.resetFormData();
+          this.formData.roomId = roomId;
+          this.formData.specificDate = this.formDate;
+          this.formData.startTime = start;
+          this.formData.endTime = end;
+          this.modalView = "form";
+        },
+
+        resetFormData() {
+          this.formData = {
+            roomId: this.rooms.length > 0 ? this.rooms[0].id : "",
+            specificDate: this.formDate,
+            startTime: "10:00",
+            endTime: "11:00",
+            eventType: "ACADEMIC",
+            title: "",
+            departmentName: "",
+            teacherName: "",
+            additionalInfo: "",
+          };
+        },
+
+        // ── Actions ────────────────────────────────────────────
+
+        async submitBooking() {
+          this.isSubmitting = true;
+          this.errorMessage = "";
+          this.formErrorMessage = "";
+          try {
+            const res = await apiFetch("/api/v1/bookings", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ ...this.formData }),
+            });
+
+            if (res.ok) {
+              this.isModalOpen = false;
+              await this.fetchBookings();
+            } else {
+              const errText = await res.text();
+              this.formErrorMessage =
+                errText || "Failed to book slot. It might already be taken.";
+            }
+          } catch (e) {
+            this.formErrorMessage = "Network error. Please try again.";
+          } finally {
+            this.isSubmitting = false;
+          }
+        },
+
+        async approveBooking(bookingId) {
+          this.formErrorMessage = "";
+          try {
+            const res = await apiFetch(
+              `/api/v1/bookings/${bookingId}/approve`,
+              { method: "POST" },
+            );
+
+            if (res.ok) {
+              await this.fetchBookings();
+              this.cellBookings = this.cellBookings.map((b) =>
+                b.id === bookingId ? { ...b, status: "APPROVED" } : b,
+              );
+            } else {
+              const errText = await res.text();
+              this.formErrorMessage = errText || "Failed to approve booking.";
+            }
+          } catch (e) {
+            this.formErrorMessage = "Network error. Please try again.";
+          }
+        },
+      }));
+    });
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,366 @@
+﻿<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>System Configuration - PlanR</title>
+    <!-- Tailwind CSS -->
+    <link rel="stylesheet" th:href="@{/css/tailwind-output.css}">
+    <!-- FontAwesome 6 -->
+    <link rel="stylesheet" href="/css/fontawesome/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <style>
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        .tab-btn.active { border-bottom-color: #2563eb; color: #2563eb; }
+        
+        .toggle-checkbox:checked { right: 0; border-color: #2563eb; }
+        .toggle-checkbox:checked + .toggle-label { background-color: #2563eb; }
+        .toggle-checkbox { right: 0; z-index: 1; border-color: #e5e7eb; transition: all 0.3s; }
+        .toggle-label { width: 3rem; height: 1.5rem; background-color: #e5e7eb; border-radius: 9999px; transition: all 0.3s; }
+        .toggle-checkbox-btn { position: absolute; top: 0.125rem; left: 0.125rem; width: 1.25rem; height: 1.25rem; background-color: white; border-radius: 50%; transition: transform 0.3s; }
+        .toggle-checkbox:checked + .toggle-label .toggle-checkbox-btn { transform: translateX(1.5rem); }
+    </style>
+</head>
+<body class="bg-[#f3f6f8] font-['Inter',sans-serif]">
+
+    <div th:replace="~{fragments/sidebar :: sidebar}"></div>
+
+    <div class="ml-64 flex flex-col min-h-screen relative">
+        <div th:replace="~{fragments/header :: header}"></div>
+
+        <main class="flex-1 p-8">
+            <!-- Page Header -->
+            <div class="flex justify-between items-start mb-6">
+                <div class="max-w-3xl">
+                    <h1 class="text-4xl font-extrabold text-[#0a192f] tracking-tight">System Configuration & Data Hub</h1>
+                    <p class="text-gray-500 font-medium mt-3 text-sm leading-relaxed">Manage system constraints, and edit core models: Courses, Teachers, Rooms, and Students.</p>
+                </div>
+            </div>
+
+            <!-- Global Constraints Section (Expanded to include Ramadan toggle logic) -->
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-8 relative overflow-hidden">
+                <div class="absolute -right-4 -top-4 w-24 h-24 bg-blue-50 rounded-full mix-blend-multiply opacity-50"></div>
+                <div class="flex items-center justify-between mb-6 relative z-10">
+                    <div class="flex items-center gap-2">
+                        <i class="fas fa-sliders-h text-blue-600 text-lg"></i>
+                        <h3 class="font-bold text-gray-900 text-lg">Global Temporal Constraints</h3>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 relative z-10">
+                    <!-- Standard Toggle -->
+                    <div class="flex items-center justify-between bg-gray-50/50 p-4 rounded-xl border border-gray-100">
+                        <div>
+                            <p class="text-sm font-semibold text-gray-900">Weekend Bookings</p>
+                            <p class="text-[10px] text-gray-500 mt-1 font-bold">Enable Sat/Sun slots</p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                          <input type="checkbox" class="sr-only peer">
+                          <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
+                        </label>
+                    </div>
+
+                    <!-- Fatigue Prevention -->
+                    <div class="flex items-center justify-between bg-gray-50/50 p-4 rounded-xl border border-gray-100">
+                        <div>
+                            <p class="text-sm font-semibold text-gray-900">Max Gap Limit (4hrs)</p>
+                            <p class="text-[10px] text-gray-500 mt-1 font-bold">Prevents 4hr delays</p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                          <input type="checkbox" class="sr-only peer" checked>
+                          <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
+                        </label>
+                    </div>
+
+                    <!-- Ramadan Temporal Override -->
+                    <div class="flex items-center justify-between bg-purple-50 p-4 rounded-xl border border-purple-200 shadow-sm col-span-2 group">
+                        <div class="flex items-center gap-4">
+                            <div class="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center text-purple-600">
+                                <i class="fas fa-moon"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm font-bold text-gray-900">Ramadan Schedule Override</p>
+                                <p class="text-[10px] text-gray-600 mt-0.5 font-medium">Update the entire master routine globally into shortened timeslots and push automated alerts to all students & faculty.</p>
+                            </div>
+                        </div>
+                        <button class="px-4 py-2 bg-purple-600 text-white font-bold rounded shadow hover:bg-purple-700 transition text-xs whitespace-nowrap">Activate Shift</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Full CRUD Data Management Block -->
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                <!-- Tab Headers -->
+                <div class="flex border-b border-gray-200 bg-gray-50/30 px-6 pt-4 gap-6">
+                    <button class="tab-btn active pb-3 px-2 border-b-2 border-transparent text-sm font-bold text-gray-500 hover:text-gray-900 transition flex items-center gap-2" onclick="openTab('tabFaculty', this)">
+                        <i class="fas fa-chalkboard-teacher"></i> Faculty 
+                    </button>
+                    <button class="tab-btn pb-3 px-2 border-b-2 border-transparent text-sm font-bold text-gray-500 hover:text-gray-900 transition flex items-center gap-2" onclick="openTab('tabCourses', this)">
+                        <i class="fas fa-book"></i> Courses
+                    </button>
+                    <button class="tab-btn pb-3 px-2 border-b-2 border-transparent text-sm font-bold text-gray-500 hover:text-gray-900 transition flex items-center gap-2" onclick="openTab('tabRooms', this)">
+                        <i class="fas fa-door-open"></i> Rooms & Types
+                    </button>
+                    <button class="tab-btn pb-3 px-2 border-b-2 border-transparent text-sm font-bold text-gray-500 hover:text-gray-900 transition flex items-center gap-2" onclick="openTab('tabStudents', this)">
+                        <i class="fas fa-user-graduate"></i> Students & Depts
+                    </button>
+                </div>
+
+                <!-- Shared Toolbar -->
+                <div class="p-4 bg-white flex justify-between items-center border-b border-gray-100">
+                    <div class="relative w-64">
+                        <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-xs"></i>
+                        <input type="text" placeholder="Search records..." class="w-full bg-gray-50 border border-gray-200 text-xs font-bold rounded-md py-2 pl-8 pr-4 focus:ring-2 focus:ring-blue-500 outline-none">
+                    </div>
+                    <button id="btnOpenAddModal" class="px-4 py-2 bg-[#0a192f] text-white font-bold rounded-lg text-xs shadow-md hover:bg-gray-800 transition-colors flex items-center gap-2">
+                        <i class="fas fa-plus"></i> Create Record
+                    </button>
+                </div>
+
+                <!-- TAB: FACULTY -->
+                <div id="tabFaculty" class="tab-content active p-0">
+                    <div class="overflow-x-auto">
+                        <!-- Identical to old faculty table but styled tightly -->
+                        <table class="w-full text-left border-collapse">
+                            <thead class="bg-gray-50/50">
+                                <tr class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                                    <th class="py-3 px-6">Name</th>
+                                    <th class="py-3 px-6">Department</th>
+                                    <th class="py-3 px-6 text-center">Max Hours</th>
+                                    <th class="py-3 px-6 text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100 text-sm font-medium">
+                                <tr class="hover:bg-blue-50/20 transition cursor-pointer">
+                                    <td class="py-3 px-6 flex items-center gap-3">
+                                        <div class="w-7 h-7 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-[10px] font-black">AS</div>
+                                        <span class="text-gray-900 font-bold">Dr. Aminul Safiq</span>
+                                    </td>
+                                    <td class="py-3 px-6 text-gray-600">Computer Science (CSE)</td>
+                                    <td class="py-3 px-6 text-center">18h</td>
+                                    <td class="py-3 px-6 text-right">
+                                        <button class="text-blue-500 hover:text-blue-700 mx-1"><i class="fas fa-edit"></i></button>
+                                        <button class="text-red-500 hover:text-red-700 mx-1 btnOpenWarningModal"><i class="fas fa-trash"></i></button>
+                                    </td>
+                                </tr>
+                                <tr class="hover:bg-blue-50/20 transition cursor-pointer">
+                                    <td class="py-3 px-6 flex items-center gap-3">
+                                        <div class="w-7 h-7 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center text-[10px] font-black">RJ</div>
+                                        <span class="text-gray-900 font-bold">Dr. Rina Jahan</span>
+                                    </td>
+                                    <td class="py-3 px-6 text-gray-600">Physics (PHY)</td>
+                                    <td class="py-3 px-6 text-center">15h</td>
+                                    <td class="py-3 px-6 text-right">
+                                        <button class="text-blue-500 hover:text-blue-700 mx-1"><i class="fas fa-edit"></i></button>
+                                        <button class="text-red-500 hover:text-red-700 mx-1 btnOpenWarningModal"><i class="fas fa-trash"></i></button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- TAB: COURSES -->
+                <div id="tabCourses" class="tab-content p-0">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead class="bg-gray-50/50">
+                                <tr class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                                    <th class="py-3 px-6">Course Code</th>
+                                    <th class="py-3 px-6">Course Label</th>
+                                    <th class="py-3 px-6 text-center">Credits / Needs</th>
+                                    <th class="py-3 px-6 text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100 text-sm font-medium">
+                                <tr class="hover:bg-blue-50/20 transition cursor-pointer">
+                                    <td class="py-3 px-6 font-bold text-blue-700">CSE 4101</td>
+                                    <td class="py-3 px-6 text-gray-900 font-semibold">Compiler Design</td>
+                                    <td class="py-3 px-6 text-center">
+                                        <span class="bg-gray-100 text-gray-600 text-[10px] px-2 py-0.5 rounded font-bold">3.0 CR • Theory</span>
+                                    </td>
+                                    <td class="py-3 px-6 text-right">
+                                        <button class="text-blue-500 hover:text-blue-700 mx-1"><i class="fas fa-edit"></i></button>
+                                        <button class="text-red-500 hover:text-red-700 mx-1"><i class="fas fa-trash"></i></button>
+                                    </td>
+                                </tr>
+                                <tr class="hover:bg-blue-50/20 transition cursor-pointer">
+                                    <td class="py-3 px-6 font-bold text-blue-700">EEE 3105</td>
+                                    <td class="py-3 px-6 text-gray-900 font-semibold">Microprocessors Lab</td>
+                                    <td class="py-3 px-6 text-center">
+                                        <span class="bg-purple-100 text-purple-700 text-[10px] px-2 py-0.5 rounded font-bold">1.5 CR • Requires Computers</span>
+                                    </td>
+                                    <td class="py-3 px-6 text-right">
+                                        <button class="text-blue-500 hover:text-blue-700 mx-1"><i class="fas fa-edit"></i></button>
+                                        <button class="text-red-500 hover:text-red-700 mx-1"><i class="fas fa-trash"></i></button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- TAB: ROOMS -->
+                <div id="tabRooms" class="tab-content p-0">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead class="bg-gray-50/50">
+                                <tr class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                                    <th class="py-3 px-6">Room Name</th>
+                                    <th class="py-3 px-6">Type Specs</th>
+                                    <th class="py-3 px-6 text-center">Capacity</th>
+                                    <th class="py-3 px-6 text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100 text-sm font-medium">
+                                <tr class="hover:bg-blue-50/20 transition cursor-pointer">
+                                    <td class="py-3 px-6 font-bold text-gray-900">Standard Room 402</td>
+                                    <td class="py-3 px-6 text-gray-600">Lecture • Has Projector</td>
+                                    <td class="py-3 px-6 text-center font-bold text-gray-800">120 seats</td>
+                                    <td class="py-3 px-6 text-right">
+                                        <button class="text-blue-500 hover:text-blue-700 mx-1"><i class="fas fa-edit"></i></button>
+                                        <button class="text-red-500 hover:text-red-700 mx-1"><i class="fas fa-trash"></i></button>
+                                    </td>
+                                </tr>
+                                <tr class="hover:bg-blue-50/20 transition cursor-pointer">
+                                    <td class="py-3 px-6 font-bold text-gray-900">Lab Alpha 2A</td>
+                                    <td class="py-3 px-6 text-gray-600">Laboratory • High-end PCs</td>
+                                    <td class="py-3 px-6 text-center font-bold text-gray-800">45 seats</td>
+                                    <td class="py-3 px-6 text-right">
+                                        <button class="text-blue-500 hover:text-blue-700 mx-1"><i class="fas fa-edit"></i></button>
+                                        <button class="text-red-500 hover:text-red-700 mx-1"><i class="fas fa-trash"></i></button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- TAB: STUDENTS -->
+                <div id="tabStudents" class="tab-content p-0">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead class="bg-gray-50/50">
+                                <tr class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                                    <th class="py-3 px-6">Roll / ID Block</th>
+                                    <th class="py-3 px-6">Department</th>
+                                    <th class="py-3 px-6 text-center">Batch Label</th>
+                                    <th class="py-3 px-6 text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100 text-sm font-medium">
+                                <tr class="hover:bg-blue-50/20 transition cursor-pointer">
+                                    <td class="py-3 px-6 font-bold text-gray-900">2020-1-60-XXX</td>
+                                    <td class="py-3 px-6 text-gray-600">Computer Science (CSE)</td>
+                                    <td class="py-3 px-6 text-center font-bold text-blue-700">Fall 2020 (Section A)</td>
+                                    <td class="py-3 px-6 text-right">
+                                        <button class="text-blue-500 hover:text-blue-700 mx-1"><i class="fas fa-edit"></i></button>
+                                        <button class="text-red-500 hover:text-red-700 mx-1"><i class="fas fa-trash"></i></button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        
+                        <div class="p-6 text-center border-t border-gray-100">
+                           <p class="text-xs text-gray-400 font-bold uppercase tracking-wider">Bulk Data Upload</p>
+                           <button class="mt-2 px-4 py-2 border border-gray-300 rounded text-xs font-bold text-gray-600 hover:bg-gray-50"><i class="fas fa-file-csv text-blue-500 mr-1"></i> Upload Students CSV</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Global Action Save (Fake for UI) -->
+            <div class="mt-6 text-right">
+                <span class="text-xs text-gray-400 mr-4 italic">No unsaved schema changes.</span>
+            </div>
+            <div class="h-10"></div>
+        </main>
+    </div>
+
+    <!-- Hidden Modal: Add New Global Record -->
+    <div id="addEntityModal" class="hidden fixed inset-0 z-[100] flex items-center justify-center bg-[#0a192f]/60 backdrop-blur-sm transition-opacity">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden transform scale-100 transition-transform">
+            <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+                <h3 class="font-extrabold text-gray-900 text-lg">Create Database Record</h3>
+                <button id="btnCloseAddModalIcon" class="text-gray-400 hover:text-gray-700 transition"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="p-6 space-y-4">
+                <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest text-center border border-dashed border-gray-200 p-2 rounded">FORM ADAPTS BASED ON CURRENT TAB</p>
+                <div>
+                    <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">Identifier / Name</label>
+                    <input type="text" placeholder="e.g. Dr. Jane or CSE 4001" class="w-full bg-gray-50 border border-gray-200 text-gray-900 text-sm font-bold rounded-lg focus:ring-2 focus:ring-blue-500 outline-none p-2.5">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">Department Link / Core Need</label>
+                    <select class="w-full bg-gray-50 border border-gray-200 text-gray-900 text-sm font-bold rounded-lg focus:ring-2 focus:ring-blue-500 outline-none p-2.5">
+                        <option>Computer Science</option>
+                        <option>Electrical Engineering</option>
+                        <option>Physics/Maths</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">Capacity Constraint / Max Limit</label>
+                    <input type="number" placeholder="Numeric constraint..." class="w-full bg-gray-50 border border-gray-200 text-gray-900 text-sm font-bold rounded-lg focus:ring-2 focus:ring-blue-500 outline-none p-2.5">
+                </div>
+            </div>
+            <div class="px-6 py-4 bg-gray-50 flex justify-end gap-3 border-t border-gray-100">
+                <button id="btnCloseAddModalBtn" class="px-5 py-2.5 bg-white border border-gray-200 text-gray-700 font-semibold rounded-lg text-sm hover:bg-gray-50 transition-colors">Cancel</button>
+                <button class="px-5 py-2.5 bg-blue-600 text-white font-semibold rounded-lg text-sm shadow-md hover:bg-blue-700 transition-colors">Insert Record</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden Modal 2: Warning Alert (Kept for deleting records) -->
+    <div id="warningModal" class="hidden fixed inset-0 z-[100] flex items-center justify-center bg-[#0a192f]/60 backdrop-blur-sm transition-opacity">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden text-center transform scale-100 transition-transform p-6 relative">
+            <div class="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center text-3xl mx-auto mb-4"><i class="fas fa-trash-alt"></i></div>
+            <h3 class="font-extrabold text-gray-900 text-xl mb-2">Delete Record</h3>
+            <p class="text-xs text-gray-500 font-medium mb-6">Irreversibly delete this core database object? It will cascade and drop attached schedules.</p>
+            <div class="flex gap-3 justify-center">
+                <button id="btnCloseWarningModalBtn" class="flex-1 px-5 py-2.5 bg-white border border-gray-200 text-gray-700 font-semibold rounded-lg text-sm hover:bg-gray-50 transition-colors">Cancel</button>
+                <button class="flex-1 px-5 py-2.5 bg-red-600 text-white font-semibold rounded-lg text-sm shadow-md hover:bg-red-700 transition-colors">Confirm Drop</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Tab switching logic
+        function openTab(tabName, btnElement) {
+            // Hide all tab contents
+            const contents = document.querySelectorAll('.tab-content');
+            contents.forEach(c => c.classList.remove('active'));
+            // Remove active from all btns
+            const btns = document.querySelectorAll('.tab-btn');
+            btns.forEach(b => b.classList.remove('active'));
+            
+            // Activate target
+            document.getElementById(tabName).classList.add('active');
+            btnElement.classList.add('active');
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Modals Logic
+            const addModal = document.getElementById('addEntityModal');
+            const btnOpenAddModal = document.getElementById('btnOpenAddModal');
+            const btnCloseAddModalIcon = document.getElementById('btnCloseAddModalIcon');
+            const btnCloseAddModalBtn = document.getElementById('btnCloseAddModalBtn');
+
+            if(btnOpenAddModal) btnOpenAddModal.addEventListener('click', () => addModal.classList.remove('hidden'));
+            if(btnCloseAddModalIcon) btnCloseAddModalIcon.addEventListener('click', () => addModal.classList.add('hidden'));
+            if(btnCloseAddModalBtn) btnCloseAddModalBtn.addEventListener('click', () => addModal.classList.add('hidden'));
+
+            const warningModal = document.getElementById('warningModal');
+            const warningOpenBtns = document.querySelectorAll('.btnOpenWarningModal');
+            const btnCloseWarningModalBtn = document.getElementById('btnCloseWarningModalBtn');
+
+            warningOpenBtns.forEach(btn => {
+                btn.addEventListener('click', () => warningModal.classList.remove('hidden'));
+            });
+            
+            if(btnCloseWarningModalBtn) btnCloseWarningModalBtn.addEventListener('click', () => warningModal.classList.add('hidden'));
+        });
+    </script>
+</body>
+</html>

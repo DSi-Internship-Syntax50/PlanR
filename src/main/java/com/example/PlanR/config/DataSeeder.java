@@ -1,42 +1,40 @@
 package com.example.PlanR.config;
 
-import com.example.PlanR.model.Department;
-import com.example.PlanR.model.User;
-import com.example.PlanR.model.enums.Role;
-import com.example.PlanR.repository.DepartmentRepository;
-import com.example.PlanR.repository.UserRepository;
+import java.util.Comparator;
+import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.crypto.password.PasswordEncoder;
 
+import com.example.PlanR.config.seeder.DataSeederBase;
+
+/**
+ * Thin orchestrator that delegates to modular seeders.
+ * Each seeder handles a single responsibility and declares its execution order.
+ *
+ * Previously this was a 329-line monolithic class with 7 injected dependencies
+ * and 6 unrelated responsibilities in a single lambda.
+ */
 @Configuration
 public class DataSeeder {
 
-    @Bean
-    CommandLineRunner initDatabase(UserRepository userRepository, DepartmentRepository departmentRepository, PasswordEncoder passwordEncoder) {
-        return args -> {
-            // Check if test user already exists to prevent duplicate entries on restart
-            if (userRepository.findByEmail("admin@planr.com").isEmpty()) {
-                
-                // 1. Create a dummy department first
-                Department cse = new Department("CSE", "Computer Science and Engineering");
-                departmentRepository.save(cse);
+    private static final Logger log = LoggerFactory.getLogger(DataSeeder.class);
 
-                // 2. Create the test user
-                User adminUser = new User("System Admin", "admin@planr.com");
-                adminUser.setPassword(passwordEncoder.encode("password123")); // Bcrypt Hash
-                adminUser.setRole(Role.ADMIN);
-                adminUser.setDepartment(cse);
-                
-                userRepository.save(adminUser);
-                
-                System.out.println("=========================================");
-                System.out.println("TEST USER CREATED:");
-                System.out.println("Email: admin@planr.com");
-                System.out.println("Password: password123");
-                System.out.println("=========================================");
-            }
+    @Bean
+    public CommandLineRunner initDatabase(List<DataSeederBase> seeders) {
+        return args -> {
+            log.info("Running {} data seeders...", seeders.size());
+            seeders.stream()
+                    .sorted(Comparator.comparingInt(DataSeederBase::getOrder))
+                    .forEach(seeder -> {
+                        log.debug("Executing seeder: {} (order={})",
+                                seeder.getClass().getSimpleName(), seeder.getOrder());
+                        seeder.seed();
+                    });
+            log.info("All data seeders completed.");
         };
     }
 }

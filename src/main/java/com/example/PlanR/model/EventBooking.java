@@ -7,7 +7,7 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 
 @Entity
-@Table(name = "events_and_bookings")
+@Table(name = "events_and_bookings", indexes = {@Index(name = "idx_booking_room_date", columnList = "room_id, specific_date")})
 public class EventBooking {
 
     @Id
@@ -39,6 +39,21 @@ public class EventBooking {
     private BookingStatus status;
 
     private String title;
+
+    @Column(name = "department_name")
+    private String departmentName;
+
+    @Column(name = "teacher_name")
+    private String teacherName;
+
+    @Column(columnDefinition = "TEXT")
+    private String additionalInfo;
+
+    @Version
+    private Long version;
+
+    @Column(name = "displaced_by_event_id")
+    private Long displacedByEventId;
 
     // Constructors
     public EventBooking() {}
@@ -114,5 +129,45 @@ public class EventBooking {
 
     public void setTitle(String title) {
         this.title = title;
+    }
+
+    public Long getVersion() {
+        return version;
+    }
+
+    public void setVersion(Long version) {
+        this.version = version;
+    }
+
+    public Long getDisplacedByEventId() {
+        return displacedByEventId;
+    }
+
+    public void setDisplacedByEventId(Long displacedByEventId) {
+        this.displacedByEventId = displacedByEventId;
+    }
+
+    public String getDepartmentName() {
+        return departmentName;
+    }
+
+    public void setDepartmentName(String departmentName) {
+        this.departmentName = departmentName;
+    }
+
+    public String getTeacherName() {
+        return teacherName;
+    }
+
+    public void setTeacherName(String teacherName) {
+        this.teacherName = teacherName;
+    }
+
+    public String getAdditionalInfo() {
+        return additionalInfo;
+    }
+
+    public void setAdditionalInfo(String additionalInfo) {
+        this.additionalInfo = additionalInfo;
     }
 }

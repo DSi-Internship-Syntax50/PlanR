@@ -2,12 +2,13 @@ package com.example.PlanR.model;
 
 import com.example.PlanR.model.enums.DayOfWeek;
 import com.example.PlanR.model.enums.Section;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import java.time.LocalTime;
 import java.util.List;
 
 @Entity
-@Table(name = "master_routine")
+@Table(name = "master_routine", indexes = {@Index(name = "idx_routine_teacher_day", columnList = "teacher_id, day_of_week")})
 public class MasterRoutine {
 
     @Id
@@ -39,12 +40,16 @@ public class MasterRoutine {
     @Enumerated(EnumType.STRING)
     private Section section;
 
+    @Column(name = "start_slot_index")
+    private Integer startSlotIndex;
+
     @OneToMany(mappedBy = "routine", cascade = CascadeType.ALL)
+    @JsonIgnore
     private List<ClassOverride> overrides;
 
-    public MasterRoutine() {}
+    public MasterRoutine() {
+    }
 
-   
     public Long getId() {
         return id;
     }
@@ -115,5 +120,13 @@ public class MasterRoutine {
 
     public void setOverrides(List<ClassOverride> overrides) {
         this.overrides = overrides;
+    }
+
+    public Integer getStartSlotIndex() {
+        return startSlotIndex;
+    }
+
+    public void setStartSlotIndex(Integer startSlotIndex) {
+        this.startSlotIndex = startSlotIndex;
     }
 }

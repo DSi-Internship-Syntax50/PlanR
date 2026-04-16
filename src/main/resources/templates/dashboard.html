@@ -1,17 +1,216 @@
-<!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+﻿<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>PlanR Dashboard</title>
+    <title>Coordinator's Canvas - PlanR</title>
+    <link rel="stylesheet" th:href="@{/css/tailwind-output.css}">
+    <link rel="stylesheet" href="/css/fontawesome/all.min.css">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
 </head>
-<body style="font-family: Arial, sans-serif; padding: 40px; text-align: center;">
+<body class="bg-[#f3f6f8]">
 
-    <h1 style="color: #2F80ED;">Welcome to PlanR Dashboard!</h1>
-    <h3 style="color: #333;">You have successfully logged in.</h3>
+    <div th:replace="~{fragments/sidebar :: sidebar}"></div>
 
-    <form th:action="@{/logout}" method="post">
-        <button type="submit" style="padding: 10px 20px; background: #dc3545; color: white; border: none; border-radius: 5px; cursor: pointer;">Logout</button>
-    </form>
+    <div class="ml-64 flex flex-col min-h-screen">
+        <div th:replace="~{fragments/header :: header}"></div>
+
+        <main class="flex-1 p-8">
+            <div class="flex justify-between items-end mb-8">
+                <div>
+                    <h1 class="text-4xl font-extrabold text-[#0a192f] tracking-tight">Coordinator's Canvas</h1>
+                    <div class="flex items-center gap-3 mt-2 text-sm">
+                        <span class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded font-bold text-xs">AUST • FALL 2024</span>
+                        <span class="text-gray-400">•</span>
+                        <span class="text-gray-500 font-medium">Real-time architectural logic grid for university scheduling.</span>
+                    </div>
+                </div>
+                <div class="flex gap-3">
+                    <button class="px-5 py-2.5 bg-blue-50 text-blue-700 font-semibold rounded-lg text-sm border border-blue-100 hover:bg-blue-100 transition-colors">Export PDF</button>
+                    <button class="px-5 py-2.5 bg-[#0a192f] text-white font-semibold rounded-lg text-sm shadow-md hover:bg-gray-800 transition-colors">Publish Routine</button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-12 gap-6">
+                <div class="col-span-8 bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                    <div class="flex justify-between text-xs font-bold text-gray-400 border-b border-gray-100 pb-4 mb-4 uppercase tracking-wider">
+                        <div class="w-16">Time</div>
+                        <div class="flex-1 text-center">Mon</div>
+                        <div class="flex-1 text-center">Tue</div>
+                        <div class="flex-1 text-center">Wed</div>
+                    </div>
+                    
+                    <div class="flex items-start mb-6">
+                        <div class="w-16 text-sm font-bold text-gray-700 pt-2 flex flex-col items-center">
+                            <span>08:00</span><span class="text-[10px] font-bold text-gray-400">AM</span>
+                        </div>
+                        <div class="flex-1 px-2">
+                            <div class="bg-blue-50 border-l-4 border-blue-500 rounded-lg p-3 h-full shadow-sm hover:shadow-md transition">
+                                <p class="text-[10px] font-extrabold text-blue-700 mb-1 uppercase tracking-wider">CSE 4101</p>
+                                <p class="text-sm font-bold text-gray-900 leading-tight mb-1">Compiler Design</p>
+                                <p class="text-[10px] text-gray-500 font-semibold flex items-center gap-1"><i class="fas fa-map-marker-alt text-blue-400"></i> Room 402 • Dr. Rahman</p>
+                            </div>
+                        </div>
+                        <!-- Conflict Example -->
+                        <div class="flex-1 px-2">
+                            <div class="bg-[#fef2f2] border-l-4 border-red-600 rounded-lg p-3 h-full relative overflow-hidden shadow-sm hover:shadow-md transition border border-red-100">
+                                <div class="absolute top-0 right-0 bg-red-600 text-white text-[9px] font-bold px-2 py-0.5 rounded-bl tracking-wider shadow">CONFLICT</div>
+                                <div class="pr-12">
+                                    <p class="text-[10px] font-extrabold text-red-600 mb-1 uppercase tracking-wider"><i class="fas fa-exclamation-circle"></i> DOUBLE BOOKING</p>
+                                    <p class="text-sm font-bold text-red-900 leading-tight mb-1">Room 301 / 305</p>
+                                    <p class="text-[10px] text-red-700 font-semibold mb-3">Dr. Karim</p>
+                                </div>
+                                <div class="mt-auto border-t border-red-200 pt-2">
+                                    <button class="btnOpenReschedule w-full text-[10px] bg-white border border-red-300 text-red-700 font-extrabold px-3 py-1.5 rounded-md shadow-sm hover:bg-red-600 hover:text-white transition-all flex justify-between items-center group">
+                                        FIND ALTERNATIVES <i class="fas fa-magic text-red-400 group-hover:text-white group-hover:animate-pulse"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex-1 px-2">
+                             <div class="border-2 border-dashed border-gray-200 rounded-lg p-3 h-full flex flex-col items-center justify-center text-gray-400 hover:bg-gray-50 hover:border-gray-300 cursor-pointer transition-colors group">
+                                <i class="fas fa-plus-circle text-lg group-hover:text-gray-500 transition-colors mb-1"></i>
+                                <span class="text-[10px] font-bold uppercase tracking-wider opacity-0 group-hover:opacity-100 transition-opacity">Assign</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-span-4 space-y-6">
+                    <div class="bg-[#0a192f] rounded-2xl shadow-lg p-6 text-white relative overflow-hidden border border-gray-800">
+                        <!-- Abstract Background Decoration -->
+                        <div class="absolute -right-8 -top-8 w-32 h-32 bg-blue-500 rounded-full mix-blend-multiply filter blur-2xl opacity-20"></div>
+                        <div class="absolute -left-8 -bottom-8 w-32 h-32 bg-purple-500 rounded-full mix-blend-multiply filter blur-2xl opacity-20"></div>
+                        
+                        <h3 class="text-lg font-bold mb-6 flex items-center gap-2 relative z-10"><i class="fas fa-heartbeat text-blue-400"></i> Schedule Health</h3>
+                        
+                        <div class="space-y-5 text-sm font-semibold relative z-10">
+                            <div>
+                                <div class="flex justify-between text-gray-300 mb-2">
+                                    <span class="text-[10px] font-bold tracking-wider uppercase text-blue-200">Logic Consistency</span>
+                                    <span class="text-green-400 text-xs font-black">92%</span>
+                                </div>
+                                <div class="w-full bg-slate-800 rounded-full h-2 shadow-inner"><div class="bg-gradient-to-r from-blue-400 to-green-400 h-2 rounded-full shadow-lg" style="width: 92%"></div></div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between text-gray-300 mb-2">
+                                    <span class="text-[10px] font-bold tracking-wider uppercase text-purple-200">Resource Balance</span>
+                                    <span class="text-xs font-black">78%</span>
+                                </div>
+                                <div class="w-full bg-slate-800 rounded-full h-2 shadow-inner"><div class="bg-gradient-to-r from-indigo-400 to-purple-400 h-2 rounded-full shadow-lg" style="width: 78%"></div></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 flex flex-col justify-between">
+                            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">8 AM Streak</p>
+                            <h4 class="text-3xl font-extrabold text-gray-900 mb-2">3 <span class="text-xs font-bold text-gray-400 tracking-wider">DAYS</span></h4>
+                            <div class="bg-red-50 text-red-600 rounded px-2 py-1 text-[9px] font-black uppercase tracking-wider inline-flex w-max items-center gap-1 border border-red-100"><i class="fas fa-arrow-trend-up"></i> High Fatigue Alert</div>
+                        </div>
+                        <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 flex flex-col justify-between">
+                            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Gaps Found</p>
+                            <h4 class="text-3xl font-extrabold text-gray-900 mb-2">12<span class="text-xs font-bold text-gray-400 tracking-wider">HRS</span></h4>
+                            <div class="bg-blue-50 text-blue-600 rounded px-2 py-1 text-[9px] font-black uppercase tracking-wider inline-flex w-max items-center gap-1 border border-blue-100"><i class="fas fa-info-circle"></i> Optimizable</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Hidden Modal: Reschedule Assistant -->
+    <div id="rescheduleModal" class="hidden fixed inset-0 z-[100] flex items-center justify-center bg-[#0a192f]/60 backdrop-blur-sm transition-opacity">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden transform scale-100 transition-transform">
+            <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/80">
+                <h3 class="font-extrabold text-gray-900 text-lg flex items-center gap-2">
+                   <i class="fas fa-random text-blue-600"></i> Reschedule Assistant
+                </h3>
+                <button class="btnCloseReschedule text-gray-400 hover:text-gray-700 transition w-8 h-8 rounded-full hover:bg-white flex items-center justify-center"><i class="fas fa-times"></i></button>
+            </div>
+            
+            <div class="p-6">
+                <!-- Context Box -->
+                <div class="bg-red-50 border border-red-100 p-3.5 rounded-xl mb-6 flex items-start gap-3 shadow-inner">
+                    <i class="fas fa-exclamation-triangle text-red-500 mt-0.5"></i>
+                    <div>
+                        <p class="text-[11px] font-extrabold text-red-800 uppercase tracking-wider mb-0.5 mt-0.5">Double Booking Detected</p>
+                        <p class="text-xs font-medium text-red-600 leading-relaxed">Dr. Karim is scheduled for two classes simultaneously on <span class="font-bold">Mon 09:30 AM</span>. To enforce logic consistency, one must be moved.</p>
+                    </div>
+                </div>
+                
+                <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 pl-1 flex items-center gap-2">
+                    <i class="fas fa-magic text-blue-400"></i> AI Suggested Alternatives
+                </p>
+                
+                <div class="space-y-3">
+                    <!-- Option 1: AI Best Match -->
+                    <label class="flex justify-between items-center p-4 border border-blue-400 bg-blue-50/50 rounded-xl cursor-pointer shadow-sm relative overflow-hidden group hover:bg-blue-50 transition">
+                        <div class="absolute left-0 top-0 bottom-0 w-1 bg-blue-500"></div>
+                        <div>
+                            <div class="flex items-center gap-3">
+                                <input type="radio" name="slot" class="w-4 h-4 text-blue-600 focus:ring-blue-500 ml-1" checked>
+                                <span class="font-bold text-gray-900 text-sm">Mon 11:00 AM</span>
+                            </div>
+                            <p class="text-[11px] text-gray-500 mt-1 pl-8">Instructor <span class="font-semibold">Dr. Karim</span> is free. <span class="font-semibold text-blue-600">Room 205</span> is empty.</p>
+                        </div>
+                        <span class="bg-gradient-to-r from-green-400 to-green-500 text-white shadow-sm px-3 py-1.5 rounded-md font-bold text-[9px] uppercase tracking-wider mr-1">Best Match</span>
+                    </label>
+                    
+                    <!-- Option 2: With Fatigue Risk -->
+                    <label class="flex justify-between items-center p-4 border border-gray-200 bg-white rounded-xl cursor-pointer hover:border-blue-300 transition group relative overflow-hidden">
+                        <div class="absolute left-0 top-0 bottom-0 w-1 bg-transparent group-hover:bg-blue-300 transition"></div>
+                        <div>
+                            <div class="flex items-center gap-3">
+                                <input type="radio" name="slot" class="w-4 h-4 text-blue-600 focus:ring-blue-500 ml-1">
+                                <span class="font-bold text-gray-900 text-sm">Wed 08:00 AM</span>
+                            </div>
+                            <p class="text-[11px] text-gray-500 mt-1 pl-8">Instructor has an empty slot. <span class="font-semibold">Room 301</span> is free.</p>
+                        </div>
+                        <span class="bg-yellow-100 text-yellow-700 px-3 py-1.5 rounded-md font-bold text-[9px] uppercase tracking-wider mr-1 border border-yellow-200">Fatigue Risk</span>
+                    </label>
+
+                     <!-- Option 3: Manual override -->
+                     <label class="flex justify-between items-center p-4 border border-gray-200 bg-white rounded-xl cursor-pointer hover:border-gray-300 transition group opacity-70">
+                        <div>
+                            <div class="flex items-center gap-3">
+                                <input type="radio" name="slot" class="w-4 h-4 text-gray-400 focus:ring-gray-500 ml-1" disabled>
+                                <span class="font-bold text-gray-400 text-sm italic">Manual override (Select from global calendar)</span>
+                            </div>
+                        </div>
+                        <i class="fas fa-chevron-right text-gray-300 text-xs mr-2"></i>
+                    </label>
+                </div>
+            </div>
+            
+            <div class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-between items-center">
+                <span class="text-[10px] text-gray-400 font-bold tracking-wider uppercase"><i class="fas fa-lock text-gray-300 mr-1"></i> Prevents core collisions</span>
+                <div class="flex gap-3">
+                    <button class="btnCloseReschedule px-5 py-2.5 bg-white border border-gray-200 text-gray-700 font-semibold rounded-lg text-sm hover:bg-gray-50 shadow-sm transition-colors">Cancel</button>
+                    <button class="btnCloseReschedule px-5 py-2.5 bg-blue-600 text-white font-semibold rounded-lg text-sm shadow-md hover:bg-blue-700 transition-colors">Confirm Shift</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const modal = document.getElementById('rescheduleModal');
+            const openBtns = document.querySelectorAll('.btnOpenReschedule');
+            const closeBtns = document.querySelectorAll('.btnCloseReschedule');
+
+            openBtns.forEach(btn => {
+                btn.addEventListener('click', () => modal.classList.remove('hidden'));
+            });
+
+            closeBtns.forEach(btn => {
+                btn.addEventListener('click', () => modal.classList.add('hidden'));
+            });
+
+            modal.addEventListener('click', (e) => {
+                if(e.target === modal) modal.classList.add('hidden');
+            });
+        });
+    </script>
 
 </body>
 </html>

@@ -1,74 +1,78 @@
 package com.example.PlanR.controller;
 
-import com.example.PlanR.dto.UserRegistrationDto;
-import com.example.PlanR.model.Department;
-import com.example.PlanR.model.User;
-import com.example.PlanR.model.enums.Role;
-import com.example.PlanR.repository.DepartmentRepository;
-import com.example.PlanR.repository.UserRepository;
-import jakarta.validation.Valid;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 
+import com.example.PlanR.dto.UserRegistrationDto;
+import com.example.PlanR.exception.ValidationException;
+import com.example.PlanR.service.UserRegistrationService;
+
+import jakarta.validation.Valid;
+
+/**
+ * Admin-only user creation controller.
+ * Registration logic is delegated to UserRegistrationService.
+ */
 @Controller
+@RequestMapping("/admin/users")
 public class RegistrationController {
 
-    private final UserRepository userRepository;
-    private final DepartmentRepository departmentRepository;
-    private final PasswordEncoder passwordEncoder;
+    private static final Logger logger = LoggerFactory.getLogger(RegistrationController.class);
+    private final UserRegistrationService registrationService;
 
-    public RegistrationController(UserRepository userRepository, DepartmentRepository departmentRepository, PasswordEncoder passwordEncoder) {
-        this.userRepository = userRepository;
-        this.departmentRepository = departmentRepository;
-        this.passwordEncoder = passwordEncoder;
+    public RegistrationController(UserRegistrationService registrationService) {
+        this.registrationService = registrationService;
     }
 
-    @GetMapping("/register")
+    @GetMapping("/create")
     public String showRegistrationForm(Model model) {
-        model.addAttribute("user", new UserRegistrationDto());
-        model.addAttribute("departments", departmentRepository.findAll());
-        model.addAttribute("roles", Role.values()); 
+        logger.info("Displaying admin user creation form");
+        model.addAttribute("registrationForm", new UserRegistrationDto());
+        model.addAttribute("departments", registrationService.getAssignableDepartments());
+        model.addAttribute("roles", registrationService.getAssignableRoles());
         return "register";
     }
 
-    @PostMapping("/register")
-    public String registerUserAccount(@Valid @ModelAttribute("user") UserRegistrationDto registrationDto,
-                                      BindingResult result,
-                                      Model model) {
+    @PostMapping("/create")
+    public String registerUserAccount(@Valid @ModelAttribute("registrationForm") UserRegistrationDto registrationDto,
+            BindingResult result, Model model) {
 
-        // 1. Check if email exists
-        if (userRepository.findByEmail(registrationDto.getEmail()).isPresent()) {
+        String email = registrationDto.getEmail().trim().toLowerCase();
+        logger.info("Admin attempting to create account with email: {}", email);
+
+        if (registrationService.isEmailTaken(email)) {
+            logger.warn("Creation failed: Email {} already exists", email);
             result.rejectValue("email", null, "There is already an account registered with that email");
         }
 
-        // 2. If there are validation errors, return to the form and repopulate dropdowns
         if (result.hasErrors()) {
-            model.addAttribute("departments", departmentRepository.findAll());
-            model.addAttribute("roles", Role.values());
+            model.addAttribute("departments", registrationService.getAssignableDepartments());
+            model.addAttribute("roles", registrationService.getAssignableRoles());
             return "register";
         }
 
-        // 3. Map DTO to User Entity
-        User user = new User();
-        user.setName(registrationDto.getName());
-        user.setEmail(registrationDto.getEmail());
-        user.setPassword(passwordEncoder.encode(registrationDto.getPassword()));
-        user.setRole(registrationDto.getRole());
-
-        // 4. Fetch and set Department
-        Department department = departmentRepository.findById(registrationDto.getDepartmentId())
-                .orElseThrow(() -> new IllegalArgumentException("Invalid department Id:" + registrationDto.getDepartmentId()));
-        user.setDepartment(department);
-
-        // 5. Save the user
-        userRepository.save(user);
-
-        // Redirect to login with success parameter
-        return "redirect:/login?success=true";
+        try {
+            registrationService.registerUser(registrationDto);
+            logger.info("User {} created successfully by admin", email);
+            return "redirect:/admin/users/create?success=true";
+        } catch (ValidationException e) {
+            result.rejectValue("email", null, e.getMessage());
+            model.addAttribute("departments", registrationService.getAssignableDepartments());
+            model.addAttribute("roles", registrationService.getAssignableRoles());
+            return "register";
+        } catch (Exception e) {
+            logger.error("Critical error during user creation for {}: {}", email, e.getMessage(), e);
+            model.addAttribute("registrationError", "A system error occurred. Please try again.");
+            model.addAttribute("departments", registrationService.getAssignableDepartments());
+            model.addAttribute("roles", registrationService.getAssignableRoles());
+            return "register";
+        }
     }
 }
