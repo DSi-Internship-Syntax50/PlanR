@@ -26,8 +26,13 @@
             >SCHEDULES</a
           >
           <a
+            href="/coordinators"
+            class="hover:text-[#0a192f] hover:bg-gray-100/80 px-4 py-2 rounded-lg transition-all"
+            >COORDINATORS</a
+          >
+          <a
             href="/faculty"
-            sec:authorize="hasAnyRole('SUPERADMIN', 'TEACHER', 'STUDENT')"
+            sec:authorize="hasAnyRole('SUPERADMIN', 'TEACHER', 'STUDENT', 'COORDINATOR')"
             class="hover:text-[#0a192f] hover:bg-gray-100/80 px-4 py-2 rounded-lg transition-all"
             >FACULTY</a
           >

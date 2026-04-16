@@ -30,7 +30,7 @@ public class SecurityConfig {
                 
                 // STRICTLY locks down user creation, faculty, and settings to Superadmin
                 .requestMatchers("/admin/**", "/settings").hasRole("SUPERADMIN")
-                .requestMatchers("/faculty").hasAnyRole("SUPERADMIN", "TEACHER","STUDENT")
+                .requestMatchers("/faculty").hasAnyRole("SUPERADMIN", "TEACHER", "STUDENT", "COORDINATOR")
                 
                 // Routine builder access
                 .requestMatchers("/routine-builder", "/generate-routine", "/api/schedule/**").hasAnyRole("SUPERADMIN", "COORDINATOR")
