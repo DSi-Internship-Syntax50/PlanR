@@ -1,0 +1,8 @@
+version: '3.8'
+
+services:
+  app:
+    environment:
+      # This overrides the local database URL from `docker-compose.yml`
+      # and points it to your Neon database URL configured in your `.env` file.
+      - SPRING_DATASOURCE_URL=${DATABASE_URL}
